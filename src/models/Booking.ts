@@ -18,9 +18,15 @@ export interface IBooking extends mongoose.Document {
   totalAmount: number;
   currency: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentIntentId?: string;
-  paymentMethod: 'stripe' | 'direct';
+  stripePaymentIntentId?: string;
+  raiffeisenPaymentId?: string;
+  paymentMethod: 'stripe' | 'raiffeisen' | 'direct';
+  paymentDate?: Date;
   bookingReference: string;
+  customerEmail?: string;
+  customerName?: string;
   createdAt: Date;
   confirmedAt?: Date;
   emailSent: boolean;
@@ -49,9 +55,20 @@ const BookingSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'cancelled', 'refunded'],
     default: 'pending'
   },
+  paymentStatus: {
+    type: String,
+    required: true,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    default: 'pending'
+  },
   paymentIntentId: { type: String, unique: true, sparse: true },
-  paymentMethod: { type: String, required: true, enum: ['stripe', 'direct'] },
+  stripePaymentIntentId: { type: String, unique: true, sparse: true },
+  raiffeisenPaymentId: { type: String, unique: true, sparse: true },
+  paymentMethod: { type: String, required: true, enum: ['stripe', 'raiffeisen', 'direct'] },
+  paymentDate: { type: Date },
   bookingReference: { type: String, required: true, unique: true },
+  customerEmail: { type: String },
+  customerName: { type: String },
   createdAt: { type: Date, default: Date.now },
   confirmedAt: { type: Date },
   emailSent: { type: Boolean, default: false },

@@ -9,8 +9,9 @@ interface EmailOptions {
   html: string;
   attachments?: Array<{
     filename: string;
-    content: string;
-    encoding: string;
+    content: string | Buffer;
+    encoding?: string;
+    cid?: string; // Content-ID for inline images
   }>;
 }
 
@@ -66,7 +67,7 @@ class EmailService {
     } else {
       // Fallback to environment variables
       this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: false, // true for 465, false for other ports
         auth: {
@@ -122,7 +123,7 @@ class EmailService {
       qrCode: string;
       ticketId?: string;
     }[]
-  ): string {
+  ): { html: string; attachments: any[] } {
     const ticketRows = tickets.map(ticket => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${ticket.ticketName}</td>
@@ -131,15 +132,59 @@ class EmailService {
       </tr>
     `).join('');
 
-    const qrCodes = tickets.map(ticket => `
-      <div style="text-align: center; margin: 20px 0; padding: 20px; border: 2px dashed #7c3aed; border-radius: 12px;">
-        <h3 style="color: #7c3aed; margin-bottom: 10px;">${ticket.ticketName}</h3>
-        <img src="${ticket.qrCode}" alt="QR Code" style="width: 200px; height: 200px; margin: 10px auto; display: block;">
-        <p style="font-size: 12px; color: #64748b; margin-top: 10px;">Ticket: ${ticket.ticketName}</p>
-      </div>
-    `).join('');
+    const qrCodes = tickets.map((ticket, index) => {
+      console.log('🎫 Processing ticket for email:', {
+        ticketName: ticket.ticketName,
+        hasQrCode: !!ticket.qrCode,
+        qrCodeLength: ticket.qrCode ? ticket.qrCode.length : 0,
+        qrCodePreview: ticket.qrCode ? ticket.qrCode.substring(0, 50) + '...' : 'No QR code',
+        isDataUrl: ticket.qrCode ? ticket.qrCode.startsWith('data:image/') : false
+      });
 
-    return `
+      // Create a unique CID for this QR code
+      const qrCodeCid = `qrcode_${ticket.ticketId || index}`;
+
+      return {
+        html: `
+        <div style="text-align: center; margin: 20px 0; padding: 20px; border: 2px dashed #7c3aed; border-radius: 12px; background-color: #fafafa;">
+          <h3 style="color: #7c3aed; margin-bottom: 15px; font-size: 18px;">${ticket.ticketName || 'Event Ticket'}</h3>
+          ${ticket.qrCode && ticket.qrCode.startsWith('data:image/') ?
+            `<div style="background-color: white; padding: 15px; border-radius: 8px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+               <img src="cid:${qrCodeCid}" alt="QR Code for ${ticket.ticketName || 'Event Ticket'}" style="width: 180px; height: 180px; display: block; border: none;" />
+             </div>` :
+            `<div style="width: 180px; height: 180px; margin: 15px auto; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; color: #6b7280; font-size: 14px;">
+               <div style="text-align: center;">
+                 <div>⚠️</div>
+                 <div>QR Code Missing</div>
+                 <div style="font-size: 12px; margin-top: 5px;">Please contact support</div>
+               </div>
+             </div>`
+          }
+          <div style="margin-top: 15px; padding: 10px; background-color: #f8fafc; border-radius: 6px;">
+            <p style="font-size: 14px; color: #475569; margin: 5px 0; font-weight: 600;">Ticket: ${ticket.ticketName || 'Event Ticket'}</p>
+            <p style="font-size: 12px; color: #64748b; margin: 5px 0;">ID: ${ticket.ticketId || 'N/A'}</p>
+            <p style="font-size: 11px; color: #94a3b8; margin: 5px 0;">Show this QR code at the entrance</p>
+          </div>
+        </div>
+      `,
+        attachment: ticket.qrCode && ticket.qrCode.startsWith('data:image/') ? {
+          filename: `qr_${ticket.ticketId || index}.png`,
+          content: ticket.qrCode.split(',')[1], // Remove data:image/png;base64, prefix
+          encoding: 'base64',
+          cid: qrCodeCid
+        } : null
+      };
+    });
+
+    // Generate HTML content from QR codes
+    const qrCodesHtml = qrCodes.map(qr => qr.html).join('');
+
+    // Create attachments array
+    const qrAttachments = qrCodes
+      .map(qr => qr.attachment)
+      .filter(attachment => attachment !== null);
+
+    const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -220,8 +265,17 @@ class EmailService {
             <!-- QR Codes -->
             <div style="margin-bottom: 30px;">
               <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">📱 Your Digital Tickets</h3>
-              <p style="color: #64748b; margin-bottom: 20px;">Show these QR codes at the event entrance. Each QR code is unique and can only be used once.</p>
-              ${qrCodes}
+              <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+                <p style="color: #1e40af; margin: 0; font-size: 14px; font-weight: 500;">
+                  <strong>Important:</strong> Show these QR codes at the event entrance for quick entry.
+                </p>
+                <ul style="color: #1e40af; margin: 8px 0 0 0; padding-left: 20px; font-size: 13px;">
+                  <li>Each QR code is unique and can only be used once</li>
+                  <li>Screenshots or printed copies work perfectly</li>
+                  <li>Keep your tickets secure and don't share QR codes</li>
+                </ul>
+              </div>
+              ${qrCodesHtml}
             </div>
 
             <!-- Important Info -->
@@ -257,6 +311,11 @@ class EmailService {
       </body>
       </html>
     `;
+
+    return {
+      html: emailHtml,
+      attachments: qrAttachments
+    };
   }
 }
 
@@ -274,7 +333,7 @@ async function createEmailServiceWithDBSettings(): Promise<EmailService> {
 }
 
 // Helper function to send booking confirmation emails
-export async function sendEmailConfirmation(booking: any): Promise<boolean> {
+export async function sendBookingConfirmationEmail(booking: any): Promise<boolean> {
   try {
     if (!booking.eventId) {
       logError('Booking missing event information', null, { action: 'email-validation' });
@@ -285,20 +344,36 @@ export async function sendEmailConfirmation(booking: any): Promise<boolean> {
     const emailServiceInstance = await createEmailServiceWithDBSettings();
     const smtpSettings = await loadSMTPSettings();
 
-    // Get user information from Clerk (if needed) or use booking data
-    const customerEmail = booking.userEmail || 'customer@example.com'; // You may need to get this from Clerk
-    const customerName = booking.userName || 'Customer'; // You may need to get this from Clerk
+    // Get customer information from booking (should be populated by webhook)
+    const customerEmail = booking.customerEmail;
+    const customerName = booking.customerName || 'Customer';
+
+    if (!customerEmail) {
+      logError('Booking missing customer email', null, { action: 'email-validation', bookingId: booking._id });
+      return false;
+    }
+
+    // Debug: Log event data for troubleshooting
+    console.log('📧 Email Service - Event Data Debug:', {
+      hasEventId: !!booking.eventId,
+      eventIdType: typeof booking.eventId,
+      eventTitle: booking.eventId?.title,
+      eventDate: booking.eventId?.date,
+      eventVenue: booking.eventId?.venue,
+      eventLocation: booking.eventId?.location,
+      eventAddress: booking.eventId?.address
+    });
 
     // Prepare event information
     const eventInfo = {
-      title: booking.eventId.title,
-      description: booking.eventId.description,
-      date: new Date(booking.eventId.date),
-      location: booking.eventId.location,
-      venue: booking.eventId.venue,
-      address: booking.eventId.address,
-      city: booking.eventId.city,
-      country: booking.eventId.country,
+      title: booking.eventId?.title || 'Event Title Not Available',
+      description: booking.eventId?.description || '',
+      date: booking.eventId?.date ? new Date(booking.eventId.date) : new Date(),
+      location: booking.eventId?.location || 'Location Not Available',
+      venue: booking.eventId?.venue || booking.eventId?.location || 'Venue Not Available',
+      address: booking.eventId?.address || 'Address Not Available',
+      city: booking.eventId?.city || '',
+      country: booking.eventId?.country || '',
     };
 
     // Prepare booking information
@@ -310,6 +385,18 @@ export async function sendEmailConfirmation(booking: any): Promise<boolean> {
       customerEmail,
     };
 
+    console.log('📧 Email Service Debug - Booking data:', {
+      bookingReference: booking.bookingReference,
+      ticketsCount: booking.tickets?.length || 0,
+      tickets: booking.tickets?.map((ticket: any) => ({
+        ticketName: ticket.ticketName,
+        ticketId: ticket.ticketId,
+        hasQrCode: !!ticket.qrCode,
+        qrCodeType: typeof ticket.qrCode,
+        qrCodeLength: ticket.qrCode ? ticket.qrCode.length : 0
+      })) || []
+    });
+
     // Prepare tickets information
     const ticketsInfo = booking.tickets.map((ticket: any) => ({
       ticketName: ticket.ticketName,
@@ -318,14 +405,14 @@ export async function sendEmailConfirmation(booking: any): Promise<boolean> {
       ticketId: ticket.ticketId,
     }));
 
-    // Generate email HTML
-    const emailHtml = emailServiceInstance.generateBookingConfirmationEmail(
+    // Generate email HTML and attachments
+    const emailContent = emailServiceInstance.generateBookingConfirmationEmail(
       bookingInfo,
       eventInfo,
       ticketsInfo
     );
 
-    // Send the email with database sender config
+    // Send the email with database sender config and QR code attachments
     const senderConfig = smtpSettings ? {
       email: smtpSettings.senderEmail,
       name: smtpSettings.senderName || 'BiletAra'
@@ -334,7 +421,8 @@ export async function sendEmailConfirmation(booking: any): Promise<boolean> {
     const success = await emailServiceInstance.sendEmail({
       to: customerEmail,
       subject: `Booking Confirmation - ${eventInfo.title} (#${bookingInfo.bookingReference})`,
-      html: emailHtml,
+      html: emailContent.html,
+      attachments: emailContent.attachments,
     }, senderConfig);
 
     if (!success) {
@@ -343,7 +431,7 @@ export async function sendEmailConfirmation(booking: any): Promise<boolean> {
 
     return success;
   } catch (error) {
-    logEmailError('sendEmailConfirmation', 'unknown', error, 'confirmation-process');
+    logEmailError('sendBookingConfirmationEmail', 'unknown', error, 'confirmation-process');
     return false;
   }
 }

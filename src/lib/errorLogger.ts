@@ -8,6 +8,7 @@ export interface ErrorContext {
   route?: string;
   action?: string;
   eventId?: string;
+  bookingId?: string;
   data?: Record<string, any>;
   metadata?: Record<string, any>;
   userAgent?: string;

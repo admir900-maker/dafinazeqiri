@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -21,7 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BackgroundWrapper } from '@/components/ui/background-wrapper'
 import { useCurrency } from '@/contexts/CurrencyContext'
-import { StripePayment } from '@/components/StripePayment'
 
 interface TicketType {
   name: string
@@ -58,6 +57,7 @@ interface Event {
 
 export default function EventDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const eventId = params.id as string
   const { formatPrice } = useCurrency()
 
@@ -66,11 +66,6 @@ export default function EventDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedTickets, setSelectedTickets] = useState<{ [key: string]: number }>({})
   const [bookingLoading, setBookingLoading] = useState(false)
-  const [paymentIntentData, setPaymentIntentData] = useState<{
-    clientSecret: string
-    orderSummary: any
-  } | null>(null)
-  const [showPayment, setShowPayment] = useState(false)
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -120,81 +115,27 @@ export default function EventDetailPage() {
       return
     }
 
-    setBookingLoading(true)
+    if (!event) return
 
-    try {
-      const response = await fetch(`/api/events/${eventId}/book`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ticketSelections: selectedTickets,
-          useWebhook: true // Enable Stripe webhook flow
-        })
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.paymentIntent) {
-        // Show Stripe payment form
-        setPaymentIntentData({
-          clientSecret: data.paymentIntent.client_secret,
-          orderSummary: data.orderSummary
-        })
-        setShowPayment(true)
-      } else if (response.ok && data.success) {
-        // Direct booking successful (fallback)
-        const ticketDetails = selectedTicketsList.map(([ticketName, quantity]) => {
-          const ticket = event?.ticketTypes.find(t => t.name === ticketName)
-          return `${quantity} x ${ticketName} (${formatPrice(ticket?.price || 0)} each)`
-        }).join('\n')
-
-        alert(`🎉 Booking Successful!\n\n${ticketDetails}\n\nTotal: ${formatPrice(data.totalPrice)}\nTickets: ${data.ticketCount}\n\nYour ticket codes will be sent via email.`)
-
-        // Reset selections and refresh event data
-        setSelectedTickets({})
-        const eventResponse = await fetch(`/api/events/${eventId}`)
-        if (eventResponse.ok) {
-          const updatedEvent = await eventResponse.json()
-          setEvent(updatedEvent)
-        }
-      } else {
-        alert(`❌ Booking Failed: ${data.error}`)
+    // Prepare ticket data for checkout
+    const ticketSelections = selectedTicketsList.map(([ticketName, quantity]) => {
+      const ticketType = event.ticketTypes.find(t => t.name === ticketName)
+      return {
+        ticketId: ticketType?.name || ticketName, // Use name as ID for now
+        ticketName,
+        quantity,
+        price: ticketType?.price || 0
       }
-    } catch (error) {
-      console.error('Error booking tickets:', error)
-      alert('❌ Network error. Please try again.')
-    } finally {
-      setBookingLoading(false)
-    }
-  }
+    })
 
-  const handlePaymentSuccess = async () => {
-    // Payment successful, reset form and refresh event data
-    setShowPayment(false)
-    setPaymentIntentData(null)
-    setSelectedTickets({})
-
-    // Refresh event data to get updated availability
-    try {
-      const eventResponse = await fetch(`/api/events/${eventId}`)
-      if (eventResponse.ok) {
-        const updatedEvent = await eventResponse.json()
-        setEvent(updatedEvent)
-      }
-    } catch (error) {
-      console.error('Error refreshing event data:', error)
+    // Redirect to checkout page with ticket data
+    const checkoutData = {
+      eventId: event._id,
+      tickets: encodeURIComponent(JSON.stringify(ticketSelections))
     }
 
-    // Show success message
-    alert('🎉 Payment successful! Your tickets have been booked. Check your email for confirmation.')
-  }
-
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error)
-    alert(`❌ Payment failed: ${error}`)
-    // Keep payment form open for retry
+    const checkoutUrl = `/checkout?eventId=${checkoutData.eventId}&tickets=${checkoutData.tickets}`
+    router.push(checkoutUrl)
   }
 
   const updateTicketQuantity = (ticketName: string, quantity: number) => {
@@ -723,8 +664,8 @@ export default function EventDetailPage() {
                       >
                         {bookingLoading ? 'Processing...' : (
                           <>
-                            Book {getTotalTickets() > 0 ? `${getTotalTickets()} ` : ''}Tickets
-                            {getTotalTickets() > 0 && ` - ${formatPrice(getTotalPrice())}`}
+                            Continue to Checkout {getTotalTickets() > 0 ? `- ${getTotalTickets()} ` : ''}
+                            {getTotalTickets() > 0 && `Ticket(s) for ${formatPrice(getTotalPrice())}`}
                           </>
                         )}
                       </Button>
@@ -779,30 +720,6 @@ export default function EventDetailPage() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Stripe Payment Component */}
-            {showPayment && paymentIntentData && (
-              <div className="mt-6">
-                <div className="mb-4">
-                  <Button
-                    onClick={() => {
-                      setShowPayment(false)
-                      setPaymentIntentData(null)
-                    }}
-                    variant="outline"
-                    className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-                  >
-                    ← Back to Ticket Selection
-                  </Button>
-                </div>
-                <StripePayment
-                  clientSecret={paymentIntentData.clientSecret}
-                  orderSummary={paymentIntentData.orderSummary}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>

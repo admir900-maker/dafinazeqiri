@@ -1,9 +1,23 @@
 import mongoose from 'mongoose';
 
 const PaymentSettingsSchema = new mongoose.Schema({
+  // Payment Provider Selection
+  paymentProvider: { type: String, default: 'stripe', enum: ['stripe', 'raiffeisen', 'both'] },
+
+  // Stripe Settings
   stripePublishableKey: { type: String, required: false },
   stripeSecretKey: { type: String, required: false },
   stripeWebhookSecret: { type: String, required: false },
+
+  // Raiffeisen Bank Kosovo Settings
+  raiffeisenMerchantId: { type: String, required: false },
+  raiffeisenApiKey: { type: String, required: false },
+  raiffeisenSecretKey: { type: String, required: false },
+  raiffeisenEnvironment: { type: String, default: 'sandbox', enum: ['sandbox', 'production'] },
+  raiffeisenWebhookSecret: { type: String, required: false },
+  raiffeisenCallbackUrl: { type: String, required: false },
+  raiffeisenReturnUrl: { type: String, required: false },
+
   platformFee: { type: Number, default: 5 },
   currency: { type: String, default: 'eur', enum: ['eur', 'usd', 'EUR', 'USD'] },
   currencySymbol: { type: String, default: '€' },

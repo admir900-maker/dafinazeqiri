@@ -20,8 +20,15 @@ export async function GET(
 
     await connectToDatabase();
 
-    // Get the booking and verify ownership
-    const booking = await Booking.findOne({ _id: bookingId, userId }).populate('eventId');
+    // Find the booking - check if it's a MongoDB ObjectId or booking reference
+    let booking;
+    if (bookingId.length === 24 && /^[0-9a-fA-F]{24}$/.test(bookingId)) {
+      // It's a MongoDB ObjectId
+      booking = await Booking.findOne({ _id: bookingId, userId }).populate('eventId');
+    } else {
+      // It's a booking reference
+      booking = await Booking.findOne({ bookingReference: bookingId, userId }).populate('eventId');
+    }
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });

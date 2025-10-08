@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Event from '@/models/Event';
 import Ticket from '@/models/Ticket';
@@ -25,6 +25,13 @@ export async function POST(
     }
 
     console.log('👤 User ID:', userId);
+
+    // Get current user information for customer details
+    const user = await currentUser();
+    const customerEmail = user?.emailAddresses[0]?.emailAddress || '';
+    const customerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Customer';
+
+    console.log('👤 Customer info:', { customerName, customerEmail });
 
     const { ticketSelections, useWebhook = true } = await req.json();
     const resolvedParams = await params;
@@ -169,8 +176,11 @@ export async function POST(
           totalAmount: totalPrice,
           currency: currency.toUpperCase(),
           status: 'pending',
+          paymentStatus: 'pending',
           paymentMethod: 'stripe',
           bookingReference,
+          customerEmail,
+          customerName,
           emailSent: false
         });
 

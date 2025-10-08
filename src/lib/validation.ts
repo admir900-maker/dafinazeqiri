@@ -179,11 +179,11 @@ export const validateEvent = (event: any): ValidationResult => {
       if (!ticket.name || ticket.name.trim() === '') {
         errors.push({ field: `ticketTypes.${index}.name`, message: `Ticket type ${index + 1} name is required` });
       }
-      if (!ticket.price || ticket.price < 0) {
+      if (ticket.price === undefined || ticket.price === null || ticket.price < 0) {
         errors.push({ field: `ticketTypes.${index}.price`, message: `Ticket type ${index + 1} must have a valid price` });
       }
-      if (!ticket.quantity || ticket.quantity < 1) {
-        errors.push({ field: `ticketTypes.${index}.quantity`, message: `Ticket type ${index + 1} must have at least 1 ticket available` });
+      if (!ticket.capacity || ticket.capacity < 1) {
+        errors.push({ field: `ticketTypes.${index}.capacity`, message: `Ticket type ${index + 1} must have at least 1 ticket available` });
       }
     });
   }

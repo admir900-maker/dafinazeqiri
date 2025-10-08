@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import { emailService } from '@/lib/emailService';
+import { sendBookingConfirmationEmail } from '@/lib/emailService';
 
 export async function POST(
   req: NextRequest,
@@ -21,8 +21,15 @@ export async function POST(
 
     await connectToDatabase();
 
-    // Get the booking with populated event data
-    const booking = await Booking.findById(bookingId).populate('eventId');
+    // Find the booking - check if it's a MongoDB ObjectId or booking reference
+    let booking;
+    if (bookingId.length === 24 && /^[0-9a-fA-F]{24}$/.test(bookingId)) {
+      // It's a MongoDB ObjectId
+      booking = await Booking.findById(bookingId).populate('eventId');
+    } else {
+      // It's a booking reference
+      booking = await Booking.findOne({ bookingReference: bookingId }).populate('eventId');
+    }
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
@@ -48,18 +55,8 @@ export async function POST(
       return NextResponse.json({ error: 'User email not found' }, { status: 400 });
     }
 
-    // Generate and send email
-    const emailHtml = emailService.generateBookingConfirmationEmail(
-      booking,
-      booking.eventId,
-      booking.tickets
-    );
-
-    const emailSent = await emailService.sendEmail({
-      to: userEmail,
-      subject: `🎫 Booking Confirmed - ${booking.eventId.title}`,
-      html: emailHtml
-    });
+    // Send booking confirmation email
+    const emailSent = await sendBookingConfirmationEmail(booking);
 
     if (emailSent) {
       // Update booking to mark email as sent
@@ -69,7 +66,7 @@ export async function POST(
       return NextResponse.json({
         success: true,
         message: 'Confirmation email sent successfully',
-        emailAddress: userEmail,
+        emailAddress: booking.customerEmail,
         bookingReference: booking.bookingReference
       });
     } else {

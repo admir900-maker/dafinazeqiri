@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     if (!workingConfig) {
       return NextResponse.json({
         success: false,
-        error: 'All SMTP configuration attempts failed. Please check your Brevo SMTP credentials and ensure the sender email is verified in your Brevo account.'
+        error: 'All SMTP configuration attempts failed. Please check your SMTP credentials and ensure the sender email is properly configured.'
       }, { status: 500 });
     }
 

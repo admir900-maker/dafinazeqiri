@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import { emailService } from '@/lib/emailService';
+import { sendBookingConfirmationEmail } from '@/lib/emailService';
 import { logApiError, logEmailError } from '@/lib/errorLogger';
 
 export async function POST(req: NextRequest) {
@@ -54,47 +54,7 @@ export async function POST(req: NextRequest) {
     // Send confirmation email if not already sent
     try {
       if (!booking.emailSent) {
-
-        // Prepare email data
-        const eventInfo = {
-          title: booking.eventId.title,
-          description: booking.eventId.description,
-          date: new Date(booking.eventId.date),
-          location: booking.eventId.location,
-          venue: booking.eventId.venue,
-          address: booking.eventId.address,
-          city: booking.eventId.city,
-          country: booking.eventId.country,
-        };
-
-        const bookingInfo = {
-          bookingReference: booking.bookingReference,
-          totalAmount: booking.totalAmount,
-          currency: booking.currency.toUpperCase(),
-          customerName: 'Customer', // You may want to get this from Clerk
-          customerEmail: 'customer@example.com', // You may want to get this from Clerk
-        };
-
-        const ticketsInfo = booking.tickets.map((ticket: any) => ({
-          ticketName: ticket.ticketName,
-          price: ticket.price,
-          qrCode: ticket.qrCode,
-          ticketId: ticket.ticketId,
-        }));
-
-        // Generate email HTML
-        const emailHtml = emailService.generateBookingConfirmationEmail(
-          bookingInfo,
-          eventInfo,
-          ticketsInfo
-        );
-
-        // Send the email
-        const emailSent = await emailService.sendEmail({
-          to: bookingInfo.customerEmail,
-          subject: `Booking Confirmation - ${eventInfo.title} (#${bookingInfo.bookingReference})`,
-          html: emailHtml,
-        });
+        const emailSent = await sendBookingConfirmationEmail(booking);
 
         if (emailSent) {
           booking.emailSent = true;

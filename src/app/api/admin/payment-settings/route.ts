@@ -45,9 +45,18 @@ export async function GET() {
 
     // Return settings with masked secret key for security
     return NextResponse.json({
+      paymentProvider: settings.paymentProvider || 'stripe',
       stripePublishableKey: settings.stripePublishableKey || '',
       stripeSecretKey: settings.stripeSecretKey ? '••••••••••••••••' : '',
       stripeWebhookSecret: settings.stripeWebhookSecret ? '••••••••••••••••' : '',
+      // Raiffeisen Bank Kosovo Settings
+      raiffeisenMerchantId: settings.raiffeisenMerchantId || '',
+      raiffeisenApiKey: settings.raiffeisenApiKey ? '••••••••••••••••' : '',
+      raiffeisenSecretKey: settings.raiffeisenSecretKey ? '••••••••••••••••' : '',
+      raiffeisenEnvironment: settings.raiffeisenEnvironment || 'sandbox',
+      raiffeisenWebhookSecret: settings.raiffeisenWebhookSecret ? '••••••••••••••••' : '',
+      raiffeisenCallbackUrl: settings.raiffeisenCallbackUrl || '',
+      raiffeisenReturnUrl: settings.raiffeisenReturnUrl || '',
       platformFee: settings.platformFee || 5,
       currency: settings.currency || 'eur',
       currencySymbol: settings.currencySymbol || '€',
@@ -96,9 +105,18 @@ export async function POST(req: NextRequest) {
     }
 
     const {
+      paymentProvider,
       stripePublishableKey,
       stripeSecretKey,
       stripeWebhookSecret,
+      // Raiffeisen Bank Kosovo Settings
+      raiffeisenMerchantId,
+      raiffeisenApiKey,
+      raiffeisenSecretKey,
+      raiffeisenEnvironment,
+      raiffeisenWebhookSecret,
+      raiffeisenCallbackUrl,
+      raiffeisenReturnUrl,
       platformFee,
       currency,
       currencySymbol,
@@ -116,17 +134,25 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     console.log('💾 Saving payment settings:', {
+      paymentProvider,
       currency,
       currencySymbol,
       hasPublishableKey: !!stripePublishableKey,
       hasSecretKey: !!stripeSecretKey,
       hasWebhookSecret: !!stripeWebhookSecret,
+      hasRaiffeisenMerchantId: !!raiffeisenMerchantId,
+      hasRaiffeisenApiKey: !!raiffeisenApiKey,
+      hasRaiffeisenSecretKey: !!raiffeisenSecretKey,
       hasSmtpConfig: !!(smtpHost && smtpUser)
     });
 
-    // Basic validation - make Stripe keys optional if SMTP is configured
-    if (!stripePublishableKey || !stripeSecretKey) {
-      console.log('⚠️ Stripe keys not provided, saving other settings...');
+    // Basic validation based on payment provider
+    if (paymentProvider === 'stripe' && (!stripePublishableKey || !stripeSecretKey)) {
+      console.log('⚠️ Stripe selected but keys not provided');
+    }
+
+    if (paymentProvider === 'raiffeisen' && (!raiffeisenMerchantId || !raiffeisenApiKey || !raiffeisenSecretKey)) {
+      console.log('⚠️ Raiffeisen selected but credentials not provided');
     }
 
     await connectToDatabase();
@@ -138,11 +164,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Update settings
+    if (paymentProvider) settings.paymentProvider = paymentProvider;
     if (stripePublishableKey) settings.stripePublishableKey = stripePublishableKey;
     if (stripeSecretKey && stripeSecretKey !== '••••••••••••••••') settings.stripeSecretKey = stripeSecretKey;
     if (stripeWebhookSecret) {
       settings.stripeWebhookSecret = stripeWebhookSecret;
     }
+
+    // Update Raiffeisen Bank Kosovo settings
+    if (raiffeisenMerchantId !== undefined) settings.raiffeisenMerchantId = raiffeisenMerchantId;
+    if (raiffeisenApiKey && raiffeisenApiKey !== '••••••••••••••••') settings.raiffeisenApiKey = raiffeisenApiKey;
+    if (raiffeisenSecretKey && raiffeisenSecretKey !== '••••••••••••••••') settings.raiffeisenSecretKey = raiffeisenSecretKey;
+    if (raiffeisenEnvironment) settings.raiffeisenEnvironment = raiffeisenEnvironment;
+    if (raiffeisenWebhookSecret && raiffeisenWebhookSecret !== '••••••••••••••••') settings.raiffeisenWebhookSecret = raiffeisenWebhookSecret;
+    if (raiffeisenCallbackUrl !== undefined) settings.raiffeisenCallbackUrl = raiffeisenCallbackUrl;
+    if (raiffeisenReturnUrl !== undefined) settings.raiffeisenReturnUrl = raiffeisenReturnUrl;
+
     if (platformFee !== undefined) settings.platformFee = Number(platformFee);
     settings.currency = currency || 'eur';
     settings.currencySymbol = currencySymbol || '€';

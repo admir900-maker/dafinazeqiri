@@ -155,7 +155,7 @@ export default function AdminPage() {
   });
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
-    { name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }
+    { name: 'General Admission', price: 10, capacity: 100, availableTickets: 100, description: '', color: '#3B82F6' }
   ]);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
@@ -165,8 +165,17 @@ export default function AdminPage() {
 
   // Payment Configuration State
   const [paymentSettings, setPaymentSettings] = useState({
+    paymentProvider: 'stripe',
     stripePublicKey: '',
     stripeSecretKey: '',
+    // Raiffeisen Bank Kosovo Settings
+    raiffeisenMerchantId: '',
+    raiffeisenApiKey: '',
+    raiffeisenSecretKey: '',
+    raiffeisenEnvironment: 'sandbox',
+    raiffeisenWebhookSecret: '',
+    raiffeisenCallbackUrl: '',
+    raiffeisenReturnUrl: '',
     platformFee: 5,
     currency: 'eur',
     validationWindowDays: 1,
@@ -253,8 +262,17 @@ export default function AdminPage() {
         const data = await res.json();
         setPaymentSettings(prev => ({
           ...prev,
+          paymentProvider: data.paymentProvider || 'stripe',
           stripePublicKey: data.stripePublishableKey || '',
           stripeSecretKey: data.stripeSecretKey === '••••••••••••••••' ? prev.stripeSecretKey : data.stripeSecretKey || '',
+          // Raiffeisen Bank Kosovo Settings
+          raiffeisenMerchantId: data.raiffeisenMerchantId || '',
+          raiffeisenApiKey: data.raiffeisenApiKey === '••••••••••••••••' ? prev.raiffeisenApiKey : data.raiffeisenApiKey || '',
+          raiffeisenSecretKey: data.raiffeisenSecretKey === '••••••••••••••••' ? prev.raiffeisenSecretKey : data.raiffeisenSecretKey || '',
+          raiffeisenEnvironment: data.raiffeisenEnvironment || 'sandbox',
+          raiffeisenWebhookSecret: data.raiffeisenWebhookSecret === '••••••••••••••••' ? prev.raiffeisenWebhookSecret : data.raiffeisenWebhookSecret || '',
+          raiffeisenCallbackUrl: data.raiffeisenCallbackUrl || '',
+          raiffeisenReturnUrl: data.raiffeisenReturnUrl || '',
           platformFee: data.platformFee || 5,
           currency: data.currency || 'eur',
           validationWindowDays: data.validationWindowDays || 1,
@@ -373,9 +391,9 @@ export default function AdminPage() {
   const addTicketType = () => {
     setTicketTypes([...ticketTypes, {
       name: '',
-      price: 0,
-      capacity: 0,
-      availableTickets: 0,
+      price: 10,
+      capacity: 50,
+      availableTickets: 50,
       description: '',
       color: '#3B82F6'
     }]);
@@ -501,8 +519,18 @@ export default function AdminPage() {
     setIsSubmitting(true);
     setValidationErrors([]);
 
+    // Extract time from datetime-local if not provided separately
+    let eventTime = newEvent.time;
+    if (!eventTime && newEvent.date) {
+      const dateTime = new Date(newEvent.date);
+      if (!isNaN(dateTime.getTime())) {
+        eventTime = dateTime.toTimeString().slice(0, 5); // HH:MM format
+      }
+    }
+
     const eventData = {
       ...newEvent,
+      time: eventTime,
       artists: newEvent.artists.split(',').map(a => a.trim()).filter(a => a),
       tags: newEvent.tags.split(',').map(t => t.trim()).filter(t => t),
       ageLimit: newEvent.ageLimit ? parseInt(newEvent.ageLimit) : undefined,
@@ -556,7 +584,7 @@ export default function AdminPage() {
           maxCapacity: '',
         });
         setTicketTypes([
-          { name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }
+          { name: 'General Admission', price: 10, capacity: 100, availableTickets: 100, description: '', color: '#3B82F6' }
         ]);
         setValidationErrors([]);
         await fetchEvents();
@@ -663,8 +691,18 @@ export default function AdminPage() {
       return;
     }
 
+    // Extract time from datetime-local if not provided separately
+    let eventTime = newEvent.time;
+    if (!eventTime && newEvent.date) {
+      const dateTime = new Date(newEvent.date);
+      if (!isNaN(dateTime.getTime())) {
+        eventTime = dateTime.toTimeString().slice(0, 5); // HH:MM format
+      }
+    }
+
     const eventData = {
       ...newEvent,
+      time: eventTime,
       artists: newEvent.artists.split(',').map(a => a.trim()).filter(a => a),
       tags: newEvent.tags.split(',').map(t => t.trim()).filter(t => t),
       ageLimit: newEvent.ageLimit ? parseInt(newEvent.ageLimit) : undefined,
@@ -720,7 +758,7 @@ export default function AdminPage() {
           maxCapacity: '',
         });
         setTicketTypes([
-          { name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }
+          { name: 'General Admission', price: 10, capacity: 100, availableTickets: 100, description: '', color: '#3B82F6' }
         ]);
         setEditingEventId(null);
         setValidationErrors([]);
@@ -769,7 +807,7 @@ export default function AdminPage() {
       metaDescription: '',
       maxCapacity: '',
     });
-    setTicketTypes([{ name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }]);
+    setTicketTypes([{ name: 'General Admission', price: 10, capacity: 100, availableTickets: 100, description: '', color: '#3B82F6' }]);
   };
 
   // Payment Configuration Functions
@@ -800,8 +838,17 @@ export default function AdminPage() {
       setSettingsLoading(true);
       // Map the field names correctly for the API
       const settingsToSave = {
+        paymentProvider: paymentSettings.paymentProvider,
         stripePublishableKey: paymentSettings.stripePublicKey,
         stripeSecretKey: paymentSettings.stripeSecretKey,
+        // Raiffeisen Bank Kosovo Settings
+        raiffeisenMerchantId: paymentSettings.raiffeisenMerchantId,
+        raiffeisenApiKey: paymentSettings.raiffeisenApiKey,
+        raiffeisenSecretKey: paymentSettings.raiffeisenSecretKey,
+        raiffeisenEnvironment: paymentSettings.raiffeisenEnvironment,
+        raiffeisenWebhookSecret: paymentSettings.raiffeisenWebhookSecret,
+        raiffeisenCallbackUrl: paymentSettings.raiffeisenCallbackUrl,
+        raiffeisenReturnUrl: paymentSettings.raiffeisenReturnUrl,
         currency: paymentSettings.currency,
         currencySymbol: paymentSettings.currency === 'eur' ? '€' : '$',
         validationWindowDays: paymentSettings.validationWindowDays,
@@ -1915,7 +1962,7 @@ export default function AdminPage() {
                       <div className="space-y-2">
                         <label className="text-white font-medium">SMTP Host</label>
                         <Input
-                          placeholder="smtp.gmail.com, smtp-relay.brevo.com, etc."
+                          placeholder="smtp.gmail.com, smtp.office365.com, etc."
                           value={paymentSettings.smtpHost}
                           onChange={(e) => setPaymentSettings({ ...paymentSettings, smtpHost: e.target.value })}
                           className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
@@ -2063,7 +2110,7 @@ export default function AdminPage() {
 
                   <div className="text-sm text-white/70 space-y-1">
                     <p>📧 <strong>Info:</strong> Configure your SMTP server to send booking confirmations and notifications.</p>
-                    <p>🔧 <strong>Providers:</strong> Works with Gmail, Brevo, Mailgun, SendGrid, or any SMTP service.</p>
+                    <p>🔧 <strong>Providers:</strong> Works with Gmail, Office365, Mailgun, SendGrid, or any SMTP service.</p>
                     <p>⚙️ <strong>Note:</strong> Save settings first, then test your configuration.</p>
                   </div>
                 </CardContent>
@@ -2081,25 +2128,142 @@ export default function AdminPage() {
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Payment Provider Selection */}
                   <div className="space-y-2">
-                    <label className="text-white font-medium">Stripe Public Key</label>
-                    <Input
-                      placeholder="pk_test_..."
-                      value={paymentSettings.stripePublicKey}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, stripePublicKey: e.target.value })}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
-                    />
+                    <label className="text-white font-medium">Payment Provider</label>
+                    <select
+                      value={paymentSettings.paymentProvider}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, paymentProvider: e.target.value })}
+                      className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
+                    >
+                      <option value="stripe" className="bg-gray-800">Stripe</option>
+                      <option value="raiffeisen" className="bg-gray-800">Raiffeisen Bank Kosovo</option>
+                      <option value="both" className="bg-gray-800">Both (Stripe + Raiffeisen)</option>
+                    </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-white font-medium">Stripe Secret Key</label>
-                    <Input
-                      placeholder="sk_test_..."
-                      type="password"
-                      value={paymentSettings.stripeSecretKey}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, stripeSecretKey: e.target.value })}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
-                    />
-                  </div>
+
+                  {/* Stripe Configuration */}
+                  {(paymentSettings.paymentProvider === 'stripe' || paymentSettings.paymentProvider === 'both') && (
+                    <div className="bg-white/10 rounded-lg p-4 space-y-4">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        Stripe Configuration
+                      </h4>
+                      <div className="space-y-2">
+                        <label className="text-white font-medium">Stripe Public Key</label>
+                        <Input
+                          placeholder="pk_test_..."
+                          value={paymentSettings.stripePublicKey}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, stripePublicKey: e.target.value })}
+                          className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-white font-medium">Stripe Secret Key</label>
+                        <Input
+                          placeholder="sk_test_..."
+                          type="password"
+                          value={paymentSettings.stripeSecretKey}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, stripeSecretKey: e.target.value })}
+                          className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Raiffeisen Bank Kosovo Configuration */}
+                  {(paymentSettings.paymentProvider === 'raiffeisen' || paymentSettings.paymentProvider === 'both') && (
+                    <div className="bg-white/10 rounded-lg p-4 space-y-4">
+                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        🏦 Raiffeisen Bank Kosovo Configuration
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-white font-medium">Merchant ID</label>
+                          <Input
+                            placeholder="Your Raiffeisen Merchant ID"
+                            value={paymentSettings.raiffeisenMerchantId}
+                            onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenMerchantId: e.target.value })}
+                            className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-white font-medium">Environment</label>
+                          <select
+                            value={paymentSettings.raiffeisenEnvironment}
+                            onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenEnvironment: e.target.value })}
+                            className="w-full p-2 rounded bg-white/20 border border-white/30 text-white"
+                          >
+                            <option value="sandbox" className="bg-gray-800">Sandbox (Testing)</option>
+                            <option value="production" className="bg-gray-800">Production (Live)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-white font-medium">API Key</label>
+                        <Input
+                          placeholder="Your Raiffeisen API Key"
+                          type="password"
+                          value={paymentSettings.raiffeisenApiKey}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenApiKey: e.target.value })}
+                          className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-white font-medium">Secret Key</label>
+                        <Input
+                          placeholder="Your Raiffeisen Secret Key"
+                          type="password"
+                          value={paymentSettings.raiffeisenSecretKey}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenSecretKey: e.target.value })}
+                          className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-white font-medium">Webhook Secret</label>
+                        <Input
+                          placeholder="Your Raiffeisen Webhook Secret"
+                          type="password"
+                          value={paymentSettings.raiffeisenWebhookSecret}
+                          onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenWebhookSecret: e.target.value })}
+                          className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-white font-medium">Callback URL</label>
+                          <Input
+                            placeholder="https://yourdomain.com/api/raiffeisen/callback"
+                            value={paymentSettings.raiffeisenCallbackUrl}
+                            onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenCallbackUrl: e.target.value })}
+                            className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-white font-medium">Return URL</label>
+                          <Input
+                            placeholder="https://yourdomain.com/payment/success"
+                            value={paymentSettings.raiffeisenReturnUrl}
+                            onChange={(e) => setPaymentSettings({ ...paymentSettings, raiffeisenReturnUrl: e.target.value })}
+                            className="bg-white/20 border-white/30 text-white placeholder:text-white/60"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-3">
+                        <p className="text-blue-200 text-sm">
+                          <strong>🏦 Raiffeisen Bank Kosovo:</strong> Enter your merchant credentials provided by Raiffeisen Bank Kosovo.
+                          Use sandbox environment for testing and production for live transactions.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <label className="text-white font-medium">Platform Fee (%)</label>
                     <div className="relative">
@@ -2551,24 +2715,70 @@ export default function AdminPage() {
                   </div>
 
                   <h4 className="text-lg font-semibold text-white mb-3">Payment Configuration Status</h4>
+
+                  {/* Payment Provider Info */}
+                  <div className="bg-white/10 rounded-lg p-3 mb-4">
+                    <p className="text-white/80 text-sm">Active Payment Provider</p>
+                    <p className="text-white text-lg font-semibold">
+                      {paymentSettings.paymentProvider === 'stripe' && '💳 Stripe'}
+                      {paymentSettings.paymentProvider === 'raiffeisen' && '🏦 Raiffeisen Bank Kosovo'}
+                      {paymentSettings.paymentProvider === 'both' && '💳🏦 Stripe + Raiffeisen Bank Kosovo'}
+                    </p>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <p className="text-white/80 text-sm">Stripe Public Key</p>
-                      <p className={`text-sm font-semibold ${paymentSettings.stripePublicKey ? 'text-green-400' : 'text-red-400'}`}>
-                        {paymentSettings.stripePublicKey ? '✅ Configured' : '❌ Not Set'}
-                      </p>
-                      {paymentSettings.stripePublicKey && (
-                        <p className="text-white/60 text-xs font-mono">
-                          {paymentSettings.stripePublicKey.substring(0, 12)}...
-                        </p>
-                      )}
-                    </div>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <p className="text-white/80 text-sm">Stripe Secret Key</p>
-                      <p className={`text-sm font-semibold ${paymentSettings.stripeSecretKey ? 'text-green-400' : 'text-red-400'}`}>
-                        {paymentSettings.stripeSecretKey ? '✅ Configured' : '❌ Not Set'}
-                      </p>
-                    </div>
+                    {/* Stripe Configuration Status */}
+                    {(paymentSettings.paymentProvider === 'stripe' || paymentSettings.paymentProvider === 'both') && (
+                      <>
+                        <div className="bg-white/10 rounded-lg p-3">
+                          <p className="text-white/80 text-sm">Stripe Public Key</p>
+                          <p className={`text-sm font-semibold ${paymentSettings.stripePublicKey ? 'text-green-400' : 'text-red-400'}`}>
+                            {paymentSettings.stripePublicKey ? '✅ Configured' : '❌ Not Set'}
+                          </p>
+                          {paymentSettings.stripePublicKey && (
+                            <p className="text-white/60 text-xs font-mono">
+                              {paymentSettings.stripePublicKey.substring(0, 12)}...
+                            </p>
+                          )}
+                        </div>
+                        <div className="bg-white/10 rounded-lg p-3">
+                          <p className="text-white/80 text-sm">Stripe Secret Key</p>
+                          <p className={`text-sm font-semibold ${paymentSettings.stripeSecretKey ? 'text-green-400' : 'text-red-400'}`}>
+                            {paymentSettings.stripeSecretKey ? '✅ Configured' : '❌ Not Set'}
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Raiffeisen Bank Configuration Status */}
+                    {(paymentSettings.paymentProvider === 'raiffeisen' || paymentSettings.paymentProvider === 'both') && (
+                      <>
+                        <div className="bg-white/10 rounded-lg p-3">
+                          <p className="text-white/80 text-sm">Raiffeisen Merchant ID</p>
+                          <p className={`text-sm font-semibold ${paymentSettings.raiffeisenMerchantId ? 'text-green-400' : 'text-red-400'}`}>
+                            {paymentSettings.raiffeisenMerchantId ? '✅ Configured' : '❌ Not Set'}
+                          </p>
+                          {paymentSettings.raiffeisenMerchantId && (
+                            <p className="text-white/60 text-xs font-mono">
+                              {paymentSettings.raiffeisenMerchantId.substring(0, 8)}...
+                            </p>
+                          )}
+                        </div>
+                        <div className="bg-white/10 rounded-lg p-3">
+                          <p className="text-white/80 text-sm">Raiffeisen API Key</p>
+                          <p className={`text-sm font-semibold ${paymentSettings.raiffeisenApiKey ? 'text-green-400' : 'text-red-400'}`}>
+                            {paymentSettings.raiffeisenApiKey ? '✅ Configured' : '❌ Not Set'}
+                          </p>
+                        </div>
+                        <div className="bg-white/10 rounded-lg p-3">
+                          <p className="text-white/80 text-sm">Raiffeisen Environment</p>
+                          <p className="text-white text-sm font-semibold">
+                            {paymentSettings.raiffeisenEnvironment === 'production' ? '🔴 Production' : '🟡 Sandbox'}
+                          </p>
+                        </div>
+                      </>
+                    )}
+
                     <div className="bg-white/10 rounded-lg p-3">
                       <p className="text-white/80 text-sm">Platform Fee</p>
                       <p className="text-white text-lg font-semibold">{paymentSettings.platformFee}%</p>

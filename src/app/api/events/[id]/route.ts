@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Event from '@/models/Event';
+import Booking from '@/models/Booking';
 import { auth } from '@clerk/nextjs/server';
 import { validateAndSanitize, validateEvent } from '@/lib/validation';
 import { logError } from '@/lib/errorLogger';
@@ -16,6 +17,42 @@ export async function GET(
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    // Calculate actual available tickets based on bookings
+    if (event.ticketTypes && event.ticketTypes.length > 0) {
+      // Get all confirmed bookings for this event
+      const confirmedBookings = await Booking.find({
+        eventId: id,
+        status: 'confirmed',
+        paymentStatus: 'paid'
+      });
+
+      // Count tickets by type from confirmed bookings
+      const bookedTicketCounts: { [key: string]: number } = {};
+      confirmedBookings.forEach(booking => {
+        booking.tickets.forEach((ticket: any) => {
+          const ticketName = ticket.ticketName;
+          bookedTicketCounts[ticketName] = (bookedTicketCounts[ticketName] || 0) + 1;
+        });
+      });
+
+      // Update available tickets for each ticket type
+      event.ticketTypes = event.ticketTypes.map((ticketType: any) => {
+        const bookedCount = bookedTicketCounts[ticketType.name] || 0;
+        const availableTickets = Math.max(0, ticketType.capacity - bookedCount);
+
+        console.log(`📊 Ticket availability for ${ticketType.name}:`, {
+          capacity: ticketType.capacity,
+          booked: bookedCount,
+          available: availableTickets
+        });
+
+        return {
+          ...ticketType._doc || ticketType,
+          availableTickets: availableTickets
+        };
+      });
     }
 
     return NextResponse.json(event);

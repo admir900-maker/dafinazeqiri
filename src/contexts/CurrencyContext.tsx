@@ -37,7 +37,6 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         const selectedCurrency = data.currency || 'eur';
         const selectedSymbol = data.currencySymbol || '€';
-        console.log('💰 Loaded currency from database:', selectedCurrency, selectedSymbol);
         setCurrencyState(selectedCurrency.toUpperCase());
         setCurrencySymbol(selectedSymbol);
       }

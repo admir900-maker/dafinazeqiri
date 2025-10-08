@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase } from './mongodb';
 import PaymentSettings from '@/models/PaymentSettings';
+import { logError, logEmailError, logDatabaseError } from './errorLogger';
 
 interface EmailOptions {
   to: string;
@@ -43,7 +44,7 @@ async function loadSMTPSettings(): Promise<SMTPConfig | null> {
       senderName: settings.senderName || 'BiletAra'
     };
   } catch (error) {
-    console.error('Error loading SMTP settings:', error);
+    logDatabaseError('loadSMTPSettings', 'PaymentSettings', error);
     return null;
   }
 }
@@ -90,10 +91,9 @@ class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent successfully:', result.messageId);
       return true;
     } catch (error) {
-      console.error('Error sending email:', error);
+      logEmailError('sendEmail', options.to, error, 'smtp-send');
       return false;
     }
   }
@@ -267,10 +267,8 @@ async function createEmailServiceWithDBSettings(): Promise<EmailService> {
   const smtpSettings = await loadSMTPSettings();
 
   if (smtpSettings) {
-    console.log('📧 Using database SMTP settings for email service');
     return new EmailService(smtpSettings);
   } else {
-    console.log('📧 Using environment variable SMTP settings for email service');
     return new EmailService();
   }
 }
@@ -279,7 +277,7 @@ async function createEmailServiceWithDBSettings(): Promise<EmailService> {
 export async function sendEmailConfirmation(booking: any): Promise<boolean> {
   try {
     if (!booking.eventId) {
-      console.error('❌ Booking missing event information');
+      logError('Booking missing event information', null, { action: 'email-validation' });
       return false;
     }
 
@@ -339,15 +337,13 @@ export async function sendEmailConfirmation(booking: any): Promise<boolean> {
       html: emailHtml,
     }, senderConfig);
 
-    if (success) {
-      console.log('✅ Confirmation email sent successfully');
-    } else {
-      console.error('❌ Failed to send confirmation email');
+    if (!success) {
+      logEmailError('sendBookingConfirmation', customerEmail, null, 'confirmation');
     }
 
     return success;
   } catch (error) {
-    console.error('❌ Error in sendEmailConfirmation:', error);
+    logEmailError('sendEmailConfirmation', 'unknown', error, 'confirmation-process');
     return false;
   }
 }

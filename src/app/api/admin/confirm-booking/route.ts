@@ -3,10 +3,14 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { emailService } from '@/lib/emailService';
+import { logApiError, logEmailError } from '@/lib/errorLogger';
 
 export async function POST(req: NextRequest) {
+  let userId: string | null | undefined;
+
   try {
-    const { userId } = await auth();
+    const authResult = await auth();
+    userId = authResult.userId;
     const user = await currentUser();
 
     if (!userId || !user) {
@@ -27,7 +31,6 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
 
-    console.log('🔍 Looking for booking:', bookingId);
     const booking = await Booking.findById(bookingId).populate('eventId');
 
     if (!booking) {
@@ -45,16 +48,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    console.log('📝 Manually confirming booking...');
     booking.status = 'confirmed';
     await booking.save();
-
-    console.log('✅ Booking manually confirmed:', bookingId);
 
     // Send confirmation email if not already sent
     try {
       if (!booking.emailSent) {
-        console.log('📧 Sending confirmation email...');
 
         // Prepare email data
         const eventInfo = {
@@ -100,13 +99,10 @@ export async function POST(req: NextRequest) {
         if (emailSent) {
           booking.emailSent = true;
           await booking.save();
-          console.log('✅ Confirmation email sent');
-        } else {
-          console.log('⚠️ Email failed to send but continuing...');
         }
       }
     } catch (emailError) {
-      console.error('❌ Error sending confirmation email:', emailError);
+      logEmailError('confirmBooking', booking.customerEmail || 'unknown', emailError, 'manual-confirmation');
       // Don't fail the request if email fails
     }
 
@@ -124,7 +120,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Error confirming booking:', error);
+    logApiError('Manual booking confirmation failed', error, '/api/admin/confirm-booking', userId || undefined, 'confirm-booking');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

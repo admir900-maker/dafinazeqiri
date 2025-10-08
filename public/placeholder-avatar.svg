@@ -1,0 +1,5 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" rx="100" fill="#F3F4F6"/>
+  <circle cx="100" cy="75" r="25" fill="#D1D5DB"/>
+  <path d="M100 110C80 110 60 125 60 145V165C60 175 68 180 78 180H122C132 180 140 175 140 165V145C140 125 120 110 100 110Z" fill="#D1D5DB"/>
+</svg>

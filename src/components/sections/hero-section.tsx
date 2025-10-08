@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Search, MapPin, Calendar, ArrowRight, Sparkles, Music, Users, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ const heroSlides = [
 ]
 
 export function HeroSection() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [location, setLocation] = useState('')
   const [particles, setParticles] = useState<Array<{
@@ -54,8 +56,17 @@ export function HeroSection() {
   }, [])
 
   const handleSearch = () => {
-    // Handle search logic
-    console.log('Searching for:', searchQuery, 'in', location)
+    const params = new URLSearchParams()
+    if (searchQuery.trim()) {
+      params.set('q', searchQuery.trim())
+    }
+    if (location.trim()) {
+      params.set('location', location.trim())
+    }
+
+    const queryString = params.toString()
+    const url = queryString ? `/events?${queryString}` : '/events'
+    router.push(url)
   }
 
   const stats = [

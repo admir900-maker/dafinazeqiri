@@ -1,4 +1,5 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { logError } from './errorLogger';
 
 export async function isUserAdmin(): Promise<boolean> {
   const { userId } = await auth();
@@ -22,8 +23,8 @@ export async function makeUserAdmin(userId: string) {
       }
     });
     return true;
-  } catch (error) {
-    console.error('Error making user admin:', error);
+  } catch (error: any) {
+    logError('Error making user admin', error, { action: 'make-user-admin', userId });
     return false;
   }
 }
@@ -37,8 +38,8 @@ export async function removeAdminRole(userId: string) {
       }
     });
     return true;
-  } catch (error) {
-    console.error('Error removing admin role:', error);
+  } catch (error: any) {
+    logError('Error removing admin role', error, { action: 'remove-admin-role', userId });
     return false;
   }
 }

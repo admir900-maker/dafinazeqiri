@@ -1,11 +1,13 @@
 'use client'
 
-import Image from 'next/image'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Calendar, MapPin, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { OptimizedImage } from '@/components/ui/optimized-image'
+import { ScreenReaderOnly } from '@/components/ui/accessibility'
 import { useCurrency } from '@/contexts/CurrencyContext'
 
 interface TicketType {
@@ -68,6 +70,16 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
     return Math.max(...event.ticketTypes.map(ticket => ticket.price))
   }
 
+  const getImageSrc = () => {
+    return event.posterImage || event.bannerImage || '/placeholder-event.svg'
+  }
+
+  const generateImageAlt = () => {
+    const artists = event.artists.length > 0 ? ` featuring ${event.artists.slice(0, 2).join(' and ')}` : ''
+    const date = formatDate(event.date)
+    return `${event.title}${artists} at ${event.venue}, ${event.location} on ${date}`
+  }
+
   const minPrice = getMinPrice()
   const maxPrice = getMaxPrice()
 
@@ -77,14 +89,16 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
 
   return (
     <Link href={`/events/${event._id}`} className="block h-full">
-      <Card className={cardClasses}>
+      <Card className={cardClasses} role="article" aria-labelledby={`event-title-${event._id}`}>
         <div className="relative overflow-hidden">
           {/* Event Image */}
           <div className={`relative ${variant === 'featured' ? 'h-64' : 'h-48'}`}>
-            <Image
-              src={event.posterImage || event.bannerImage || '/placeholder-event.jpg'}
-              alt={event.title}
-              fill
+            <OptimizedImage
+              src={getImageSrc()}
+              alt={generateImageAlt()}
+              fallbackSrc="/placeholder-event.svg"
+              placeholder="blur"
+              priority={variant === 'featured'}
               className="object-cover transition-transform duration-300 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -109,14 +123,17 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
 
           <CardContent className="p-4">
             {/* Title */}
-            <h3 className={`font-bold text-white mb-2 group-hover:text-white transition-colors drop-shadow-md ${variant === 'featured' ? 'text-xl' : 'text-lg'
-              }`}>
+            <h3
+              id={`event-title-${event._id}`}
+              className={`font-bold text-white mb-2 group-hover:text-white transition-colors drop-shadow-md ${variant === 'featured' ? 'text-xl' : 'text-lg'}`}
+            >
               {event.title}
             </h3>
 
             {/* Artists */}
             {event.artists && event.artists.length > 0 && (
               <p className="text-sm text-white/80 mb-3 drop-shadow-sm">
+                <ScreenReaderOnly>Featuring artists: </ScreenReaderOnly>
                 {event.artists.join(', ')}
               </p>
             )}
@@ -124,36 +141,58 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
             {/* Event Details */}
             <div className="space-y-2 mb-4">
               <div className="flex items-center text-sm text-white/90 drop-shadow-sm">
-                <Calendar className="w-4 h-4 mr-2 text-white" />
-                {formatDate(event.date)}
+                <Calendar className="w-4 h-4 mr-2 text-white" aria-hidden="true" />
+                <span>
+                  <ScreenReaderOnly>Date: </ScreenReaderOnly>
+                  {formatDate(event.date)}
+                </span>
               </div>
 
               <div className="flex items-center text-sm text-white/90 drop-shadow-sm">
-                <Clock className="w-4 h-4 mr-2 text-white" />
-                {formatTime(event.time)}
+                <Clock className="w-4 h-4 mr-2 text-white" aria-hidden="true" />
+                <span>
+                  <ScreenReaderOnly>Time: </ScreenReaderOnly>
+                  {formatTime(event.time)}
+                </span>
               </div>
 
               <div className="flex items-center text-sm text-white/90 drop-shadow-sm">
-                <MapPin className="w-4 h-4 mr-2 text-white" />
-                <span className="truncate">{event.venue}, {event.location}</span>
+                <MapPin className="w-4 h-4 mr-2 text-white" aria-hidden="true" />
+                <span className="truncate">
+                  <ScreenReaderOnly>Location: </ScreenReaderOnly>
+                  {event.venue}, {event.location}
+                </span>
               </div>
 
               <div className="flex items-center text-sm text-white/90 drop-shadow-sm">
-                <Users className="w-4 h-4 mr-2 text-white" />
-                Max {event.maxCapacity} attendees
+                <Users className="w-4 h-4 mr-2 text-white" aria-hidden="true" />
+                <span>
+                  <ScreenReaderOnly>Capacity: </ScreenReaderOnly>
+                  Max {event.maxCapacity} attendees
+                </span>
               </div>
             </div>
 
             {/* Tags */}
             {event.tags && event.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4">
+              <div className="flex flex-wrap gap-1 mb-4" role="list" aria-label="Event tags">
                 {event.tags.slice(0, 3).map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="text-xs bg-white/20 text-white border-white/30"
+                    role="listitem"
+                  >
                     {tag}
                   </Badge>
                 ))}
                 {event.tags.length > 3 && (
-                  <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-white/20 text-white border-white/30"
+                    role="listitem"
+                    aria-label={`${event.tags.length - 3} more tags`}
+                  >
                     +{event.tags.length - 3}
                   </Badge>
                 )}
@@ -170,10 +209,12 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
             {/* Price */}
             <div>
               <div className="text-2xl font-bold text-white drop-shadow-md">
-                {formatPrice(minPrice)}
-                {maxPrice > minPrice && (
-                  <span className="text-sm font-normal text-white/80"> - {formatPrice(maxPrice)}</span>
-                )}
+                <span aria-label={`Price starting from ${formatPrice(minPrice)}`}>
+                  {formatPrice(minPrice)}
+                  {maxPrice > minPrice && (
+                    <span className="text-sm font-normal text-white/80"> - {formatPrice(maxPrice)}</span>
+                  )}
+                </span>
               </div>
               <div className="text-xs text-white/70 drop-shadow-sm">
                 {event.ticketTypes?.length > 1 ? 'Multiple types available' : 'Per ticket'}
@@ -181,7 +222,10 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
             </div>
 
             {/* Action Button */}
-            <Button className="bg-white/30 backdrop-blur-sm hover:bg-white/40 text-white border border-white/40 shadow-lg pointer-events-none">
+            <Button
+              className="bg-white/30 backdrop-blur-sm hover:bg-white/40 text-white border border-white/40 shadow-lg pointer-events-none"
+              aria-label={`${variant === 'featured' ? 'Get tickets' : 'View details'} for ${event.title}`}
+            >
               {variant === 'featured' ? 'Get Tickets' : 'View Details'}
             </Button>
           </CardFooter>

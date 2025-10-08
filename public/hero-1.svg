@@ -1,0 +1,17 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="heroGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333EA;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#heroGradient1)"/>
+  <circle cx="1440" cy="270" r="120" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="480" cy="810" r="80" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="240" cy="540" r="60" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="1680" cy="810" r="100" fill="rgba(255,255,255,0.1)"/>
+  <path d="M960 440L980 480L1020 470L1040 510L1060 470L1040 430L1000 440L980 400L960 440Z" fill="rgba(255,255,255,0.2)"/>
+  <path d="M1200 600L1210 620L1230 615L1240 635L1250 615L1240 595L1220 600L1210 580L1200 600Z" fill="rgba(255,255,255,0.15)"/>
+  <path d="M720 700L730 720L750 715L760 735L770 715L760 695L740 700L730 680L720 700Z" fill="rgba(255,255,255,0.15)"/>
+</svg>

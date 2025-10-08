@@ -27,7 +27,7 @@ export function Header({ cartCount = 0 }: HeaderProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+      router.push(`/events?q=${encodeURIComponent(searchQuery)}`)
     }
   }
 

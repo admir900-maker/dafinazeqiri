@@ -54,27 +54,29 @@ export async function GET(
       userId: userId
     };
 
-    // Generate both Apple and Google pass data
-    const applePassData = WalletPassGenerator.generateApplePass(ticketData);
-    const googlePayData = WalletPassGenerator.generateGooglePayObject(ticketData);
+    // Generate Apple Wallet pass data
+    const passJson = WalletPassGenerator.generateApplePass(ticketData);
 
+    // In a production environment, you would need to:
+    // 1. Sign the pass with Apple certificates
+    // 2. Create a proper PKPass file with manifest and signature
+    // 3. Return the binary .pkpass file
+
+    // For now, return the JSON structure with instructions
     return NextResponse.json({
       success: true,
-      message: 'Wallet pass data generated successfully',
-      passData: {
-        apple: applePassData,
-        google: googlePayData
-      },
-      downloadUrls: {
-        apple: `/api/bookings/${bookingId}/tickets/${ticketId}/wallet/apple`,
-        google: `/api/bookings/${bookingId}/tickets/${ticketId}/wallet/google`
-      },
-      setupInstructions: WalletPassGenerator.getSetupInstructions(),
-      currentStatus: 'Pass structures are ready - full integration requires platform-specific setup'
+      message: 'Apple Wallet pass data generated',
+      passData: passJson,
+      instructions: WalletPassGenerator.getSetupInstructions().apple,
+      currentStatus: 'Pass JSON structure is ready for signing and packaging'
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
   } catch (error) {
-    console.error('Error generating wallet pass:', error);
+    console.error('Error generating Apple Wallet pass:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

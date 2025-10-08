@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { SkipLink } from "@/components/ui/accessibility";
 import { ClerkProvider } from '@clerk/nextjs';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
@@ -33,8 +34,12 @@ export default function RootLayout({
       <CurrencyProvider>
         <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
           <body className={`${inter.variable} font-sans antialiased min-h-screen flex flex-col main-background`}>
+            {/* Skip links for accessibility */}
+            <SkipLink href="#main-content">Skip to main content</SkipLink>
+            <SkipLink href="#navigation">Skip to navigation</SkipLink>
+
             <Header />
-            <main className="flex-1 pt-16 main-background">
+            <main id="main-content" className="flex-1 pt-16 main-background" role="main">
               <div className="main-content">
                 {children}
               </div>

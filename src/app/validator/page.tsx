@@ -172,17 +172,12 @@ export default function ValidatorPage() {
     if (!file) return;
 
     try {
-      console.log('📁 File selected:', file.name, file.type);
-
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageData = e.target?.result as string;
-        console.log('🖼️ Image data loaded, size:', imageData.length);
 
         const img = new Image();
         img.onload = async () => {
-          console.log('🖼️ Image loaded, dimensions:', img.width, 'x', img.height);
-
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -201,17 +196,15 @@ export default function ValidatorPage() {
           const tryDecode = async (imageSource: HTMLImageElement, description: string): Promise<boolean> => {
             try {
               attempts++;
-              console.log(`🔍 Attempt ${attempts}/${maxAttempts}: ${description}`);
               const result = await codeReader.decodeFromImage(imageSource);
 
               if (result) {
                 const qrText = result.getText();
-                console.log('✅ QR decoded successfully:', qrText);
                 await validateTicket(qrText);
                 return true;
               }
             } catch (error) {
-              console.log(`❌ ${description} failed:`, error);
+              // Silently handle decode failures
             }
             return false;
           };
@@ -264,14 +257,12 @@ Please try:
                     scaledImg.src = scaledCanvas.toDataURL();
                   }
                 } catch (scaleError) {
-                  console.error('❌ Scaling failed:', scaleError);
                   alert('Could not read QR code from image. Please try entering the code manually.');
                 }
               };
               enhancedImg.src = enhancedCanvas.toDataURL();
             }
           } catch (enhanceError) {
-            console.error('❌ Enhancement failed:', enhanceError);
             alert('Could not read QR code from image. Please try entering the code manually.');
           }
         };
@@ -289,7 +280,7 @@ Please try:
 
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('❌ File upload error:', error);
+      console.error('File upload error:', error);
       alert(`Error reading file: ${error}`);
     }
 

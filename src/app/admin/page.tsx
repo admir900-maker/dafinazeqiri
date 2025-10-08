@@ -12,6 +12,8 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { BackgroundWrapper } from '@/components/ui/background-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { validateEvent, ValidationError, formatValidationErrors } from '@/lib/validation';
+import { logError } from '@/lib/errorLogger';
 import {
   BarChart3,
   Users,
@@ -157,6 +159,10 @@ export default function AdminPage() {
   ]);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
+  // Form validation state
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Payment Configuration State
   const [paymentSettings, setPaymentSettings] = useState({
     stripePublicKey: '',
@@ -242,12 +248,9 @@ export default function AdminPage() {
   const fetchPaymentSettings = useCallback(async () => {
     try {
       setSettingsLoading(true);
-      console.log('🔄 Fetching payment & SMTP settings from database...');
       const res = await fetch('/api/admin/payment-settings');
-      console.log('📡 API response status:', res.status, res.statusText);
       if (res.ok) {
         const data = await res.json();
-        console.log('📥 Received payment settings:', data);
         setPaymentSettings(prev => ({
           ...prev,
           stripePublicKey: data.stripePublishableKey || '',
@@ -266,14 +269,9 @@ export default function AdminPage() {
           senderEmail: data.senderEmail || '',
           senderName: data.senderName || 'BiletAra'
         }));
-        console.log('✅ Settings loaded successfully');
-      } else {
-        const errorText = await res.text();
-        console.log('❌ API request failed:', res.status, errorText);
-        console.log('No payment settings found, using defaults');
       }
     } catch (error) {
-      console.error('❌ Error fetching payment settings:', error);
+      console.error('Error fetching payment settings:', error);
     } finally {
       setSettingsLoading(false);
     }
@@ -281,12 +279,8 @@ export default function AdminPage() {
 
   // Load payment settings after authentication is confirmed
   useEffect(() => {
-    console.log('🔍 useEffect triggered - isLoaded:', isLoaded, 'isSignedIn:', isSignedIn);
     if (isLoaded && isSignedIn) {
-      console.log('✅ Authentication confirmed, fetching payment settings...');
       fetchPaymentSettings();
-    } else {
-      console.log('⏳ Waiting for authentication...');
     }
   }, [isLoaded, isSignedIn, fetchPaymentSettings]);
 
@@ -313,7 +307,6 @@ export default function AdminPage() {
       const res = await fetch('/api/debug/auth');
       const data = await res.json();
       setDebugInfo(data);
-      console.log('Auth debug info:', data);
     } catch (error) {
       console.error('Failed to check auth:', error);
     }
@@ -321,10 +314,8 @@ export default function AdminPage() {
 
   const testAPI = async () => {
     try {
-      console.log('Testing basic API...');
       const res = await fetch('/api/test');
       const data = await res.json();
-      console.log('API test result:', data);
       alert(`API Test: ${data.message}`);
     } catch (error) {
       console.error('API test failed:', error);
@@ -334,12 +325,9 @@ export default function AdminPage() {
 
   const fetchEvents = async () => {
     try {
-      console.log('Fetching events...');
       const res = await fetch('/api/events');
-      console.log('Events response status:', res.status);
       if (res.ok) {
         const data = await res.json();
-        console.log('Events data:', data);
         setEvents(Array.isArray(data) ? data : []);
       } else {
         const errorData = await res.json();
@@ -356,14 +344,10 @@ export default function AdminPage() {
 
   const fetchTickets = async () => {
     try {
-      console.log('Fetching tickets...');
       const res = await fetch('/api/tickets');
-      console.log('Tickets response status:', res.status);
-      console.log('Tickets response headers:', res.headers.get('content-type'));
 
       if (res.ok) {
         const data = await res.json();
-        console.log('Tickets data:', data);
         setTickets(Array.isArray(data) ? data : []);
       } else {
         let errorData;
@@ -514,6 +498,8 @@ export default function AdminPage() {
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setValidationErrors([]);
 
     const eventData = {
       ...newEvent,
@@ -528,39 +514,68 @@ export default function AdminPage() {
       })),
     };
 
-    const res = await fetch('/api/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData),
-    });
+    // Validate the event data
+    const validation = validateEvent(eventData);
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setIsSubmitting(false);
+      return;
+    }
 
-    if (res.ok) {
-      setNewEvent({
-        title: '',
-        description: '',
-        date: '',
-        time: '',
-        endDate: '',
-        location: '',
-        venue: '',
-        address: '',
-        city: '',
-        country: '',
-        posterImage: '',
-        bannerImage: '',
-        youtubeTrailer: '',
-        category: 'concert',
-        ageLimit: '',
-        duration: '',
-        language: '',
-        artists: '',
-        organizer: '',
-        tags: '',
-        metaDescription: '',
-        maxCapacity: '',
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
       });
-      setTicketTypes([{ name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }]);
-      fetchEvents();
+
+      if (res.ok) {
+        // Reset form
+        setNewEvent({
+          title: '',
+          description: '',
+          date: '',
+          time: '',
+          endDate: '',
+          location: '',
+          venue: '',
+          address: '',
+          city: '',
+          country: '',
+          posterImage: '',
+          bannerImage: '',
+          youtubeTrailer: '',
+          category: 'concert',
+          ageLimit: '',
+          duration: '',
+          language: '',
+          artists: '',
+          organizer: '',
+          tags: '',
+          metaDescription: '',
+          maxCapacity: '',
+        });
+        setTicketTypes([
+          { name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }
+        ]);
+        setValidationErrors([]);
+        await fetchEvents();
+        alert('Event created successfully!');
+      } else {
+        const errorData = await res.json();
+        setValidationErrors([{
+          field: 'submit',
+          message: errorData.error || 'Failed to create event'
+        }]);
+      }
+    } catch (error: any) {
+      logError('Event creation failed', error, { action: 'create-event' });
+      setValidationErrors([{
+        field: 'submit',
+        message: 'Network error occurred while creating event'
+      }]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -636,9 +651,15 @@ export default function AdminPage() {
 
   const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setValidationErrors([]);
 
     if (!editingEventId) {
-      alert('No event selected for editing');
+      setValidationErrors([{
+        field: 'submit',
+        message: 'No event selected for editing'
+      }]);
+      setIsSubmitting(false);
       return;
     }
 
@@ -655,8 +676,13 @@ export default function AdminPage() {
       })),
     };
 
-    console.log('Updating event with ID:', editingEventId);
-    console.log('Event data being sent:', eventData);
+    // Validate the event data
+    const validation = validateEvent(eventData);
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const res = await fetch(`/api/events/${editingEventId}`, {
@@ -665,9 +691,7 @@ export default function AdminPage() {
         body: JSON.stringify(eventData),
       });
 
-      console.log('Update response status:', res.status);
       const responseData = await res.json();
-      console.log('Update response data:', responseData);
 
       if (res.ok) {
         // Reset form and editing state
@@ -695,16 +719,27 @@ export default function AdminPage() {
           metaDescription: '',
           maxCapacity: '',
         });
-        setTicketTypes([{ name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }]);
+        setTicketTypes([
+          { name: 'General Admission', price: 0, capacity: 0, availableTickets: 0, description: '', color: '#3B82F6' }
+        ]);
         setEditingEventId(null);
-        await fetchEvents(); // Ensure we wait for the refresh
-        alert('Event updated successfully');
+        setValidationErrors([]);
+        await fetchEvents();
+        alert('Event updated successfully!');
       } else {
-        alert(`Failed to update event: ${responseData.error || 'Unknown error'}`);
+        setValidationErrors([{
+          field: 'submit',
+          message: responseData.error || 'Failed to update event'
+        }]);
       }
-    } catch (error) {
-      console.error('Error updating event:', error);
-      alert('Error updating event');
+    } catch (error: any) {
+      logError('Event update failed', error, { action: 'update-event', eventId: editingEventId });
+      setValidationErrors([{
+        field: 'submit',
+        message: 'Network error occurred while updating event'
+      }]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1082,6 +1117,20 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={editingEventId ? handleUpdateEvent : handleCreateEvent} className="space-y-6">
+                    {/* Validation Errors Display */}
+                    {validationErrors.length > 0 && (
+                      <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 backdrop-blur-sm">
+                        <div className="flex items-start gap-2">
+                          <div className="text-red-400 text-sm">
+                            <div className="font-medium mb-2">Please fix the following errors:</div>
+                            {validationErrors.map((error, index) => (
+                              <div key={index} className="mb-1">• {error.message}</div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Basic Information */}
                     <div className="space-y-4">
                       <h4 className="font-semibold text-lg text-white">Basic Information</h4>
@@ -1335,8 +1384,19 @@ export default function AdminPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
-                        {editingEventId ? 'Update Event' : 'Create Event'}
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            {editingEventId ? 'Updating...' : 'Creating...'}
+                          </div>
+                        ) : (
+                          editingEventId ? 'Update Event' : 'Create Event'
+                        )}
                       </Button>
                       {editingEventId && (
                         <Button type="button" variant="outline" onClick={cancelEdit} className="bg-white/20 border-white/30 text-white hover:bg-white/30">

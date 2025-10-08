@@ -132,12 +132,27 @@ export default function BookingsPage() {
 
   const addToWallet = async (bookingId: string, ticketId: string, walletType: 'apple' | 'google') => {
     try {
-      const response = await fetch(`/api/bookings/${bookingId}/tickets/${ticketId}/wallet`);
+      const response = await fetch(`/api/bookings/${bookingId}/tickets/${ticketId}/wallet/${walletType}`);
       const data = await response.json();
 
       if (data.success) {
-        // For now, show instructions since we need certificates for actual wallet integration
-        alert(`To add to ${walletType === 'apple' ? 'Apple Wallet' : 'Google Pay'}:\n\n1. Save the QR code image\n2. Open your ${walletType === 'apple' ? 'Apple Wallet' : 'Google Pay'} app\n3. Add a pass/ticket\n4. Import the saved QR code\n\nFull wallet integration coming soon!`);
+        // Show informative dialog with setup instructions
+        const platformName = walletType === 'apple' ? 'Apple Wallet' : 'Google Pay';
+        const instructions = data.instructions;
+
+        let message = `${platformName} Integration Status:\n\n`;
+        message += `Current Status: ${data.currentStatus}\n\n`;
+        message += `Setup Requirements:\n`;
+        instructions.requirements.forEach((req: string, index: number) => {
+          message += `${index + 1}. ${req}\n`;
+        });
+        message += `\nRequired Environment Variables:\n`;
+        instructions.envVars.forEach((envVar: string) => {
+          message += `• ${envVar}\n`;
+        });
+        message += `\nThe wallet pass structure is ready and can be integrated once the platform-specific setup is completed.`;
+
+        alert(message);
       } else {
         alert('Failed to generate wallet pass. Please try again.');
       }

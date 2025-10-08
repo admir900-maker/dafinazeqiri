@@ -54,27 +54,30 @@ export async function GET(
       userId: userId
     };
 
-    // Generate both Apple and Google pass data
-    const applePassData = WalletPassGenerator.generateApplePass(ticketData);
-    const googlePayData = WalletPassGenerator.generateGooglePayObject(ticketData);
+    // Generate Google Pay pass object
+    const googlePayObject = WalletPassGenerator.generateGooglePayObject(ticketData);
 
+    // In a production environment, you would need to:
+    // 1. Sign the JWT with your Google Service Account private key
+    // 2. Create the proper Google Pay Save to Wallet link
+    // 3. Handle the Google Wallet API integration
+
+    // For now, return the object structure with instructions
     return NextResponse.json({
       success: true,
-      message: 'Wallet pass data generated successfully',
-      passData: {
-        apple: applePassData,
-        google: googlePayData
-      },
-      downloadUrls: {
-        apple: `/api/bookings/${bookingId}/tickets/${ticketId}/wallet/apple`,
-        google: `/api/bookings/${bookingId}/tickets/${ticketId}/wallet/google`
-      },
-      setupInstructions: WalletPassGenerator.getSetupInstructions(),
-      currentStatus: 'Pass structures are ready - full integration requires platform-specific setup'
+      message: 'Google Pay pass data generated',
+      passData: googlePayObject,
+      instructions: WalletPassGenerator.getSetupInstructions().google,
+      currentStatus: 'Pass object structure is ready for JWT signing and API integration',
+      saveUrl: `https://pay.google.com/gp/v/save/${encodeURIComponent(JSON.stringify(googlePayObject))}`
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
   } catch (error) {
-    console.error('Error generating wallet pass:', error);
+    console.error('Error generating Google Pay pass:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

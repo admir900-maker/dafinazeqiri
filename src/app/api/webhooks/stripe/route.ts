@@ -5,7 +5,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-09-30.clover',
 });
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     console.log('Stripe webhook received');
 
     const body = await req.text();
-    const headersList = headers();
+    const headersList = await headers();
     const sig = headersList.get('stripe-signature')!;
 
     let event: Stripe.Event;

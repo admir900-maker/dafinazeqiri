@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import Event from '@/models/Event';
 import PaymentSettings from '@/models/PaymentSettings';
 
 // Helper function to check if validation is allowed based on admin settings
@@ -82,7 +81,7 @@ export async function POST(req: NextRequest) {
     let parsedData;
     try {
       parsedData = JSON.parse(qrCodeData);
-    } catch (error) {
+    } catch {
       // If JSON parsing fails, try to find ticket by direct QR code match
       console.log('🔍 Trying direct QR code lookup for:', qrCodeData);
 
@@ -94,7 +93,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid QR code format or ticket not found' }, { status: 400 });
       }
 
-      const ticket = booking.tickets.find(t => t.qrCode === qrCodeData);
+      const ticket = booking.tickets.find((t: any) => t.qrCode === qrCodeData);
       if (!ticket) {
         return NextResponse.json({ error: 'Ticket not found in booking' }, { status: 400 });
       }
@@ -135,7 +134,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Mark ticket as used
-      const ticketIndex = booking.tickets.findIndex(t => t.qrCode === qrCodeData);
+      const ticketIndex = booking.tickets.findIndex((t: any) => t.qrCode === qrCodeData);
       booking.tickets[ticketIndex].isUsed = true;
       booking.tickets[ticketIndex].usedAt = new Date();
       booking.tickets[ticketIndex].validatedBy = userId;
@@ -203,7 +202,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find the specific ticket
-    const ticketIndex = booking.tickets.findIndex(t => t.ticketId === ticketId);
+    const ticketIndex = booking.tickets.findIndex((t: any) => t.ticketId === ticketId);
 
     if (ticketIndex === -1) {
       return NextResponse.json({ error: 'Ticket not found in booking' }, { status: 404 });

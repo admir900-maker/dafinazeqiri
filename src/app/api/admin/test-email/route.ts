@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { emailService } from '@/lib/emailService';
 import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {

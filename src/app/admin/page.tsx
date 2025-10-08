@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
@@ -239,6 +239,46 @@ export default function AdminPage() {
     }
   }, [isLoaded, isSignedIn]);
 
+  const fetchPaymentSettings = useCallback(async () => {
+    try {
+      setSettingsLoading(true);
+      console.log('🔄 Fetching payment & SMTP settings from database...');
+      const res = await fetch('/api/admin/payment-settings');
+      console.log('📡 API response status:', res.status, res.statusText);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('📥 Received payment settings:', data);
+        setPaymentSettings(prev => ({
+          ...prev,
+          stripePublicKey: data.stripePublishableKey || '',
+          stripeSecretKey: data.stripeSecretKey === '••••••••••••••••' ? prev.stripeSecretKey : data.stripeSecretKey || '',
+          platformFee: data.platformFee || 5,
+          currency: data.currency || 'eur',
+          validationWindowDays: data.validationWindowDays || 1,
+          validationStartDays: data.validationStartDays || 0,
+          allowValidationAnytime: data.allowValidationAnytime || false,
+          // SMTP Settings
+          smtpHost: data.smtpHost || '',
+          smtpPort: data.smtpPort || 587,
+          smtpSecure: data.smtpSecure || false,
+          smtpUser: data.smtpUser || '',
+          smtpPass: data.smtpPass === '••••••••••••••••' ? prev.smtpPass : data.smtpPass || '',
+          senderEmail: data.senderEmail || '',
+          senderName: data.senderName || 'BiletAra'
+        }));
+        console.log('✅ Settings loaded successfully');
+      } else {
+        const errorText = await res.text();
+        console.log('❌ API request failed:', res.status, errorText);
+        console.log('No payment settings found, using defaults');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching payment settings:', error);
+    } finally {
+      setSettingsLoading(false);
+    }
+  }, []);
+
   // Load payment settings after authentication is confirmed
   useEffect(() => {
     console.log('🔍 useEffect triggered - isLoaded:', isLoaded, 'isSignedIn:', isSignedIn);
@@ -248,7 +288,7 @@ export default function AdminPage() {
     } else {
       console.log('⏳ Waiting for authentication...');
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, fetchPaymentSettings]);
 
   // Show loading until Clerk is loaded
   if (!isLoaded) {
@@ -718,45 +758,6 @@ export default function AdminPage() {
       'AUD': { symbol: 'A$', name: 'Australian Dollar' }
     };
     return currencies[currencyCode] || { symbol: '$', name: 'US Dollar' };
-  };
-
-  const fetchPaymentSettings = async () => {
-    try {
-      setSettingsLoading(true);
-      console.log('🔄 Fetching payment & SMTP settings from database...');
-      const res = await fetch('/api/admin/payment-settings');
-      console.log('📡 API response status:', res.status, res.statusText);
-      if (res.ok) {
-        const data = await res.json();
-        console.log('📥 Received payment settings:', data);
-        setPaymentSettings({
-          stripePublicKey: data.stripePublishableKey || '',
-          stripeSecretKey: data.stripeSecretKey === '••••••••••••••••' ? paymentSettings.stripeSecretKey : data.stripeSecretKey || '',
-          platformFee: data.platformFee || 5,
-          currency: data.currency || 'eur',
-          validationWindowDays: data.validationWindowDays || 1,
-          validationStartDays: data.validationStartDays || 0,
-          allowValidationAnytime: data.allowValidationAnytime || false,
-          // SMTP Settings
-          smtpHost: data.smtpHost || '',
-          smtpPort: data.smtpPort || 587,
-          smtpSecure: data.smtpSecure || false,
-          smtpUser: data.smtpUser || '',
-          smtpPass: data.smtpPass === '••••••••••••••••' ? paymentSettings.smtpPass : data.smtpPass || '',
-          senderEmail: data.senderEmail || '',
-          senderName: data.senderName || 'BiletAra'
-        });
-        console.log('✅ Settings loaded successfully');
-      } else {
-        const errorText = await res.text();
-        console.log('❌ API request failed:', res.status, errorText);
-        console.log('No payment settings found, using defaults');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching payment settings:', error);
-    } finally {
-      setSettingsLoading(false);
-    }
   };
 
   const savePaymentSettings = async () => {

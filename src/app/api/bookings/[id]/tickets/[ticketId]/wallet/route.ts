@@ -27,7 +27,7 @@ export async function GET(
     }
 
     // Find the specific ticket
-    const ticket = booking.tickets.find(t => t.ticketId === ticketId);
+    const ticket = booking.tickets.find((t: any) => t.ticketId === ticketId);
 
     if (!ticket) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });

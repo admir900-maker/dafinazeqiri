@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import Event from '@/models/Event';
 import { emailService } from '@/lib/emailService';
 
 export async function POST(req: NextRequest) {

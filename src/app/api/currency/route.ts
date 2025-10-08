@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    let settings = await PaymentSettings.findOne({});
+    const settings = await PaymentSettings.findOne({});
 
     if (!settings) {
       // Return default settings if none exist

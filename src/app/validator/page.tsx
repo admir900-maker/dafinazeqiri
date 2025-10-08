@@ -438,7 +438,7 @@ Please try:
                           </button>
                         </div>
                         <p className="mt-1 text-xs text-gray-500">
-                          💡 <strong>Tip:</strong> To get QR data manually, go to your <a href="/bookings" className="text-purple-600 hover:underline" target="_blank">bookings page</a>, right-click "View QR", select "Inspect Element", and look for the JSON data in the image src or page source.
+                          💡 <strong>Tip:</strong> To get QR data manually, go to your <a href="/bookings" className="text-purple-600 hover:underline" target="_blank">bookings page</a>, right-click &quot;View QR&quot;, select &quot;Inspect Element&quot;, and look for the JSON data in the image src or page source.
                         </p>
                       </div>
 

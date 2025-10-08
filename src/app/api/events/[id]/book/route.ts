@@ -10,7 +10,7 @@ import QRCode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-09-30.clover',
 });
 
 export async function POST(
@@ -145,7 +145,8 @@ export async function POST(
             });
           } catch (qrError) {
             console.error('❌ Error generating QR code:', qrError);
-            throw new Error(`Failed to generate QR code for ticket: ${qrError.message}`);
+            const errorMessage = qrError instanceof Error ? qrError.message : 'Unknown error';
+            throw new Error(`Failed to generate QR code for ticket: ${errorMessage}`);
           }
         }
       }
@@ -177,7 +178,8 @@ export async function POST(
         console.log('✅ Booking created with ID:', booking._id);
       } catch (bookingError) {
         console.error('❌ Error creating booking:', bookingError);
-        throw new Error(`Failed to create booking: ${bookingError.message}`);
+        const errorMessage = bookingError instanceof Error ? bookingError.message : 'Unknown error';
+        throw new Error(`Failed to create booking: ${errorMessage}`);
       }
 
       // Create Stripe Payment Intent with webhook handling

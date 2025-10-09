@@ -5,13 +5,9 @@ import Event from '@/models/Event';
 import Ticket from '@/models/Ticket';
 import Booking from '@/models/Booking';
 import PaymentSettings from '@/models/PaymentSettings';
-import Stripe from 'stripe';
+import { getStripe, isStripeEnabled } from '@/lib/stripe';
 import QRCode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-});
 
 export async function POST(
   req: NextRequest,
@@ -26,6 +22,15 @@ export async function POST(
 
     console.log('👤 User ID:', userId);
 
+    // Check if Stripe is enabled
+    const stripeEnabled = await isStripeEnabled();
+    if (!stripeEnabled) {
+      return NextResponse.json({ error: 'Payment processing is currently unavailable' }, { status: 503 });
+    }
+
+    // Get Stripe instance with settings from database
+    const stripe = await getStripe();
+
     // Get current user information for customer details
     const user = await currentUser();
     const customerEmail = user?.emailAddresses[0]?.emailAddress || '';
@@ -33,7 +38,7 @@ export async function POST(
 
     console.log('👤 Customer info:', { customerName, customerEmail });
 
-    const { ticketSelections, useWebhook = true } = await req.json();
+    const { ticketSelections } = await req.json();
     const resolvedParams = await params;
     const eventId = resolvedParams.id;
 
@@ -106,169 +111,28 @@ export async function POST(
       });
     }
 
-    if (useWebhook) {
-      // Get currency from payment settings using Mongoose
-      let currency = 'eur'; // default fallback
-      try {
-        const paymentSettings = await PaymentSettings.findOne({});
-        currency = paymentSettings?.currency || 'eur';
-        console.log('💰 Currency from settings:', currency);
-      } catch (settingsError) {
-        console.error('❌ Error fetching payment settings:', settingsError);
-        // Continue with default currency
-      }
+    // Get currency from payment settings using Mongoose
+    let currency = 'eur'; // default fallback
+    try {
+      const paymentSettings = await PaymentSettings.findOne({});
+      currency = paymentSettings?.currency || 'eur';
+      console.log('💰 Currency from settings:', currency);
+    } catch (settingsError) {
+      console.error('❌ Error fetching payment settings:', settingsError);
+      // Continue with default currency
+    }
 
-      // Create booking record first (will be confirmed by webhook)
-      const bookingTickets = [];
+    // Create booking record first (will be confirmed by webhook)
+    const bookingTickets = [];
 
-      for (const [ticketName, quantity] of Object.entries(ticketSelections)) {
-        if (typeof quantity !== 'number' || quantity <= 0) continue;
+    for (const [ticketName, quantity] of Object.entries(ticketSelections)) {
+      if (typeof quantity !== 'number' || quantity <= 0) continue;
 
-        const ticketType = event.ticketTypes.find((t: any) => t.name === ticketName);
-        if (!ticketType) continue;
+      const ticketType = event.ticketTypes.find((t: any) => t.name === ticketName);
+      if (!ticketType) continue;
 
-        for (let i = 0; i < quantity; i++) {
-          try {
-            const ticketId = uuidv4();
-            const qrData = {
-              eventId,
-              ticketId,
-              userId,
-              ticketType: ticketName,
-              price: ticketType.price,
-              eventTitle: event.title,
-              timestamp: Date.now()
-            };
-
-            console.log('🎫 Generating QR code for ticket:', ticketId);
-            const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
-
-            bookingTickets.push({
-              ticketName,
-              ticketId,
-              qrCode,
-              price: ticketType.price,
-              isUsed: false
-            });
-          } catch (qrError) {
-            console.error('❌ Error generating QR code:', qrError);
-            const errorMessage = qrError instanceof Error ? qrError.message : 'Unknown error';
-            throw new Error(`Failed to generate QR code for ticket: ${errorMessage}`);
-          }
-        }
-      }
-
-      let booking;
-      try {
-        console.log('💾 Creating booking record...');
-
-        // Generate booking reference manually
-        const timestamp = Date.now().toString(36).toUpperCase();
-        const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const bookingReference = `BKNG${timestamp}${random}`;
-
-        console.log('📝 Generated booking reference:', bookingReference);
-
-        booking = new Booking({
-          userId,
-          eventId,
-          tickets: bookingTickets,
-          totalAmount: totalPrice,
-          currency: currency.toUpperCase(),
-          status: 'pending',
-          paymentStatus: 'pending',
-          paymentMethod: 'stripe',
-          bookingReference,
-          customerEmail,
-          customerName,
-          emailSent: false
-        });
-
-        await booking.save();
-        console.log('✅ Booking created with ID:', booking._id);
-      } catch (bookingError) {
-        console.error('❌ Error creating booking:', bookingError);
-        const errorMessage = bookingError instanceof Error ? bookingError.message : 'Unknown error';
-        throw new Error(`Failed to create booking: ${errorMessage}`);
-      }
-
-      // Create Stripe Payment Intent with webhook handling
-      try {
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount: Math.round(totalPrice * 100), // Convert to cents
-          currency: currency.toLowerCase(),
-          automatic_payment_methods: {
-            enabled: true,
-          },
-          metadata: {
-            eventId: eventId,
-            userId: userId,
-            bookingId: booking._id.toString(),
-            ticketSelections: JSON.stringify(ticketSelections),
-            eventTitle: event.title,
-            totalTickets: Object.values(ticketSelections).reduce((sum: number, qty: any) => sum + qty, 0).toString(),
-          },
-          description: `Tickets for ${event.title} - ${Object.values(ticketSelections).reduce((sum: number, qty: any) => sum + qty, 0)} tickets`,
-        });
-
-        // Update booking with payment intent ID
-        booking.paymentIntentId = paymentIntent.id;
-        await booking.save();
-
-        return NextResponse.json({
-          success: true,
-          paymentIntent: {
-            id: paymentIntent.id,
-            client_secret: paymentIntent.client_secret,
-            amount: paymentIntent.amount,
-            currency: paymentIntent.currency,
-          },
-          orderSummary: {
-            eventId,
-            eventTitle: event.title,
-            ticketBreakdown,
-            totalPrice,
-            totalTickets: Object.values(ticketSelections).reduce((sum: number, qty: any) => sum + qty, 0),
-            bookingReference: booking.bookingReference,
-          },
-          message: 'Payment intent created. Complete payment to confirm booking.',
-        });
-
-      } catch (stripeError: any) {
-        // Remove booking if payment intent creation fails
-        await Booking.findByIdAndDelete(booking._id);
-
-        console.error('Stripe Payment Intent creation failed:', stripeError);
-        return NextResponse.json({
-          error: 'Payment processing failed: ' + stripeError.message
-        }, { status: 500 });
-      }
-    } else {
-      // Direct booking (original functionality) - for testing or alternative flow
-      const purchasedTickets: any[] = [];
-      const bookingTickets = [];
-
-      for (const [ticketName, quantity] of Object.entries(ticketSelections)) {
-        if (typeof quantity !== 'number' || quantity <= 0) continue;
-
-        const ticketType = event.ticketTypes.find((t: any) => t.name === ticketName);
-
-        if (!ticketType) {
-          return NextResponse.json({ error: `Ticket type "${ticketName}" not found` }, { status: 400 });
-        }
-
-        if (ticketType.availableTickets < quantity) {
-          return NextResponse.json({
-            error: `Not enough tickets available for ${ticketName}. Only ${ticketType.availableTickets} left.`
-          }, { status: 400 });
-        }
-
-        // Update available tickets for this ticket type
-        const ticketTypeIndex = event.ticketTypes.findIndex((t: any) => t.name === ticketName);
-        event.ticketTypes[ticketTypeIndex].availableTickets -= quantity;
-
-        // Generate tickets for this type
-        for (let i = 0; i < quantity; i++) {
+      for (let i = 0; i < quantity; i++) {
+        try {
           const ticketId = uuidv4();
           const qrData = {
             eventId,
@@ -280,10 +144,9 @@ export async function POST(
             timestamp: Date.now()
           };
 
+          console.log('🎫 Generating QR code for ticket:', ticketId);
           const qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
-          const ticketCode = `TKT-${eventId.slice(-6)}-${ticketName.replace(/\s+/g, '').toUpperCase()}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
 
-          // Create booking ticket record
           bookingTickets.push({
             ticketName,
             ticketId,
@@ -291,72 +154,98 @@ export async function POST(
             price: ticketType.price,
             isUsed: false
           });
-
-          // Keep legacy ticket for compatibility
-          const newTicket = new Ticket({
-            eventId: eventId,
-            userId,
-            ticketType: ticketName,
-            price: ticketType.price,
-            qrCode: ticketCode,
-            isValidated: false,
-            purchaseDate: new Date(),
-            status: 'active'
-          });
-
-          purchasedTickets.push(newTicket);
+        } catch (qrError) {
+          console.error('❌ Error generating QR code:', qrError);
+          const errorMessage = qrError instanceof Error ? qrError.message : 'Unknown error';
+          throw new Error(`Failed to generate QR code for ticket: ${errorMessage}`);
         }
       }
+    }
 
-      // Save the updated event
-      await event.save();
-
-      // Create booking record
-      const paymentSettings = await PaymentSettings.findOne({});
-      const currency = paymentSettings?.currency || 'EUR';
+    let booking;
+    try {
+      console.log('💾 Creating booking record...');
 
       // Generate booking reference manually
       const timestamp = Date.now().toString(36).toUpperCase();
       const random = Math.random().toString(36).substring(2, 8).toUpperCase();
       const bookingReference = `BKNG${timestamp}${random}`;
 
-      const booking = new Booking({
+      console.log('📝 Generated booking reference:', bookingReference);
+
+      booking = new Booking({
         userId,
         eventId,
         tickets: bookingTickets,
         totalAmount: totalPrice,
         currency: currency.toUpperCase(),
-        status: 'confirmed',
-        paymentMethod: 'direct',
+        status: 'pending',
+        paymentStatus: 'pending',
+        paymentMethod: 'stripe',
         bookingReference,
-        confirmedAt: new Date(),
+        customerEmail,
+        customerName,
         emailSent: false
       });
 
       await booking.save();
+      console.log('✅ Booking created with ID:', booking._id);
+    } catch (bookingError) {
+      console.error('❌ Error creating booking:', bookingError);
+      const errorMessage = bookingError instanceof Error ? bookingError.message : 'Unknown error';
+      throw new Error(`Failed to create booking: ${errorMessage}`);
+    }
 
-      // Save all legacy tickets
-      if (purchasedTickets.length > 0) {
-        await Ticket.insertMany(purchasedTickets);
-      }
+    // Create Stripe Payment Intent with webhook handling
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(totalPrice * 100), // Convert to cents
+        currency: currency.toLowerCase(),
+        automatic_payment_methods: {
+          enabled: true,
+        },
+        metadata: {
+          eventId: eventId,
+          userId: userId,
+          bookingId: booking._id.toString(),
+          ticketSelections: JSON.stringify(ticketSelections),
+          eventTitle: event.title,
+          totalTickets: Object.values(ticketSelections).reduce((sum: number, qty: any) => sum + qty, 0).toString(),
+        },
+        description: `Tickets for ${event.title} - ${Object.values(ticketSelections).reduce((sum: number, qty: any) => sum + qty, 0)} tickets`,
+      });
 
-      // Check if event is sold out
-      const totalAvailable = event.ticketTypes.reduce((sum: number, ticket: any) => sum + ticket.availableTickets, 0);
-
-      if (totalAvailable === 0) {
-        event.status = 'sold-out';
-        await event.save();
-      }
+      // Update booking with payment intent ID
+      booking.paymentIntentId = paymentIntent.id;
+      await booking.save();
 
       return NextResponse.json({
         success: true,
-        message: 'Tickets booked successfully!',
-        ticketCount: purchasedTickets.length,
-        totalPrice,
-        bookingReference: booking.bookingReference,
-        ticketCodes: purchasedTickets.map(t => t.qrCode),
-        purchaseDate: new Date().toISOString()
+        paymentIntent: {
+          id: paymentIntent.id,
+          client_secret: paymentIntent.client_secret,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+        },
+        orderSummary: {
+          eventId,
+          eventTitle: event.title,
+          ticketBreakdown,
+          totalPrice,
+          totalTickets: Object.values(ticketSelections).reduce((sum: number, qty: any) => sum + qty, 0),
+          bookingReference: booking.bookingReference,
+        },
+        message: 'Payment intent created. Complete payment to confirm booking.',
       });
+
+    } catch (stripeError: any) {
+      // Remove booking if payment intent creation fails
+      await Booking.findByIdAndDelete(booking._id);
+
+      console.error('Stripe Payment Intent creation failed:', stripeError);
+      return NextResponse.json({
+        error: 'Payment processing failed: ' + stripeError.message
+      }, { status: 500 });
     }
 
   } catch (error) {

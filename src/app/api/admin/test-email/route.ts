@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import nodemailer from 'nodemailer';
+import { getSiteConfig } from '@/lib/settings';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Test email address is required' }, { status: 400 });
     }
 
+    // Get site configuration
+    const siteConfig = await getSiteConfig();
+
     // Use provided SMTP settings or fall back to environment variables
     const smtpConfig = smtpSettings || {
       smtpHost: process.env.SMTP_HOST,
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
       smtpUser: process.env.SMTP_USER,
       smtpPass: process.env.SMTP_PASS,
       senderEmail: process.env.SENDER_EMAIL,
-      senderName: 'BiletAra'
+      senderName: siteConfig.siteName
     };
 
     if (!smtpConfig.smtpHost || !smtpConfig.smtpUser) {
@@ -119,7 +123,7 @@ export async function POST(req: NextRequest) {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>BiletAra Email Test</title>
+        <title>${siteConfig.siteName} Email Test</title>
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
@@ -128,7 +132,7 @@ export async function POST(req: NextRequest) {
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
           <h2 style="color: #495057; margin-top: 0;">Email Configuration Test</h2>
-          <p>This is a test email to verify that your BiletAra email configuration is working correctly.</p>
+          <p>This is a test email to verify that your ${siteConfig.siteName} email configuration is working correctly.</p>
           
           <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
             <h3 style="margin-top: 0; color: #28a745;">✓ SMTP Configuration</h3>
@@ -149,7 +153,7 @@ export async function POST(req: NextRequest) {
         
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
           <p style="color: #6c757d; font-size: 14px; margin: 0;">
-            BiletAra - Event Ticketing Platform<br>
+            ${siteConfig.siteName} - Event Ticketing Platform<br>
             This is an automated test email.
           </p>
         </div>
@@ -162,9 +166,9 @@ export async function POST(req: NextRequest) {
 
     try {
       const mailOptions = {
-        from: `"${smtpConfig.senderName || 'BiletAra'}" <${smtpConfig.senderEmail || smtpConfig.smtpUser}>`,
+        from: `"${smtpConfig.senderName || siteConfig.siteName}" <${smtpConfig.senderEmail || smtpConfig.smtpUser}>`,
         to: testEmail,
-        subject: '✅ BiletAra Email Configuration Test',
+        subject: `✅ ${siteConfig.siteName} Email Configuration Test`,
         html: emailHtml,
       }; const result = await workingTransporter.sendMail(mailOptions);
       console.log('✅ Test email sent successfully:', result.messageId);

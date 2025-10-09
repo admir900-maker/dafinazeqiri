@@ -283,7 +283,7 @@ export const validatePrice = (price: number | string, fieldName: string = 'Price
     } else if (numPrice < 0) {
       errors.push({ field: fieldName.toLowerCase(), message: `${fieldName} cannot be negative` });
     } else if (numPrice > 99999.99) {
-      errors.push({ field: fieldName.toLowerCase(), message: `${fieldName} cannot exceed $99,999.99` });
+      errors.push({ field: fieldName.toLowerCase(), message: `${fieldName} cannot exceed €99,999.99` });
     }
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,15 +14,51 @@ interface HeaderProps {
   cartCount?: number
 }
 
+interface SiteConfig {
+  siteName: string;
+  siteDescription: string;
+  siteUrl: string;
+  currency: string;
+  timezone: string;
+  logoUrl: string;
+  faviconUrl: string;
+}
+
 export function Header({ cartCount = 0 }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>({
+    siteName: 'BiletAra', // fallback
+    siteDescription: '',
+    siteUrl: '',
+    currency: 'EUR',
+    timezone: 'UTC',
+    logoUrl: '',
+    faviconUrl: ''
+  })
   const router = useRouter()
   const { isSignedIn } = useAuth()
   const { user } = useUser()
 
   const isAdmin = user?.publicMetadata?.role === 'admin'
   const isValidator = user?.publicMetadata?.role === 'validator'
+
+  // Fetch site configuration
+  useEffect(() => {
+    const fetchSiteConfig = async () => {
+      try {
+        const response = await fetch('/api/site-config')
+        if (response.ok) {
+          const config = await response.json()
+          setSiteConfig(config)
+        }
+      } catch (error) {
+        console.error('Failed to fetch site config:', error)
+      }
+    }
+
+    fetchSiteConfig()
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +96,7 @@ export function Header({ cartCount = 0 }: HeaderProps) {
           <Link href="/" className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <Ticket className="h-8 w-8 text-white" />
-              <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md">BiletAra</span>
+              <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md">{siteConfig.siteName}</span>
             </div>
           </Link>
 

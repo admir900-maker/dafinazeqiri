@@ -6,6 +6,7 @@ import Booking from '@/models/Booking';
 import { RaiffeisenBankAPI, getRaiffeisenConfig } from '@/lib/raiffeisenBank';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
+import { getSiteConfig } from '@/lib/settings';
 
 export async function POST(
   request: NextRequest,
@@ -102,12 +103,15 @@ export async function POST(
     // Initialize Raiffeisen API
     const raiffeisenAPI = new RaiffeisenBankAPI(config);
 
+    // Get site configuration for description
+    const siteConfig = await getSiteConfig();
+
     // Create payment intent
     const paymentIntent = await raiffeisenAPI.createPaymentIntent({
       amount: totalAmount,
       currency: 'EUR',
       orderId: booking._id.toString(),
-      description: `BiletAra - ${event.name} - ${bookingTickets.length} ticket(s)`,
+      description: `${siteConfig.siteName} - ${event.name} - ${bookingTickets.length} ticket(s)`,
       customerEmail,
       customerName,
       returnUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/booking-success?bookingId=${booking._id}`,

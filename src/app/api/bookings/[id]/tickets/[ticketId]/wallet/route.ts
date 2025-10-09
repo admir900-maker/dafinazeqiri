@@ -62,7 +62,7 @@ export async function GET(
     };
 
     // Generate both Apple and Google pass data
-    const applePassData = WalletPassGenerator.generateApplePass(ticketData);
+    const applePassData = await WalletPassGenerator.generateApplePass(ticketData);
     const googlePayData = WalletPassGenerator.generateGooglePayObject(ticketData);
 
     return NextResponse.json({

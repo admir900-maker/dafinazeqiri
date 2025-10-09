@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { ArrowLeft, CreditCard, Building2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { formatPrice } = useCurrency();
+  const { user, isLoaded, isSignedIn } = useUser();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [ticketSelections, setTicketSelections] = useState<TicketSelection[]>([]);
@@ -51,6 +53,9 @@ function CheckoutContent() {
   const [showStripePayment, setShowStripePayment] = useState(false);
 
   useEffect(() => {
+    // Wait for user data to load before proceeding
+    if (!isLoaded) return;
+
     // Get data from URL params
     const eventId = searchParams.get('eventId');
     const tickets = searchParams.get('tickets');
@@ -70,7 +75,7 @@ function CheckoutContent() {
       setError('Invalid checkout data');
       setLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, isLoaded]);
 
   const fetchEventAndSettings = async (eventId: string) => {
     try {
@@ -83,17 +88,36 @@ function CheckoutContent() {
       setEvent(eventData);
 
       // Fetch payment settings
-      const settingsResponse = await fetch('/api/admin/payment-settings');
+      const settingsResponse = await fetch('/api/payment-config');
       if (settingsResponse.ok) {
         const settings = await settingsResponse.json();
         setPaymentSettings(settings);
 
-        // Auto-select payment method if only one is available
+        // Use payment method configured in admin settings for all users
+        console.log('💳 Payment provider from settings:', settings.paymentProvider);
+        console.log('💳 Full settings:', settings);
+
+        // Auto-select payment method based on admin settings
         if (settings.paymentProvider === 'stripe') {
+          console.log('💳 Setting Stripe as payment method');
           setSelectedPaymentMethod('stripe');
         } else if (settings.paymentProvider === 'raiffeisen') {
+          console.log('💳 Setting Raiffeisen as payment method');
+          setSelectedPaymentMethod('raiffeisen');
+        } else if (settings.paymentProvider === 'both') {
+          // If both are enabled, we can show selection or default to one
+          // For now, defaulting to Raiffeisen for general users
+          console.log('💳 Both providers enabled, defaulting to Raiffeisen');
+          setSelectedPaymentMethod('raiffeisen');
+        } else {
+          // Fallback: if no valid provider is set, default to Raiffeisen
+          console.log('💳 No valid provider found, defaulting to Raiffeisen');
           setSelectedPaymentMethod('raiffeisen');
         }
+      } else {
+        // If settings API fails, default to Raiffeisen
+        console.log('💳 Settings API failed, defaulting to Raiffeisen');
+        setSelectedPaymentMethod('raiffeisen');
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -128,8 +152,7 @@ function CheckoutContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ticketSelections: ticketSelectionsMap,
-          useWebhook: true
+          ticketSelections: ticketSelectionsMap
         })
       });
 
@@ -221,6 +244,56 @@ function CheckoutContent() {
     setShowStripePayment(false);
     setPaymentIntentData(null);
   };
+
+  if (!isLoaded) {
+    return (
+      <BackgroundWrapper>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Clock className="h-12 w-12 mx-auto text-white animate-spin" />
+            <h1 className="text-2xl font-bold text-white mt-4">Loading...</h1>
+            <p className="text-white/80 mt-2">Preparing your checkout...</p>
+          </div>
+        </div>
+      </BackgroundWrapper>
+    );
+  }
+
+  // Redirect to sign-in if user is not authenticated
+  if (isLoaded && !isSignedIn) {
+    return (
+      <BackgroundWrapper>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-8">
+            <div className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-lg p-8 shadow-xl">
+              <h1 className="text-2xl font-bold text-white mb-4">Please Login or Sign Up</h1>
+              <p className="text-white/80 mb-6">You need to be signed in to proceed with payment and complete your booking.</p>
+              <div className="space-y-3">
+                <Link href="/auth/signin" className="block">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/signup" className="block">
+                  <Button variant="outline" className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/30">
+                <Link href={`/events/${searchParams.get('eventId')}`}>
+                  <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Event
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </BackgroundWrapper>
+    );
+  }
 
   if (loading) {
     return (
@@ -361,6 +434,7 @@ function CheckoutContent() {
                 <CardTitle className="text-white">Payment Method</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Settings-based payment method display */}
                 {paymentSettings?.paymentProvider === 'both' && (
                   <div className="space-y-4">
                     <h4 className="text-white font-medium">Choose your payment method:</h4>
@@ -405,6 +479,37 @@ function CheckoutContent() {
                   </div>
                 )}
 
+                {/* Single payment method display */}
+                {paymentSettings?.paymentProvider !== 'both' && selectedPaymentMethod && (
+                  <div className="space-y-4">
+                    <h4 className="text-white font-medium">Available Payment Method:</h4>
+                    <div className="p-4 rounded-lg border border-purple-500 bg-purple-500/20 text-white">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {selectedPaymentMethod === 'stripe' ? (
+                            <>
+                              <CreditCard className="h-6 w-6" />
+                              <div>
+                                <div className="font-medium">Stripe</div>
+                                <div className="text-sm opacity-80">Credit/Debit Card</div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Building2 className="h-6 w-6" />
+                              <div>
+                                <div className="font-medium">Raiffeisen Bank Kosovo</div>
+                                <div className="text-sm opacity-80">Bank Transfer</div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-2xl">{selectedPaymentMethod === 'stripe' ? '💳' : '🏦'}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Continue Button */}
                 <div className="pt-4">
                   {selectedPaymentMethod === 'stripe' && (
@@ -427,21 +532,17 @@ function CheckoutContent() {
                     </Button>
                   )}
 
-                  {paymentSettings?.paymentProvider !== 'both' && !selectedPaymentMethod && (
-                    <Button
-                      onClick={paymentSettings?.paymentProvider === 'stripe' ? handleStripeCheckout : handleRaiffeisenCheckout}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3"
-                      disabled={bookingLoading}
-                    >
-                      {bookingLoading ? 'Processing...' :
-                        `Continue with ${paymentSettings?.paymentProvider === 'stripe' ? 'Stripe' : 'Raiffeisen Bank'} - ${formatPrice(getTotalAmount())}`
-                      }
-                    </Button>
-                  )}
-
                   {paymentSettings?.paymentProvider === 'both' && !selectedPaymentMethod && (
                     <div className="text-center text-white/70 text-sm">
                       Please select a payment method above
+                    </div>
+                  )}
+
+                  {!selectedPaymentMethod && paymentSettings?.paymentProvider !== 'both' && (
+                    <div className="text-center text-white/70 text-sm">
+                      Loading payment options...
+                      <br />
+                      <small>Payment provider: {paymentSettings?.paymentProvider || 'not loaded'}</small>
                     </div>
                   )}
                 </div>

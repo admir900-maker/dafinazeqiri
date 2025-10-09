@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
+import { CloudinaryImage } from './cloudinary-image';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps {
@@ -35,12 +36,10 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
 
   const handleError = useCallback(() => {
     if (imgSrc !== fallbackSrc) {
       setImgSrc(fallbackSrc);
-      setHasError(true);
       onError?.();
     }
   }, [imgSrc, fallbackSrc, onError]);
@@ -79,6 +78,38 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         ? blurDataURL || generateBlurDataURL(width, height)
         : undefined,
   };
+
+  // Check if the source is from Cloudinary
+  const isCloudinaryUrl = imgSrc.includes('cloudinary.com') || imgSrc.includes('res.cloudinary.com');
+
+  // Use CloudinaryImage for Cloudinary URLs when width and height are provided
+  if (isCloudinaryUrl && width && height) {
+    return (
+      <div className="relative">
+        <CloudinaryImage
+          src={imgSrc}
+          alt={alt || 'Image'}
+          width={width}
+          height={height}
+          className={cn(
+            'transition-opacity duration-300',
+            isLoading && 'opacity-0',
+            !isLoading && 'opacity-100',
+            className
+          )}
+          priority={priority}
+          quality="auto"
+          sizes={sizes}
+        />
+        {isLoading && (
+          <div
+            className="absolute inset-0 bg-gray-200 animate-pulse rounded"
+            style={{ width, height }}
+          />
+        )}
+      </div>
+    );
+  }
 
   if (width && height) {
     return (

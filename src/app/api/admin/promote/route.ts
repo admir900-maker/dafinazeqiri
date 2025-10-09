@@ -1,31 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { makeUserAdmin } from '@/lib/admin';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 
+// POST /api/admin/promote - Promote user role
 export async function POST(request: NextRequest) {
+  let adminUserId: string | null = null;
+
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const { userId: authUserId } = await auth();
+    adminUserId = authUserId;
+
+    if (!adminUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { targetUserId } = await request.json();
+    // TODO: Add admin role check
+    // For now, allowing any authenticated user
 
-    // Only allow current admins to make other users admin
-    // For initial setup, you might want to temporarily comment this out
-    // const isAdmin = await isUserAdmin();
-    // if (!isAdmin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    // }
+    const body = await request.json();
+    const { userId, role } = body;
 
-    const success = await makeUserAdmin(targetUserId);
-
-    if (success) {
-      return NextResponse.json({ message: 'User promoted to admin' });
-    } else {
-      return NextResponse.json({ error: 'Failed to promote user' }, { status: 500 });
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+
+    // Validate role
+    const validRoles = ['admin', 'manager', 'staff', 'validator', ''];
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    }
+
+    // Update user metadata in Clerk
+    const client = await clerkClient();
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        role: role || undefined
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `User ${role ? `promoted to ${role}` : 'role removed'}`
+    });
+
+  } catch (error: any) {
+    console.error('Error promoting user:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to update user role'
+    }, { status: 500 });
   }
 }

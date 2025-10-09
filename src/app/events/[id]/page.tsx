@@ -42,7 +42,13 @@ interface Event {
   ticketTypes: TicketType[]
   posterImage?: string
   bannerImage?: string
-  category: string
+  category: {
+    _id: string
+    name: string
+    slug: string
+    icon: string
+    color: string
+  } | string
   artists: string[]
   maxCapacity: number
   tags: string[]
@@ -249,7 +255,7 @@ export default function EventDetailPage() {
             <div className="flex items-end justify-between">
               <div className="flex-1">
                 <Badge className="bg-purple-600 text-white mb-4">
-                  {event.category}
+                  {typeof event.category === 'object' ? event.category.name : event.category}
                 </Badge>
                 <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
                   {event.title}
@@ -297,6 +303,30 @@ export default function EventDetailPage() {
                     </p>
                   </CardContent>
                 </Card>
+
+                {/* YouTube Trailer */}
+                {event.youtubeTrailer && (
+                  <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
+                    <CardHeader>
+                      <CardTitle className="text-white drop-shadow-md flex items-center gap-2">
+                        <Play className="w-5 h-5" />
+                        Event Trailer
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="relative aspect-video rounded-lg overflow-hidden">
+                        <iframe
+                          src={event.youtubeTrailer.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                          title={`${event.title} - Event Trailer`}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {event.artists && event.artists.length > 0 && (
                   <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
@@ -504,7 +534,7 @@ export default function EventDetailPage() {
 
                       <div>
                         <h4 className="font-medium text-white">Category</h4>
-                        <p className="text-white/80">{event.category}</p>
+                        <p className="text-white/80">{typeof event.category === 'object' ? event.category.name : event.category}</p>
                       </div>
                     </div>
 
@@ -631,7 +661,7 @@ export default function EventDetailPage() {
                               <div className="flex justify-between text-sm">
                                 <span className="text-white/90">Subtotal:</span>
                                 <span className="font-medium text-white">
-                                  ${((selectedTickets[ticket.name] || 0) * ticket.price).toFixed(2)}
+                                  {formatPrice((selectedTickets[ticket.name] || 0) * ticket.price)}
                                 </span>
                               </div>
                             </div>
@@ -668,52 +698,6 @@ export default function EventDetailPage() {
                             {getTotalTickets() > 0 && `Ticket(s) for ${formatPrice(getTotalPrice())}`}
                           </>
                         )}
-                      </Button>
-
-                      {/* Test Direct Booking Button */}
-                      <Button
-                        onClick={async () => {
-                          const selectedTicketsList = Object.entries(selectedTickets).filter(([, quantity]) => quantity > 0)
-                          if (selectedTicketsList.length === 0) {
-                            alert('Please select at least one ticket')
-                            return
-                          }
-
-                          setBookingLoading(true)
-                          try {
-                            const response = await fetch(`/api/events/${eventId}/book`, {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                ticketSelections: selectedTickets,
-                                useWebhook: false // Direct booking for testing
-                              })
-                            })
-
-                            const data = await response.json()
-                            if (response.ok) {
-                              alert('🎉 Test booking successful!')
-                              setSelectedTickets({})
-                              // Refresh event data
-                              const eventResponse = await fetch(`/api/events/${eventId}`)
-                              if (eventResponse.ok) {
-                                const updatedEvent = await eventResponse.json()
-                                setEvent(updatedEvent)
-                              }
-                            } else {
-                              alert(`❌ Test booking failed: ${data.error}`)
-                            }
-                          } catch (error) {
-                            alert('❌ Network error')
-                          } finally {
-                            setBookingLoading(false)
-                          }
-                        }}
-                        variant="outline"
-                        className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20 text-sm py-2"
-                        disabled={getTotalTickets() === 0 || bookingLoading}
-                      >
-                        Test Direct Booking (Skip Payment)
                       </Button>
                     </div>
                   </>

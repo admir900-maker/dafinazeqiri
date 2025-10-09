@@ -1,12 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BackgroundWrapper } from '@/components/ui/background-wrapper'
 import { FormField, ValidatedForm } from '@/components/ui/validated-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { validateContactForm } from '@/lib/validation'
 import { logError } from '@/lib/errorLogger'
 import { Mail, Phone, MapPin, Send } from 'lucide-react'
+
+interface SiteConfig {
+  siteName: string;
+  siteDescription: string;
+  siteUrl: string;
+  currency: string;
+  timezone: string;
+  logoUrl: string;
+  faviconUrl: string;
+}
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +25,32 @@ export default function ContactPage() {
     subject: '',
     message: ''
   })
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>({
+    siteName: 'BiletAra', // fallback
+    siteDescription: '',
+    siteUrl: '',
+    currency: 'EUR',
+    timezone: 'UTC',
+    logoUrl: '',
+    faviconUrl: ''
+  })
+
+  // Fetch site configuration
+  useEffect(() => {
+    const fetchSiteConfig = async () => {
+      try {
+        const response = await fetch('/api/site-config')
+        if (response.ok) {
+          const config = await response.json()
+          setSiteConfig(config)
+        }
+      } catch (error) {
+        console.error('Failed to fetch site config:', error)
+      }
+    }
+
+    fetchSiteConfig()
+  }, [])
 
   const handleSubmit = async (data: any) => {
     try {
@@ -52,7 +88,7 @@ export default function ContactPage() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4 text-white drop-shadow-lg">Contact Us</h1>
             <p className="text-xl text-white/90 drop-shadow-md max-w-2xl mx-auto">
-              Get in touch with the BiletAra team. We're here to help with any questions about tickets, events, or our platform.
+              Get in touch with the {siteConfig.siteName} team. We're here to help with any questions about tickets, events, or our platform.
             </p>
           </div>
 
@@ -69,7 +105,7 @@ export default function ContactPage() {
                 <CardContent className="text-white/90 space-y-3">
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-white/70" />
-                    <span>support@biletara.com</span>
+                    <span>support@{siteConfig.siteUrl || 'example.com'}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-white/70" />
@@ -91,7 +127,7 @@ export default function ContactPage() {
                 <CardContent className="text-white/90 space-y-3">
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-white/70" />
-                    <span>business@biletara.com</span>
+                    <span>business@{siteConfig.siteUrl || 'example.com'}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-white/70" />

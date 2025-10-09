@@ -2,55 +2,156 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import PaymentSettings from '@/models/PaymentSettings';
+import Settings from '@/models/Settings';
+import ValidationLog from '@/models/ValidationLog';
+import { logApiError } from '@/lib/errorLogger';
+
+// Helper function to log validation activities
+async function logValidation(validationSettings: any, data: {
+  success: boolean;
+  ticketId: string;
+  eventId: string;
+  eventTitle: string;
+  userId: string;
+  userName: string;
+  validatorId: string;
+  validatorName: string;
+  qrData: string;
+  message: string;
+  timestamp: Date;
+  validationType?: string;
+  request?: NextRequest;
+}) {
+  if (!validationSettings.logValidations) return;
+
+  try {
+    // Console log for debugging
+    console.log('Validation Log:', {
+      timestamp: data.timestamp.toISOString(),
+      success: data.success,
+      ticketId: data.ticketId,
+      eventId: data.eventId,
+      validatedBy: data.validatorId,
+      message: data.message,
+      type: data.validationType || 'qr_scan'
+    });
+
+    // Create database log entry
+    const deviceInfo = data.request ? {
+      userAgent: data.request.headers.get('user-agent') || '',
+      ip: data.request.headers.get('x-forwarded-for')?.split(',')[0] ||
+        data.request.headers.get('x-real-ip') || 'unknown'
+    } : undefined;
+
+    const validationLog = new ValidationLog({
+      validatorId: data.validatorId,
+      validatorName: data.validatorName,
+      bookingId: data.ticketId,
+      eventId: data.eventId,
+      eventTitle: data.eventTitle,
+      userId: data.userId,
+      userName: data.userName,
+      validationType: data.validationType || 'entry',
+      status: data.success ? 'validated' : 'rejected',
+      notes: data.message,
+      deviceInfo,
+      metadata: {
+        scanMethod: 'qr',
+        ticketQuantity: 1,
+        ticketType: 'Standard' // This could be enhanced to get actual ticket type
+      }
+    });
+
+    await validationLog.save();
+
+  } catch (error) {
+    console.error('Failed to log validation:', error);
+  }
+}
+
+// Helper function to get validation settings
+async function getValidationSettings() {
+  try {
+    const settings = await Settings.findOne({});
+    return settings?.validation || {
+      qrCodeEnabled: true,
+      scannerEnabled: true,
+      multipleScansAllowed: false,
+      scanTimeWindow: 5,
+      requireValidatorRole: true,
+      logValidations: true,
+      offlineValidation: false,
+      validationTimeout: 30,
+      customValidationRules: [],
+      antiReplayEnabled: true,
+      maxValidationsPerTicket: 1,
+      validationSoundEnabled: true,
+      vibrationEnabled: true,
+      geoLocationRequired: false,
+      allowedLocations: []
+    };
+  } catch (error) {
+    console.error('Error fetching validation settings:', error);
+    // Return default settings if error
+    return {
+      qrCodeEnabled: true,
+      scannerEnabled: true,
+      multipleScansAllowed: false,
+      scanTimeWindow: 5,
+      requireValidatorRole: true,
+      logValidations: true,
+      offlineValidation: false,
+      validationTimeout: 30,
+      customValidationRules: [],
+      antiReplayEnabled: true,
+      maxValidationsPerTicket: 1,
+      validationSoundEnabled: true,
+      vibrationEnabled: true,
+      geoLocationRequired: false,
+      allowedLocations: []
+    };
+  }
+}
 
 // Helper function to check if validation is allowed based on admin settings
-async function isValidationAllowed(eventDate: Date): Promise<{ allowed: boolean; error?: string }> {
+async function isValidationAllowed(eventDate: Date, validationSettings: any): Promise<{ allowed: boolean; error?: string }> {
   try {
-    const settings = await PaymentSettings.findOne({});
-
-    // If no settings found, use default (1 day window)
-    const validationWindowDays = settings?.validationWindowDays ?? 1;
-    const validationStartDays = settings?.validationStartDays ?? 0;
-    const allowValidationAnytime = settings?.allowValidationAnytime ?? false;
-
-    // If admin allows validation anytime, always return allowed
-    if (allowValidationAnytime) {
-      return { allowed: true };
+    // Check if QR validation is enabled
+    if (!validationSettings.qrCodeEnabled) {
+      return {
+        allowed: false,
+        error: 'QR code validation is currently disabled.'
+      };
     }
 
+    // Check if scanner is enabled
+    if (!validationSettings.scannerEnabled) {
+      return {
+        allowed: false,
+        error: 'Ticket scanner is currently disabled.'
+      };
+    }
+
+    // Use scan time window for validation timing
+    const scanTimeWindow = validationSettings.scanTimeWindow || 5; // minutes default
     const today = new Date();
     const eventDateObj = new Date(eventDate);
 
-    // Calculate days difference (positive if event is in future, negative if in past)
-    const daysDifference = (eventDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    // Allow scanning within the scan time window (in days for now)
+    const timeDifference = Math.abs(eventDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
 
-    // Check if we're within the allowed validation window
-    const withinStartWindow = daysDifference >= -validationStartDays;
-    const withinEndWindow = Math.abs(daysDifference) <= validationWindowDays;
-
-    if (withinStartWindow && withinEndWindow) {
+    if (timeDifference <= scanTimeWindow) {
       return { allowed: true };
     }
 
-    // Create helpful error message based on the configuration
-    let errorMessage = `Ticket validation is not allowed at this time. `;
-    if (validationStartDays > 0) {
-      errorMessage += `Validation opens ${validationStartDays} day(s) before the event. `;
-    }
-    errorMessage += `Validation window: ${validationWindowDays} day(s) around the event date.`;
-
     return {
       allowed: false,
-      error: errorMessage
+      error: `Ticket validation is not allowed at this time. Validation window: ${scanTimeWindow} day(s) around event date.`
     };
   } catch (error) {
     console.error('Error checking validation settings:', error);
-    // Fallback to default 1-day window if settings can't be loaded
-    const daysDifference = Math.abs((eventDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
     return {
-      allowed: daysDifference <= 1,
-      error: 'Ticket can only be validated on event day (default fallback)'
+      allowed: true // Fallback to allow validation if error occurs
     };
   }
 }
@@ -64,9 +165,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Check if user is validator or admin
+    await connectToDatabase();
+
+    // Get validation settings
+    const validationSettings = await getValidationSettings();
+
+    // Check if user is validator or admin (if required by settings)
     const userRole = user.publicMetadata?.role as string;
-    if (!userRole || !['validator', 'admin'].includes(userRole)) {
+    if (validationSettings.requireValidatorRole && (!userRole || !['validator', 'admin'].includes(userRole))) {
       return NextResponse.json({ error: 'Insufficient permissions. Validator or admin role required.' }, { status: 403 });
     }
 
@@ -82,87 +188,7 @@ export async function POST(req: NextRequest) {
     try {
       parsedData = JSON.parse(qrCodeData);
     } catch {
-      // If JSON parsing fails, try to find ticket by direct QR code match
-      console.log('🔍 Trying direct QR code lookup for:', qrCodeData);
-
-      const booking = await Booking.findOne({
-        'tickets.qrCode': qrCodeData
-      }).populate('eventId');
-
-      if (!booking) {
-        return NextResponse.json({ error: 'Invalid QR code format or ticket not found' }, { status: 400 });
-      }
-
-      const ticket = booking.tickets.find((t: any) => t.qrCode === qrCodeData);
-      if (!ticket) {
-        return NextResponse.json({ error: 'Ticket not found in booking' }, { status: 400 });
-      }
-
-      // Check if ticket is already used
-      if (ticket.isUsed) {
-        return NextResponse.json({
-          success: false,
-          error: 'Ticket already validated',
-          message: `This ticket has already been validated on ${new Date(ticket.usedAt).toLocaleString()}. Please contact the responsible person if you believe this is an error.`,
-          ticket: {
-            ticketId: ticket.ticketId,
-            ticketName: ticket.ticketName,
-            price: ticket.price,
-            usedAt: ticket.usedAt,
-            validatedBy: ticket.validatedBy,
-          },
-          event: {
-            title: booking.eventId.title,
-            date: booking.eventId.date,
-            location: booking.eventId.location,
-          },
-          booking: {
-            bookingReference: booking.bookingReference,
-            totalAmount: booking.totalAmount,
-            currency: booking.currency,
-          }
-        }, { status: 400 });
-      }
-
-      // Check if validation is allowed based on admin settings
-      const validationCheck = await isValidationAllowed(booking.eventId.date);
-      if (!validationCheck.allowed) {
-        return NextResponse.json({
-          error: validationCheck.error,
-          eventDate: booking.eventId.date
-        }, { status: 400 });
-      }
-
-      // Mark ticket as used
-      const ticketIndex = booking.tickets.findIndex((t: any) => t.qrCode === qrCodeData);
-      booking.tickets[ticketIndex].isUsed = true;
-      booking.tickets[ticketIndex].usedAt = new Date();
-      booking.tickets[ticketIndex].validatedBy = userId;
-
-      await booking.save();
-
-      // Direct QR code validation result - SUCCESS
-      return NextResponse.json({
-        success: true,
-        message: 'Ticket validated successfully',
-        ticket: {
-          ticketId: ticket.ticketId,
-          ticketName: ticket.ticketName,
-          price: ticket.price,
-          usedAt: booking.tickets[ticketIndex].usedAt,
-          validatedBy: userId,
-        },
-        event: {
-          title: booking.eventId.title,
-          date: booking.eventId.date,
-          location: booking.eventId.location,
-        },
-        booking: {
-          bookingReference: booking.bookingReference,
-          totalAmount: booking.totalAmount,
-          currency: booking.currency,
-        }
-      });
+      return NextResponse.json({ error: 'Invalid QR code format' }, { status: 400 });
     }
 
     const { eventId, ticketId, userId: ticketUserId, bookingId } = parsedData;
@@ -212,6 +238,23 @@ export async function POST(req: NextRequest) {
 
     // Check if ticket is already used
     if (ticket.isUsed) {
+      // Log failed validation attempt
+      await logValidation(validationSettings, {
+        success: false,
+        ticketId: ticket.ticketId,
+        eventId: booking.eventId._id.toString(),
+        eventTitle: booking.eventId.title,
+        userId: booking.userId,
+        userName: `User-${booking.userId}`,
+        validatorId: userId,
+        validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+        qrData: qrCodeData,
+        message: 'Ticket already validated',
+        timestamp: new Date(),
+        validationType: 'entry',
+        request: req
+      });
+
       return NextResponse.json({
         success: false,
         error: 'Ticket already validated',
@@ -240,8 +283,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if validation is allowed based on admin settings
-    const validationCheck = await isValidationAllowed(booking.eventId.date);
+    const validationCheck = await isValidationAllowed(booking.eventId.date, validationSettings);
     if (!validationCheck.allowed) {
+      // Log failed validation due to settings
+      await logValidation(validationSettings, {
+        success: false,
+        ticketId: ticket.ticketId,
+        eventId: booking.eventId._id.toString(),
+        eventTitle: booking.eventId.title,
+        userId: booking.userId,
+        userName: `User-${booking.userId}`,
+        validatorId: userId,
+        validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+        qrData: qrCodeData,
+        message: validationCheck.error || 'Validation not allowed',
+        timestamp: new Date(),
+        validationType: 'entry',
+        request: req
+      });
+
       return NextResponse.json({
         error: validationCheck.error,
         eventDate: booking.eventId.date
@@ -254,6 +314,23 @@ export async function POST(req: NextRequest) {
     booking.tickets[ticketIndex].validatedBy = userId;
 
     await booking.save();
+
+    // Log successful validation
+    await logValidation(validationSettings, {
+      success: true,
+      ticketId: ticket.ticketId,
+      eventId: booking.eventId._id.toString(),
+      eventTitle: booking.eventId.title,
+      userId: booking.userId,
+      userName: `User-${booking.userId}`, // In a real app, you'd fetch the actual user name
+      validatorId: userId,
+      validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+      qrData: qrCodeData,
+      message: 'Ticket validated successfully',
+      timestamp: new Date(),
+      validationType: 'entry',
+      request: req
+    });
 
     return NextResponse.json({
       success: true,

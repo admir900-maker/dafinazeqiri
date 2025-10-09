@@ -13,7 +13,7 @@ export async function GET(
   try {
     await connectToDatabase();
     const { id } = await params;
-    const event = await Event.findById(id);
+    const event = await Event.findById(id).populate('category', 'name slug icon color');
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });

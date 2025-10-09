@@ -38,10 +38,17 @@ interface Event {
   ticketTypes: TicketType[]
   posterImage?: string
   bannerImage?: string
-  category: string
+  category: {
+    _id: string
+    name: string
+    slug: string
+    icon: string
+    color: string
+  } | string
   artists: string[]
   maxCapacity: number
   tags: string[]
+  youtubeTrailer?: string
 }
 
 function EventsPageContent() {
@@ -84,8 +91,16 @@ function EventsPageContent() {
         }
         const data = await response.json()
 
+        // Check if the API response was successful
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to fetch events')
+        }
+
+        // Extract events array from the response object
+        const eventsArray = data.events || []
+
         // Sort events by date (upcoming first)
-        const sortedEvents = data.sort((a: Event, b: Event) =>
+        const sortedEvents = eventsArray.sort((a: Event, b: Event) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
         )
 
@@ -93,8 +108,10 @@ function EventsPageContent() {
         setFilteredEvents(sortedEvents)
 
         // Extract unique categories and locations for filters
-        const uniqueCategories = Array.from(new Set(data.map((event: Event) => event.category).filter(Boolean)))
-        const uniqueLocations = Array.from(new Set(data.map((event: Event) => event.location).filter(Boolean)))
+        const uniqueCategories = Array.from(new Set(eventsArray.map((event: Event) =>
+          typeof event.category === 'object' ? event.category.name : event.category
+        ).filter(Boolean)))
+        const uniqueLocations = Array.from(new Set(eventsArray.map((event: Event) => event.location).filter(Boolean)))
 
         setCategories(uniqueCategories as string[])
         setLocations(uniqueLocations as string[])
@@ -122,7 +139,11 @@ function EventsPageContent() {
 
     // Category filter
     if (selectedCategory) {
-      filtered = filtered.filter(event => event.category === selectedCategory)
+      filtered = filtered.filter(event =>
+        typeof event.category === 'object'
+          ? event.category.name === selectedCategory
+          : event.category === selectedCategory
+      )
     }
 
     // Location filter
@@ -319,7 +340,7 @@ function EventsPageContent() {
                   {/* Price Range */}
                   <div>
                     <label className="block text-sm font-medium text-white drop-shadow-sm mb-2">
-                      Min Price ($)
+                      Min Price (€)
                     </label>
                     <Input
                       type="number"
@@ -335,7 +356,7 @@ function EventsPageContent() {
 
                   <div>
                     <label className="block text-sm font-medium text-white drop-shadow-sm mb-2">
-                      Max Price ($)
+                      Max Price (€)
                     </label>
                     <Input
                       type="number"

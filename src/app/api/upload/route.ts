@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { v2 as cloudinary } from 'cloudinary';
+import { getCloudinary, isCloudinaryEnabled, getUploadFolder } from '@/lib/cloudinary';
 
 interface CloudinaryUploadResult {
   secure_url: string;
   public_id: string;
 }
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,24 +14,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if Cloudinary is enabled
+    const cloudinaryEnabled = await isCloudinaryEnabled();
+    if (!cloudinaryEnabled) {
+      return NextResponse.json({ error: 'File upload is currently unavailable' }, { status: 503 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const folder = formData.get('folder') as string || 'events';
+    const requestedFolder = formData.get('folder') as string;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // Get upload folder from settings
+    const defaultFolder = await getUploadFolder();
+    const folder = requestedFolder || defaultFolder;
+
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    // Get configured Cloudinary instance
+    const cloudinary = await getCloudinary();
 
     // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           resource_type: 'auto',
-          folder: `biletara/${folder}`,
+          folder: `${defaultFolder}/${folder}`,
           transformation: [
             { width: 1920, height: 1080, crop: 'limit', quality: 'auto' },
           ],

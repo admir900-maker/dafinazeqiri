@@ -23,9 +23,15 @@ global.mongoose = cached;
 export async function connectToDatabase() {
   if (cached.conn) return cached.conn;
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI as string, {
-      bufferCommands: false,
-    }).then((mongoose) => mongoose);
+    const opts = {
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferCommands: false, // Disable mongoose buffering
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+      minPoolSize: 5, // Maintain at least 5 socket connections
+    };
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts).then((mongoose) => mongoose);
   }
   cached.conn = await cached.promise;
   return cached.conn;

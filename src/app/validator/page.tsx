@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Calendar, MapPin, Ticket, Upload, FileText } from 'lucide-react';
+import { Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Calendar, MapPin, Ticket, Upload, FileText, Eye, Activity, RefreshCw } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/library';
 
 interface ValidationResult {
@@ -31,6 +31,50 @@ interface ValidationResult {
   validatedBy?: string;
 }
 
+interface ValidationSettings {
+  qrCodeEnabled: boolean;
+  scannerEnabled: boolean;
+  multipleScansAllowed: boolean;
+  scanTimeWindow: number;
+  requireValidatorRole: boolean;
+  logValidations: boolean;
+  offlineValidation: boolean;
+  validationTimeout: number;
+  customValidationRules: string[];
+  antiReplayEnabled: boolean;
+  maxValidationsPerTicket: number;
+  validationSoundEnabled: boolean;
+  vibrationEnabled: boolean;
+  geoLocationRequired: boolean;
+  allowedLocations: string[];
+}
+
+interface ValidationLog {
+  _id: string;
+  validatorId: string;
+  validatorName: string;
+  bookingId: string;
+  eventId: string;
+  eventTitle: string;
+  userId: string;
+  userName: string;
+  validationType: 'entry' | 'exit' | 'general';
+  status: 'validated' | 'rejected' | 'flagged';
+  notes?: string;
+  location?: string;
+  deviceInfo?: {
+    userAgent: string;
+    ip: string;
+  };
+  metadata?: {
+    ticketType: string;
+    ticketQuantity: number;
+    scanMethod: 'qr' | 'manual' | 'nfc';
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function ValidatorPage() {
   const { user, isLoaded } = useUser();
   const [isScanning, setIsScanning] = useState(false);
@@ -38,9 +82,83 @@ export default function ValidatorPage() {
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [manualQrInput, setManualQrInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [validationSettings, setValidationSettings] = useState<ValidationSettings | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Validation logs state
+  const [validationLogs, setValidationLogs] = useState<ValidationLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<ValidationLog | null>(null);
+  const [showLogDetails, setShowLogDetails] = useState(false);
+
+  // Fetch validation settings
+  const fetchValidationSettings = async () => {
+    try {
+      setSettingsLoading(true);
+      const response = await fetch('/api/admin/settings');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.validation) {
+          setValidationSettings(result.data.validation);
+        } else {
+          // Set default settings if none exist
+          setValidationSettings({
+            qrCodeEnabled: true,
+            scannerEnabled: true,
+            multipleScansAllowed: false,
+            scanTimeWindow: 5,
+            requireValidatorRole: true,
+            logValidations: true,
+            offlineValidation: false,
+            validationTimeout: 30,
+            customValidationRules: [],
+            antiReplayEnabled: true,
+            maxValidationsPerTicket: 1,
+            validationSoundEnabled: true,
+            vibrationEnabled: true,
+            geoLocationRequired: false,
+            allowedLocations: []
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching validation settings:', error);
+      // Set default settings on error
+      setValidationSettings({
+        qrCodeEnabled: true,
+        scannerEnabled: true,
+        multipleScansAllowed: false,
+        scanTimeWindow: 5,
+        requireValidatorRole: true,
+        logValidations: true,
+        offlineValidation: false,
+        validationTimeout: 30,
+        customValidationRules: [],
+        antiReplayEnabled: true,
+        maxValidationsPerTicket: 1,
+        validationSoundEnabled: true,
+        vibrationEnabled: true,
+        geoLocationRequired: false,
+        allowedLocations: []
+      });
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchValidationSettings();
+  }, []);
+
+  useEffect(() => {
+    if (showLogs && user) {
+      fetchValidationLogs();
+    }
+  }, [showLogs, user]);
 
   useEffect(() => {
     if (isLoaded && user) {
@@ -74,6 +192,36 @@ export default function ValidatorPage() {
   };
 
   const startScanning = async () => {
+    // Check if validation settings are loaded
+    if (!validationSettings) {
+      setValidationResult({
+        success: false,
+        message: 'Validation settings not loaded. Please refresh the page.',
+        error: 'Settings not loaded'
+      });
+      return;
+    }
+
+    // Check if QR code validation is enabled
+    if (!validationSettings.qrCodeEnabled) {
+      setValidationResult({
+        success: false,
+        message: 'QR code validation is currently disabled.',
+        error: 'QR validation disabled'
+      });
+      return;
+    }
+
+    // Check if scanner is enabled
+    if (!validationSettings.scannerEnabled) {
+      setValidationResult({
+        success: false,
+        message: 'Ticket scanner is currently disabled.',
+        error: 'Scanner disabled'
+      });
+      return;
+    }
+
     if (cameraPermission !== 'granted') {
       const granted = await requestCameraPermission();
       if (!granted) return;
@@ -108,6 +256,48 @@ export default function ValidatorPage() {
     }
   };
 
+  // Validation feedback functions
+  const playValidationSound = (isSuccess: boolean) => {
+    if (!validationSettings?.validationSoundEnabled) return;
+
+    try {
+      // Create audio context for playing validation sounds
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Different frequencies for success/failure
+      oscillator.frequency.value = isSuccess ? 800 : 400;
+      oscillator.type = 'sine';
+
+      // Different durations for success/failure
+      const duration = isSuccess ? 0.2 : 0.5;
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (error) {
+      console.log('Audio not supported or failed:', error);
+    }
+  };
+
+  const triggerVibration = (isSuccess: boolean) => {
+    if (!validationSettings?.vibrationEnabled || !navigator.vibrate) return;
+
+    try {
+      // Different vibration patterns for success/failure
+      const pattern = isSuccess ? [100] : [300, 100, 300];
+      navigator.vibrate(pattern);
+    } catch (error) {
+      console.log('Vibration not supported:', error);
+    }
+  };
+
   const stopScanning = () => {
     if (readerRef.current) {
       readerRef.current.reset();
@@ -117,24 +307,104 @@ export default function ValidatorPage() {
 
   const validateTicket = async (qrData: string) => {
     try {
+      // Add validation timeout if enabled
+      const timeoutDuration = validationSettings?.validationTimeout ? validationSettings.validationTimeout * 1000 : 30000;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
+
       const response = await fetch('/api/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ qrCodeData: qrData }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       const result = await response.json();
       setValidationResult(result);
 
-    } catch (error) {
+      // Trigger feedback based on result
+      if (result.success) {
+        playValidationSound(true);
+        triggerVibration(true);
+      } else {
+        playValidationSound(false);
+        triggerVibration(false);
+      }
+
+    } catch (error: any) {
       console.error('Error validating ticket:', error);
-      setValidationResult({
+
+      let errorMessage = 'Network error. Please try again.';
+      if (error.name === 'AbortError') {
+        errorMessage = `Validation timeout (${validationSettings?.validationTimeout || 30}s). Please try again.`;
+      }
+
+      const errorResult = {
         success: false,
-        message: 'Network error. Please try again.',
-        error: 'Network error'
+        message: errorMessage,
+        error: error.name === 'AbortError' ? 'Timeout' : 'Network error'
+      };
+
+      setValidationResult(errorResult);
+      playValidationSound(false);
+      triggerVibration(false);
+    }
+  };
+
+  // Validation logs functions
+  const fetchValidationLogs = async () => {
+    try {
+      setLogsLoading(true);
+
+      const params = new URLSearchParams({
+        limit: '10',
+        validatorId: user?.id || ''
       });
+
+      // Show logs from today
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      params.append('startDate', startOfDay.toISOString());
+
+      const response = await fetch(`/api/validation-logs?${params}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setValidationLogs(data.data.logs || []);
+      } else {
+        console.error('Failed to fetch validation logs:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching validation logs:', error);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const viewLogDetails = (log: ValidationLog) => {
+    setSelectedLog(log);
+    setShowLogDetails(true);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'validated': return 'text-green-600 bg-green-50';
+      case 'rejected': return 'text-red-600 bg-red-50';
+      case 'flagged': return 'text-yellow-600 bg-yellow-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'validated': return CheckCircle;
+      case 'rejected': return XCircle;
+      case 'flagged': return AlertTriangle;
+      default: return CheckCircle;
     }
   };
 
@@ -338,6 +608,47 @@ Please try:
               Logged in as: {user.firstName} {user.lastName} ({userRole})
             </div>
           </div>
+
+          {/* Validation Settings Status */}
+          {validationSettings && (
+            <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Validation Settings Status</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className={`flex items-center gap-2 ${validationSettings.qrCodeEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`w-2 h-2 rounded-full ${validationSettings.qrCodeEnabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  QR Validation
+                </div>
+                <div className={`flex items-center gap-2 ${validationSettings.scannerEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`w-2 h-2 rounded-full ${validationSettings.scannerEnabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  Scanner
+                </div>
+                <div className={`flex items-center gap-2 ${validationSettings.validationSoundEnabled ? 'text-green-600' : 'text-gray-600'}`}>
+                  <div className={`w-2 h-2 rounded-full ${validationSettings.validationSoundEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  Sound
+                </div>
+                <div className={`flex items-center gap-2 ${validationSettings.vibrationEnabled ? 'text-green-600' : 'text-gray-600'}`}>
+                  <div className={`w-2 h-2 rounded-full ${validationSettings.vibrationEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  Vibration
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  Max: {validationSettings.maxValidationsPerTicket}
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  Timeout: {validationSettings.validationTimeout}s
+                </div>
+                <div className={`flex items-center gap-2 ${validationSettings.antiReplayEnabled ? 'text-green-600' : 'text-gray-600'}`}>
+                  <div className={`w-2 h-2 rounded-full ${validationSettings.antiReplayEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  Anti-Replay
+                </div>
+                <div className={`flex items-center gap-2 ${validationSettings.multipleScansAllowed ? 'text-green-600' : 'text-gray-600'}`}>
+                  <div className={`w-2 h-2 rounded-full ${validationSettings.multipleScansAllowed ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  Multi-Scan
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Scanner Section */}
@@ -567,6 +878,198 @@ Please try:
               )}
             </div>
           </div>
+
+          {/* Validation Logs Section */}
+          <div className="mt-8">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <Activity className="w-6 h-6" />
+                  Today's Validation Logs
+                </h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={fetchValidationLogs}
+                    disabled={logsLoading}
+                    className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${logsLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={() => setShowLogs(!showLogs)}
+                    className="bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    {showLogs ? 'Hide Logs' : 'Show Logs'}
+                  </button>
+                </div>
+              </div>
+
+              {showLogs && (
+                <div className="space-y-4">
+                  {logsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading validation logs...</p>
+                    </div>
+                  ) : validationLogs.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No validation logs found for today.</p>
+                      <p className="text-gray-500 text-sm mt-2">Your validation activities will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {validationLogs.map((log) => {
+                        const StatusIcon = getStatusIcon(log.status);
+
+                        return (
+                          <div
+                            key={log._id}
+                            className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${getStatusColor(log.status)}`}>
+                                  <StatusIcon className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-gray-800">{log.eventTitle}</h4>
+                                  <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                                    <span>{log.userName}</span>
+                                    <span>•</span>
+                                    <span>{new Date(log.createdAt).toLocaleTimeString()}</span>
+                                    <span>•</span>
+                                    <span className="capitalize">{log.validationType}</span>
+                                  </div>
+                                  {log.notes && (
+                                    <p className="text-sm text-gray-500 mt-1 line-clamp-1">{log.notes}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
+                                  {log.status}
+                                </span>
+                                <button
+                                  onClick={() => viewLogDetails(log)}
+                                  className="bg-gray-600 text-white py-1 px-3 rounded text-sm hover:bg-gray-700 transition-colors flex items-center gap-1"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  Details
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Log Details Modal */}
+          {showLogDetails && selectedLog && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">Validation Log Details</h3>
+                    <button
+                      onClick={() => setShowLogDetails(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <XCircle className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Event</label>
+                        <p className="text-gray-800">{selectedLog.eventTitle}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Status</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedLog.status)}`}>
+                            {selectedLog.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Customer</label>
+                        <p className="text-gray-800">{selectedLog.userName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Validation Type</label>
+                        <p className="text-gray-800 capitalize">{selectedLog.validationType}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Date & Time</label>
+                        <p className="text-gray-800">{new Date(selectedLog.createdAt).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Validator</label>
+                        <p className="text-gray-800">{selectedLog.validatorName}</p>
+                      </div>
+                    </div>
+
+                    {selectedLog.location && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Location</label>
+                        <p className="text-gray-800">{selectedLog.location}</p>
+                      </div>
+                    )}
+
+                    {selectedLog.notes && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Notes</label>
+                        <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{selectedLog.notes}</p>
+                      </div>
+                    )}
+
+                    {selectedLog.metadata && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Technical Details</label>
+                        <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                          {selectedLog.metadata.ticketType && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Ticket Type:</span>
+                              <span>{selectedLog.metadata.ticketType}</span>
+                            </div>
+                          )}
+                          {selectedLog.metadata.ticketQuantity && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Quantity:</span>
+                              <span>{selectedLog.metadata.ticketQuantity}</span>
+                            </div>
+                          )}
+                          {selectedLog.metadata.scanMethod && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Scan Method:</span>
+                              <span className="capitalize">{selectedLog.metadata.scanMethod}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={() => setShowLogDetails(false)}
+                      className="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

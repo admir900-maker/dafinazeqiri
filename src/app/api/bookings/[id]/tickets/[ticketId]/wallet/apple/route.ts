@@ -62,7 +62,7 @@ export async function GET(
     };
 
     // Generate Apple Wallet pass data
-    const passJson = WalletPassGenerator.generateApplePass(ticketData);
+    const passJson = await WalletPassGenerator.generateApplePass(ticketData);
 
     // In a production environment, you would need to:
     // 1. Sign the pass with Apple certificates

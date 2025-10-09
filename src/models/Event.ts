@@ -36,7 +36,8 @@ const EventSchema = new mongoose.Schema({
   availableTickets: { type: Number },
 
   // Event details
-  category: { type: String, enum: ['concert', 'festival', 'theater', 'sports', 'comedy', 'conference', 'other'], default: 'concert' },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: false }, // Reference to Category model
+  categoryLegacy: { type: String, enum: ['concert', 'festival', 'theater', 'sports', 'comedy', 'conference', 'other'] }, // Backward compatibility
   ageLimit: { type: Number, min: 0 },
   duration: { type: Number }, // in minutes
   language: { type: String },
@@ -44,6 +45,9 @@ const EventSchema = new mongoose.Schema({
   organizer: { type: String },
   status: { type: String, enum: ['draft', 'published', 'cancelled', 'sold-out'], default: 'published' },
   maxCapacity: { type: Number }, // Maximum capacity for the event
+  currency: { type: String, default: 'EUR' },
+  isActive: { type: Boolean, default: true },
+  featured: { type: Boolean, default: false },
 
   // SEO and social
   tags: [{ type: String }],

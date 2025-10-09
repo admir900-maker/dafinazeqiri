@@ -406,7 +406,7 @@ function BookingSuccessContent() {
             </h3>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <ul className="text-sm text-gray-700 space-y-2">
-                <li>• Arrive at least 30 minutes before the event starts</li>
+                <li>• Arrive at least 90 minutes before the event starts</li>
                 <li>• Bring a valid ID for verification</li>
                 <li>• Keep your tickets secure and don't share QR codes</li>
                 <li>• Screenshots of QR codes are accepted</li>

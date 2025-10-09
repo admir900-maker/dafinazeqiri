@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import { useEffect, useState } from 'react';
 
 interface SEOProps {
   title?: string;
@@ -14,8 +15,18 @@ interface SEOProps {
   alternateLanguages?: { hreflang: string; href: string }[];
 }
 
+interface SiteConfig {
+  siteName: string;
+  siteDescription: string;
+  siteUrl: string;
+  currency: string;
+  timezone: string;
+  logoUrl: string;
+  faviconUrl: string;
+}
+
 export const SEO: React.FC<SEOProps> = ({
-  title = 'BiletAra - Your Premier Destination for Live Events',
+  title,
   description = 'Discover and book tickets for the best concerts, festivals, and live events. Secure booking, instant delivery, and unforgettable experiences await.',
   keywords = [
     'concert tickets',
@@ -36,8 +47,35 @@ export const SEO: React.FC<SEOProps> = ({
   locale = 'en_US',
   alternateLanguages = []
 }) => {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com';
-  const fullTitle = title.includes('BiletAra') ? title : `${title} | BiletAra`;
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>({
+    siteName: 'BiletAra', // fallback
+    siteDescription: '',
+    siteUrl: '',
+    currency: 'EUR',
+    timezone: 'UTC',
+    logoUrl: '',
+    faviconUrl: ''
+  })
+
+  // Fetch site configuration
+  useEffect(() => {
+    const fetchSiteConfig = async () => {
+      try {
+        const response = await fetch('/api/site-config')
+        if (response.ok) {
+          const config = await response.json()
+          setSiteConfig(config)
+        }
+      } catch (error) {
+        console.error('Failed to fetch site config:', error)
+      }
+    }
+
+    fetchSiteConfig()
+  }, [])
+
+  const siteUrl = siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com';
+  const fullTitle = title ? (title.includes(siteConfig.siteName) ? title : `${title} | ${siteConfig.siteName}`) : `${siteConfig.siteName} - Your Premier Destination for Live Events`;
   const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
   const fullCanonicalUrl = canonicalUrl || siteUrl;
 
@@ -47,7 +85,7 @@ export const SEO: React.FC<SEOProps> = ({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords.join(', ')} />
-      <meta name="author" content="BiletAra" />
+      <meta name="author" content={siteConfig.siteName} />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="theme-color" content="#3B82F6" />
 
@@ -69,7 +107,7 @@ export const SEO: React.FC<SEOProps> = ({
       <meta property="og:image" content={fullOgImage} />
       <meta property="og:image:alt" content={title} />
       <meta property="og:url" content={fullCanonicalUrl} />
-      <meta property="og:site_name" content="BiletAra" />
+      <meta property="og:site_name" content={siteConfig.siteName} />
       <meta property="og:locale" content={locale} />
 
       {/* Twitter Card */}
@@ -139,25 +177,57 @@ export const generateEventStructuredData = (event: {
   image: event.image,
 });
 
-export const generateOrganizationStructuredData = () => ({
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'BiletAra',
-  description: 'Premier destination for live event tickets and entertainment experiences',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com',
-  logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'}/logo.png`,
-  contactPoint: {
-    '@type': 'ContactPoint',
-    telephone: '+1-555-123-4567',
-    contactType: 'customer service',
-    email: 'support@biletara.com',
-  },
-  sameAs: [
-    'https://twitter.com/biletara',
-    'https://facebook.com/biletara',
-    'https://instagram.com/biletara',
-  ],
-});
+export const generateOrganizationStructuredData = async () => {
+  try {
+    const response = await fetch('/api/site-config')
+    const siteConfig = response.ok ? await response.json() : {
+      siteName: 'BiletAra',
+      siteDescription: 'Premier destination for live event tickets and entertainment experiences',
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'
+    }
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: siteConfig.siteName,
+      description: siteConfig.siteDescription || 'Premier destination for live event tickets and entertainment experiences',
+      url: siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com',
+      logo: `${siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'}/logo.png`,
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '+1-555-123-4567',
+        contactType: 'customer service',
+        email: 'support@biletara.com',
+      },
+      sameAs: [
+        'https://twitter.com/biletara',
+        'https://facebook.com/biletara',
+        'https://instagram.com/biletara',
+      ],
+    }
+  } catch (error) {
+    // Fallback if API fails
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'BiletAra',
+      description: 'Premier destination for live event tickets and entertainment experiences',
+      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com',
+      logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'}/logo.png`,
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '+1-555-123-4567',
+        contactType: 'customer service',
+        email: 'support@biletara.com',
+      },
+      sameAs: [
+        'https://twitter.com/biletara',
+        'https://facebook.com/biletara',
+        'https://instagram.com/biletara',
+      ],
+    }
+  }
+};
 
 export const generateBreadcrumbStructuredData = (items: { name: string; url: string }[]) => ({
   '@context': 'https://schema.org',

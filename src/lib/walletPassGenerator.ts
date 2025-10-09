@@ -3,6 +3,8 @@
  * Provides helper functions for generating Apple Wallet and Google Pay passes
  */
 
+import { getSiteConfig } from './settings';
+
 export interface TicketData {
   ticketId: string;
   ticketName: string;
@@ -69,7 +71,9 @@ export class WalletPassGenerator {
   /**
    * Generates Apple Wallet pass data structure
    */
-  static generateApplePass(ticketData: TicketData): ApplePassData {
+  static async generateApplePass(ticketData: TicketData): Promise<ApplePassData> {
+    const siteConfig = await getSiteConfig();
+
     const barcodeData = JSON.stringify({
       eventId: ticketData.event._id,
       ticketId: ticketData.ticketId,
@@ -83,9 +87,9 @@ export class WalletPassGenerator {
       passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID || 'pass.com.biletara.eventticket',
       serialNumber: ticketData.ticketId,
       teamIdentifier: process.env.APPLE_TEAM_ID || 'BILETARA',
-      organizationName: 'BiletAra',
+      organizationName: siteConfig.siteName,
       description: `${ticketData.event.title} - ${ticketData.ticketName}`,
-      logoText: 'BiletAra',
+      logoText: siteConfig.siteName,
       foregroundColor: 'rgb(255, 255, 255)',
       backgroundColor: 'rgb(30, 58, 138)',
       labelColor: 'rgb(255, 255, 255)',
@@ -151,7 +155,7 @@ export class WalletPassGenerator {
           {
             key: 'contact',
             label: 'Contact Information',
-            value: 'For support, visit biletara.com or email support@biletara.com'
+            value: `For support, visit ${siteConfig.siteUrl || 'our website'} or email support@${siteConfig.siteUrl || 'example.com'}`
           },
           {
             key: 'instructions',

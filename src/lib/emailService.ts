@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { connectToDatabase } from './mongodb';
 import PaymentSettings from '@/models/PaymentSettings';
 import { logError, logEmailError, logDatabaseError } from './errorLogger';
+import { getEmailConfig, getSiteConfig } from './settings';
 
 interface EmailOptions {
   to: string;
@@ -25,27 +26,43 @@ interface SMTPConfig {
   senderName?: string;
 }
 
-// Function to load SMTP settings from database
+// Function to load SMTP settings from database (updated to use new settings service)
 async function loadSMTPSettings(): Promise<SMTPConfig | null> {
   try {
-    await connectToDatabase();
-    const settings = await PaymentSettings.findOne({});
+    const emailConfig = await getEmailConfig();
+    const siteConfig = await getSiteConfig();
 
-    if (!settings || !settings.smtpHost || !settings.smtpUser) {
-      return null;
+    if (!emailConfig.smtp.host || !emailConfig.smtp.username) {
+      // Fallback to legacy PaymentSettings for backward compatibility
+      await connectToDatabase();
+      const legacySettings = await PaymentSettings.findOne({});
+
+      if (!legacySettings || !legacySettings.smtpHost || !legacySettings.smtpUser) {
+        return null;
+      }
+
+      return {
+        smtpHost: legacySettings.smtpHost,
+        smtpPort: legacySettings.smtpPort || 587,
+        smtpSecure: legacySettings.smtpSecure || false,
+        smtpUser: legacySettings.smtpUser,
+        smtpPass: legacySettings.smtpPass,
+        senderEmail: legacySettings.senderEmail || legacySettings.smtpUser,
+        senderName: legacySettings.senderName || siteConfig.siteName
+      };
     }
 
     return {
-      smtpHost: settings.smtpHost,
-      smtpPort: settings.smtpPort || 587,
-      smtpSecure: settings.smtpSecure || false,
-      smtpUser: settings.smtpUser,
-      smtpPass: settings.smtpPass,
-      senderEmail: settings.senderEmail || settings.smtpUser,
-      senderName: settings.senderName || 'BiletAra'
+      smtpHost: emailConfig.smtp.host,
+      smtpPort: emailConfig.smtp.port,
+      smtpSecure: emailConfig.smtp.secure,
+      smtpUser: emailConfig.smtp.username,
+      smtpPass: emailConfig.smtp.password,
+      senderEmail: emailConfig.fromAddress,
+      senderName: emailConfig.fromName
     };
   } catch (error) {
-    logDatabaseError('loadSMTPSettings', 'PaymentSettings', error);
+    logDatabaseError('loadSMTPSettings', 'Settings', error);
     return null;
   }
 }
@@ -63,6 +80,10 @@ class EmailService {
           user: smtpConfig.smtpUser,
           pass: smtpConfig.smtpPass,
         },
+        tls: {
+          rejectUnauthorized: false, // Accept self-signed certificates
+          ciphers: 'SSLv3'
+        }
       });
     } else {
       // Fallback to environment variables
@@ -74,14 +95,25 @@ class EmailService {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        tls: {
+          rejectUnauthorized: false
+        }
       });
     }
   }
 
   async sendEmail(options: EmailOptions, senderConfig?: { email: string; name: string }): Promise<boolean> {
     try {
+      const siteConfig = await getSiteConfig();
       const fromEmail = senderConfig?.email || process.env.SENDER_EMAIL;
-      const fromName = senderConfig?.name || 'BiletAra';
+      const fromName = senderConfig?.name || siteConfig.siteName;
+
+      console.log('📧 Attempting to send email:', {
+        to: options.to,
+        subject: options.subject,
+        fromEmail,
+        fromName
+      });
 
       const mailOptions = {
         from: `"${fromName}" <${fromEmail}>`,
@@ -91,15 +123,27 @@ class EmailService {
         attachments: options.attachments,
       };
 
+      // Test connection before sending
+      try {
+        await this.transporter.verify();
+        console.log('✅ SMTP connection verified successfully');
+      } catch (verifyError) {
+        console.error('❌ SMTP verification failed:', verifyError);
+        logEmailError('sendEmail-verify', options.to, verifyError, 'smtp-verify');
+        return false;
+      }
+
       const result = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully:', result.messageId);
       return true;
     } catch (error) {
+      console.error('❌ Email sending failed:', error);
       logEmailError('sendEmail', options.to, error, 'smtp-send');
       return false;
     }
   }
 
-  generateBookingConfirmationEmail(
+  async generateBookingConfirmationEmail(
     booking: {
       bookingReference: string;
       totalAmount: number;
@@ -123,7 +167,9 @@ class EmailService {
       qrCode: string;
       ticketId?: string;
     }[]
-  ): { html: string; attachments: any[] } {
+  ): Promise<{ html: string; attachments: any[] }> {
+    const siteConfig = await getSiteConfig();
+
     const ticketRows = tickets.map(ticket => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${ticket.ticketName}</td>
@@ -190,14 +236,14 @@ class EmailService {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Booking Confirmation - BiletAra</title>
+        <title>Booking Confirmation - ${siteConfig.siteName}</title>
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">🎫 BiletAra</h1>
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">🎫 ${siteConfig.siteName}</h1>
             <p style="margin: 8px 0 0 0; opacity: 0.9;">Your tickets are confirmed!</p>
           </div>
 
@@ -294,8 +340,8 @@ class EmailService {
             <div style="text-align: center; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
               <p style="margin: 0 0 12px 0; color: #64748b;">Need help? Contact our support team</p>
               <p style="margin: 0; color: #64748b;">
-                📧 <a href="mailto:support@biletara.com" style="color: #2563eb; text-decoration: none;">support@biletara.com</a> | 
-                🌐 <a href="https://biletara.com" style="color: #2563eb; text-decoration: none;">biletara.com</a>
+                📧 <a href="mailto:support@${siteConfig.siteUrl || 'example.com'}" style="color: #2563eb; text-decoration: none;">support@${siteConfig.siteUrl || 'example.com'}</a> | 
+                🌐 <a href="https://${siteConfig.siteUrl || 'example.com'}" style="color: #2563eb; text-decoration: none;">${siteConfig.siteUrl || 'example.com'}</a>
               </p>
             </div>
 
@@ -303,8 +349,8 @@ class EmailService {
 
           <!-- Footer -->
           <div style="background-color: #1e293b; color: #94a3b8; padding: 20px; text-align: center;">
-            <p style="margin: 0; font-size: 14px;">© 2025 BiletAra. All rights reserved.</p>
-            <p style="margin: 8px 0 0 0; font-size: 12px;">You received this email because you booked tickets with BiletAra.</p>
+            <p style="margin: 0; font-size: 14px;">© 2025 ${siteConfig.siteName}. All rights reserved.</p>
+            <p style="margin: 8px 0 0 0; font-size: 12px;">You received this email because you booked tickets with ${siteConfig.siteName}.</p>
           </div>
 
         </div>
@@ -406,16 +452,17 @@ export async function sendBookingConfirmationEmail(booking: any): Promise<boolea
     }));
 
     // Generate email HTML and attachments
-    const emailContent = emailServiceInstance.generateBookingConfirmationEmail(
+    const emailContent = await emailServiceInstance.generateBookingConfirmationEmail(
       bookingInfo,
       eventInfo,
       ticketsInfo
     );
 
     // Send the email with database sender config and QR code attachments
+    const siteConfig = await getSiteConfig();
     const senderConfig = smtpSettings ? {
       email: smtpSettings.senderEmail,
-      name: smtpSettings.senderName || 'BiletAra'
+      name: smtpSettings.senderName || siteConfig.siteName
     } : undefined;
 
     const success = await emailServiceInstance.sendEmail({

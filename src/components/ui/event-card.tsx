@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, Clock, Users } from 'lucide-react'
+import { Calendar, MapPin, Clock, Users, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
@@ -29,10 +29,17 @@ interface Event {
   ticketTypes: TicketType[]
   posterImage?: string
   bannerImage?: string
-  category: string
+  category: {
+    _id: string
+    name: string
+    slug: string
+    icon: string
+    color: string
+  } | string
   artists: string[]
   maxCapacity: number
   tags: string[]
+  youtubeTrailer?: string
 }
 
 interface EventCardProps {
@@ -40,52 +47,91 @@ interface EventCardProps {
   variant?: 'default' | 'featured'
 }
 
-export function EventCard({ event, variant = 'default' }: EventCardProps) {
+// Memoized date formatter
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+// Memoized time formatter
+const formatTime = (timeString: string) => {
+  return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
+export const EventCard = memo(function EventCard({ event, variant = 'default' }: EventCardProps) {
   const { formatPrice } = useCurrency()
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
+  // Memoize expensive calculations
+  const { minPrice, maxPrice, imageSrc, imageAlt } = useMemo(() => {
+    const prices = event.ticketTypes?.map(ticket => ticket.price) || [0]
+    const min = Math.min(...prices)
+    const max = Math.max(...prices)
 
-  const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-  }
+    const src = event.posterImage || event.bannerImage || '/placeholder-event.svg'
 
-  const getMinPrice = () => {
-    if (!event.ticketTypes || event.ticketTypes.length === 0) return 0
-    return Math.min(...event.ticketTypes.map(ticket => ticket.price))
-  }
-
-  const getMaxPrice = () => {
-    if (!event.ticketTypes || event.ticketTypes.length === 0) return 0
-    return Math.max(...event.ticketTypes.map(ticket => ticket.price))
-  }
-
-  const getImageSrc = () => {
-    return event.posterImage || event.bannerImage || '/placeholder-event.svg'
-  }
-
-  const generateImageAlt = () => {
     const artists = event.artists.length > 0 ? ` featuring ${event.artists.slice(0, 2).join(' and ')}` : ''
     const date = formatDate(event.date)
-    return `${event.title}${artists} at ${event.venue}, ${event.location} on ${date}`
-  }
+    const alt = `${event.title}${artists} at ${event.venue}, ${event.location} on ${date}`
 
-  const minPrice = getMinPrice()
-  const maxPrice = getMaxPrice()
+    return {
+      minPrice: min,
+      maxPrice: max,
+      imageSrc: src,
+      imageAlt: alt
+    }
+  }, [event.ticketTypes, event.posterImage, event.bannerImage, event.title, event.artists, event.venue, event.location, event.date])
 
-  const cardClasses = variant === 'featured'
-    ? 'group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl'
-    : 'group cursor-pointer transition-all duration-300 hover:scale-102 hover:shadow-lg bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl'
+  // Memoize formatted date and time
+  const formattedDate = useMemo(() => formatDate(event.date), [event.date])
+  const formattedTime = useMemo(() => formatTime(event.time), [event.time])
+
+  // Memoize card classes
+  const cardClasses = useMemo(() => {
+    return variant === 'featured'
+      ? 'group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl'
+      : 'group cursor-pointer transition-all duration-300 hover:scale-102 hover:shadow-lg bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl'
+  }, [variant])
+
+  // Memoize tags display
+  const tagsDisplay = useMemo(() => {
+    if (!event.tags || event.tags.length === 0) return null
+
+    const visibleTags = event.tags.slice(0, 3)
+    const hiddenCount = event.tags.length - 3
+
+    return (
+      <div className="flex flex-wrap gap-1 mb-4" role="list" aria-label="Event tags">
+        {visibleTags.map((tag, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="text-xs bg-white/20 text-white border-white/30"
+            role="listitem"
+          >
+            {tag}
+          </Badge>
+        ))}
+        {hiddenCount > 0 && (
+          <Badge
+            variant="secondary"
+            className="text-xs bg-white/20 text-white border-white/30"
+            role="listitem"
+            aria-label={`${hiddenCount} more tags`}
+          >
+            +{hiddenCount}
+          </Badge>
+        )}
+      </div>
+    )
+  }, [event.tags])
 
   return (
     <Link href={`/events/${event._id}`} className="block h-full">
@@ -94,8 +140,8 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
           {/* Event Image */}
           <div className={`relative ${variant === 'featured' ? 'h-64' : 'h-48'}`}>
             <OptimizedImage
-              src={getImageSrc()}
-              alt={generateImageAlt()}
+              src={imageSrc}
+              alt={imageAlt}
               fallbackSrc="/placeholder-event.svg"
               placeholder="blur"
               priority={variant === 'featured'}
@@ -107,18 +153,25 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
             <Badge
               className="absolute top-4 left-4 bg-white/30 backdrop-blur-sm hover:bg-white/40 text-white border border-white/40"
             >
-              {event.category}
+              {typeof event.category === 'object' ? event.category.name : event.category}
             </Badge>
 
             {/* Date Badge */}
             <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-sm rounded-lg p-2 text-center min-w-[60px] border border-white/40">
               <div className="text-xs font-medium text-white/90">
-                {formatDate(event.date).split(' ')[0]}
+                {formattedDate.split(' ')[0]}
               </div>
               <div className="text-lg font-bold text-white">
-                {formatDate(event.date).split(' ')[1].replace(',', '')}
+                {formattedDate.split(' ')[1].replace(',', '')}
               </div>
             </div>
+
+            {/* YouTube Trailer Indicator */}
+            {event.youtubeTrailer && (
+              <div className="absolute bottom-4 right-4 bg-red-600/80 backdrop-blur-sm rounded-full p-2 border border-red-400/40">
+                <Play className="w-4 h-4 text-white" fill="white" />
+              </div>
+            )}
           </div>
 
           <CardContent className="p-4">
@@ -144,7 +197,7 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
                 <Calendar className="w-4 h-4 mr-2 text-white" aria-hidden="true" />
                 <span>
                   <ScreenReaderOnly>Date: </ScreenReaderOnly>
-                  {formatDate(event.date)}
+                  {formattedDate}
                 </span>
               </div>
 
@@ -152,7 +205,7 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
                 <Clock className="w-4 h-4 mr-2 text-white" aria-hidden="true" />
                 <span>
                   <ScreenReaderOnly>Time: </ScreenReaderOnly>
-                  {formatTime(event.time)}
+                  {formattedTime}
                 </span>
               </div>
 
@@ -174,30 +227,7 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
             </div>
 
             {/* Tags */}
-            {event.tags && event.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4" role="list" aria-label="Event tags">
-                {event.tags.slice(0, 3).map((tag, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="text-xs bg-white/20 text-white border-white/30"
-                    role="listitem"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-                {event.tags.length > 3 && (
-                  <Badge
-                    variant="secondary"
-                    className="text-xs bg-white/20 text-white border-white/30"
-                    role="listitem"
-                    aria-label={`${event.tags.length - 3} more tags`}
-                  >
-                    +{event.tags.length - 3}
-                  </Badge>
-                )}
-              </div>
-            )}
+            {tagsDisplay}
 
             {/* Description */}
             <p className="text-sm text-white/80 line-clamp-2 mb-4 drop-shadow-sm">
@@ -233,4 +263,4 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
       </Card>
     </Link>
   )
-}
+})

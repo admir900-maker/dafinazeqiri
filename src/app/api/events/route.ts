@@ -1,61 +1,129 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import mongoose from 'mongoose';
 import Event from '@/models/Event';
+import Category from '@/models/Category';
 import Booking from '@/models/Booking';
 import { auth } from '@clerk/nextjs/server';
 import { validateAndSanitize, validateEvent } from '@/lib/validation';
 import { logError } from '@/lib/errorLogger';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
-    const events = await Event.find({}).sort({ date: 1 });
 
-    // Calculate available tickets for each event
-    const eventsWithAvailableTickets = await Promise.all(
-      events.map(async (event) => {
-        if (event.ticketTypes && event.ticketTypes.length > 0) {
-          // Get all confirmed bookings for this event
-          const confirmedBookings = await Booking.find({
-            eventId: event._id,
-            status: 'confirmed',
-            paymentStatus: 'paid'
-          });
+    // Ensure models are registered
+    if (!mongoose.models.Category) {
+      require('@/models/Category');
+    }
+    if (!mongoose.models.Event) {
+      require('@/models/Event');
+    }
 
-          // Count tickets by type from confirmed bookings
-          const bookedTicketCounts: { [key: string]: number } = {};
-          confirmedBookings.forEach(booking => {
-            booking.tickets.forEach((ticket: any) => {
-              const ticketName = ticket.ticketName;
-              bookedTicketCounts[ticketName] = (bookedTicketCounts[ticketName] || 0) + 1;
-            });
-          });
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100); // Cap at 100
+    const page = parseInt(searchParams.get('page') || '1');
+    const skip = (page - 1) * limit;
 
-          // Update available tickets for each ticket type
-          const updatedTicketTypes = event.ticketTypes.map((ticketType: any) => {
-            const bookedCount = bookedTicketCounts[ticketType.name] || 0;
-            const availableTickets = Math.max(0, ticketType.capacity - bookedCount);
+    // Build query
+    let query: any = {};
+    if (category) {
+      query.category = category;
+    }
 
-            return {
-              ...ticketType._doc || ticketType,
-              availableTickets: availableTickets
-            };
-          });
+    // Use lean() for better performance and select only needed fields
+    const events = await Event.find(query)
+      .populate('category', 'name slug icon color')
+      .select('title description date time location venue ticketTypes posterImage bannerImage artists maxCapacity tags youtubeTrailer category')
+      .sort({ date: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Much faster for read-only operations
+
+    // Get total count for pagination (only if needed)
+    const totalEvents = page === 1 ? await Event.countDocuments(query) : 0;
+
+    // Optimize ticket availability calculation with aggregation
+    const eventIds = events.map(event => event._id);
+    const bookingAggregation = await Booking.aggregate([
+      {
+        $match: {
+          eventId: { $in: eventIds },
+          status: 'confirmed',
+          paymentStatus: 'paid'
+        }
+      },
+      {
+        $unwind: '$tickets'
+      },
+      {
+        $group: {
+          _id: {
+            eventId: '$eventId',
+            ticketName: '$tickets.ticketName'
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Create lookup map for booked tickets
+    const bookedTicketsMap: { [key: string]: { [ticketName: string]: number } } = {};
+    bookingAggregation.forEach(item => {
+      const eventId = item._id.eventId.toString();
+      const ticketName = item._id.ticketName;
+      if (!bookedTicketsMap[eventId]) {
+        bookedTicketsMap[eventId] = {};
+      }
+      bookedTicketsMap[eventId][ticketName] = item.count;
+    });
+
+    // Update events with available ticket counts
+    const eventsWithAvailableTickets = events.map((event: any) => {
+      if (event.ticketTypes && event.ticketTypes.length > 0) {
+        const eventId = event._id.toString();
+        const bookedTickets = bookedTicketsMap[eventId] || {};
+
+        const updatedTicketTypes = event.ticketTypes.map((ticketType: any) => {
+          const bookedCount = bookedTickets[ticketType.name] || 0;
+          const availableTickets = Math.max(0, ticketType.capacity - bookedCount);
 
           return {
-            ...event._doc,
-            ticketTypes: updatedTicketTypes
+            ...ticketType,
+            availableTickets: availableTickets
           };
-        }
+        });
 
-        return event;
-      })
-    );
+        return {
+          ...event,
+          ticketTypes: updatedTicketTypes
+        };
+      }
 
-    return NextResponse.json(eventsWithAvailableTickets);
+      return event;
+    });
+
+    // Add cache headers for better performance
+    const response = NextResponse.json({
+      success: true,
+      events: eventsWithAvailableTickets,
+      pagination: {
+        page,
+        limit,
+        total: totalEvents,
+        pages: totalEvents ? Math.ceil(totalEvents / limit) : 0
+      }
+    });
+
+    // Cache for 5 minutes
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
+    return response;
   } catch (error: any) {
     logError('Error fetching events', error, { action: 'events-api-get' });
-    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch events' }, { status: 500 });
   }
 }
 

@@ -9,7 +9,11 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
-    "build:analyze": "ANALYZE=true next build"
+    "build:analyze": "ANALYZE=true next build",
+    "optimize:db": "node scripts/optimize-database.js",
+    "analyze:performance": "node scripts/optimize-database.js --analyze",
+    "optimize": "npm run optimize:db && npm run build:analyze",
+    "test:optimization": "node scripts/test-optimization.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.3",
@@ -18,6 +22,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
     "@stripe/react-stripe-js": "^5.2.0",
@@ -26,8 +31,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^7.0.2",
     "@types/qrcode": "^1.5.5",
-    "@types/sharp": "^0.31.1",
-    "@types/swiper": "^5.4.3",
     "@types/uuid": "^10.0.0",
     "@zxing/library": "^0.21.3",
     "bcryptjs": "^3.0.2",
@@ -43,16 +46,13 @@
     "mongoose": "^8.19.1",
     "next": "15.5.4",
     "next-cloudinary": "^6.16.0",
-    "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.9",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.64.0",
-    "react-intersection-observer": "^9.16.0",
     "sharp": "^0.34.4",
     "stripe": "^19.1.0",
-    "swiper": "^12.0.2",
     "tailwind-merge": "^3.3.1",
     "uuid": "^13.0.0",
     "zod": "^4.1.12"
@@ -66,6 +66,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
+    "tsx": "^4.7.0",
     "typescript": "^5"
   }
 }

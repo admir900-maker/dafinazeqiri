@@ -52,7 +52,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
   const setCurrency = (newCurrency: string) => {
     setCurrencyState(newCurrency);
-    setCurrencySymbol(currencyData[newCurrency]?.symbol || '$');
+    setCurrencySymbol(currencyData[newCurrency]?.symbol || '€');
   };
 
   const formatPrice = (price: number): string => {
@@ -60,7 +60,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getCurrencyInfo = (currencyCode: string) => {
-    return currencyData[currencyCode] || { symbol: '$', name: 'US Dollar' };
+    return currencyData[currencyCode] || { symbol: '€', name: 'Euro' };
   };
 
   return (

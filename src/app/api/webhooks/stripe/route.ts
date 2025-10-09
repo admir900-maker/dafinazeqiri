@@ -5,12 +5,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { sendBookingConfirmationEmail } from '@/lib/emailService';
 import { clerkClient } from '@clerk/nextjs/server';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-});
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+import { getStripe, getStripeWebhookSecret } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +18,15 @@ export async function POST(req: NextRequest) {
     let event: Stripe.Event;
 
     try {
+      // Get stripe instance and webhook secret from database settings
+      const stripe = await getStripe();
+      const endpointSecret = await getStripeWebhookSecret();
+
+      if (!endpointSecret) {
+        console.error('Stripe webhook secret not configured');
+        return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+      }
+
       event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
       console.log('Webhook signature verified:', event.type);
     } catch (err) {

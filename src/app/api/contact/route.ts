@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateAndSanitize, validateContactForm } from '@/lib/validation';
 import { logError } from '@/lib/errorLogger';
+import { getSiteConfig } from '@/lib/settings';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,9 +56,10 @@ export async function POST(request: NextRequest) {
 
 // Optional: Handle GET requests to provide form configuration
 export async function GET() {
+  const siteConfig = await getSiteConfig();
   return NextResponse.json({
-    supportEmail: 'support@biletara.com',
-    businessEmail: 'business@biletara.com',
+    supportEmail: `support@${siteConfig.siteUrl || 'example.com'}`,
+    businessEmail: `business@${siteConfig.siteUrl || 'example.com'}`,
     maxMessageLength: 2000,
     supportedLanguages: ['en', 'tr'],
     responseTime: '24-48 hours'

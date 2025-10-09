@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Event from '@/models/Event';
-import stripe from '@/lib/stripe';
+import getStripeInstance from '@/lib/stripe';
 import { auth } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not enough tickets available' }, { status: 400 });
     }
 
+    const stripe = await getStripeInstance();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [

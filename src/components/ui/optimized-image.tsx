@@ -34,7 +34,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   onError,
   onLoad,
 }) => {
-  const [imgSrc, setImgSrc] = useState(src);
+  // Use fallback if src is undefined or null
+  const [imgSrc, setImgSrc] = useState(src || fallbackSrc);
   const [isLoading, setIsLoading] = useState(true);
 
   const handleError = useCallback(() => {
@@ -80,7 +81,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   };
 
   // Check if the source is from Cloudinary
-  const isCloudinaryUrl = imgSrc.includes('cloudinary.com') || imgSrc.includes('res.cloudinary.com');
+  const isCloudinaryUrl = imgSrc && (imgSrc.includes('cloudinary.com') || imgSrc.includes('res.cloudinary.com'));
 
   // Use CloudinaryImage for Cloudinary URLs when width and height are provided
   if (isCloudinaryUrl && width && height) {

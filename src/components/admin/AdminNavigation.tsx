@@ -16,7 +16,8 @@ import {
   Bell,
   Tag,
   BookOpen,
-  CheckCircle
+  CheckCircle,
+  Activity
 } from 'lucide-react';
 
 interface NavItem {
@@ -84,6 +85,12 @@ const adminNavItems: NavItem[] = [
     label: 'Analytics',
     icon: BarChart3,
     description: 'Reports and insights'
+  },
+  {
+    href: '/admin/user-activity',
+    label: 'User Activity',
+    icon: Activity,
+    description: 'Monitor user behavior and actions'
   },
   {
     href: '/admin/payments',

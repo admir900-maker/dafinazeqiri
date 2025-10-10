@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { SkipLink } from "@/components/ui/accessibility";
 import { ClerkProvider } from '@clerk/nextjs';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { FavoritesProvider, CartProvider } from '@/contexts/FavoritesCartContext';
 import { getSiteConfig } from '@/lib/settings';
 
 const inter = Inter({
@@ -53,21 +54,25 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <CurrencyProvider>
-        <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-          <body className={`${inter.variable} font-sans antialiased min-h-screen flex flex-col main-background`}>
-            {/* Skip links for accessibility */}
-            <SkipLink href="#main-content">Skip to main content</SkipLink>
-            <SkipLink href="#navigation">Skip to navigation</SkipLink>
+        <FavoritesProvider>
+          <CartProvider>
+            <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
+              <body className={`${inter.variable} font-sans antialiased min-h-screen flex flex-col main-background`}>
+                {/* Skip links for accessibility */}
+                <SkipLink href="#main-content">Skip to main content</SkipLink>
+                <SkipLink href="#navigation">Skip to navigation</SkipLink>
 
-            <Header />
-            <main id="main-content" className="flex-1 pt-16 main-background" role="main">
-              <div className="main-content">
-                {children}
-              </div>
-            </main>
-            <Footer />
-          </body>
-        </html>
+                <Header />
+                <main id="main-content" className="flex-1 pt-16 main-background" role="main">
+                  <div className="main-content">
+                    {children}
+                  </div>
+                </main>
+                <Footer />
+              </body>
+            </html>
+          </CartProvider>
+        </FavoritesProvider>
       </CurrencyProvider>
     </ClerkProvider>
   );

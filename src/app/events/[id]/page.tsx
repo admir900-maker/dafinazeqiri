@@ -13,7 +13,9 @@ import {
   Share2,
   ArrowLeft,
   Play,
-  ExternalLink
+  ExternalLink,
+  ShoppingCart,
+  CreditCard
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +23,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BackgroundWrapper } from '@/components/ui/background-wrapper'
 import { useCurrency } from '@/contexts/CurrencyContext'
+import { useCart } from '@/contexts/FavoritesCartContext'
+import { useUser } from '@clerk/nextjs'
+import { activityLogger } from '@/lib/activityLogger'
 
 interface TicketType {
   name: string
@@ -66,6 +71,8 @@ export default function EventDetailPage() {
   const router = useRouter()
   const eventId = params.id as string
   const { formatPrice } = useCurrency()
+  const { addToCart, cartItems } = useCart()
+  const { user } = useUser()
 
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,9 +89,23 @@ export default function EventDetailPage() {
         }
         const data = await response.json()
         setEvent(data)
+
+        // Log event view
+        activityLogger.logEventView(data._id, data.title, {
+          source: 'event_detail_page',
+          category: data.category?.name,
+          venue: data.venue,
+          date: data.date
+        })
       } catch (err) {
         console.error('Error fetching event:', err)
         setError('Failed to load event details')
+
+        // Log error
+        activityLogger.logError('event_fetch_failed', 'Failed to load event details', {
+          eventId,
+          error: err instanceof Error ? err.message : 'Unknown error'
+        })
       } finally {
         setLoading(false)
       }
@@ -123,35 +144,92 @@ export default function EventDetailPage() {
 
     if (!event) return
 
-    // Prepare ticket data for checkout
-    const ticketSelections = selectedTicketsList.map(([ticketName, quantity]) => {
-      const ticketType = event.ticketTypes.find(t => t.name === ticketName)
-      return {
-        ticketId: ticketType?.name || ticketName, // Use name as ID for now
-        ticketName,
-        quantity,
-        price: ticketType?.price || 0
+    setBookingLoading(true)
+
+    try {
+      // Log ticket selections before proceeding to checkout
+      for (const [ticketName, quantity] of selectedTicketsList) {
+        const ticketType = event.ticketTypes.find(t => t.name === ticketName)
+        if (ticketType) {
+          // Log individual ticket selection
+          await activityLogger.logTicketSelection(
+            event._id,
+            event.title,
+            ticketType.name,
+            quantity,
+            ticketType.price * quantity
+          )
+        }
       }
-    })
 
-    // Redirect to checkout page with ticket data
-    const checkoutData = {
-      eventId: event._id,
-      tickets: encodeURIComponent(JSON.stringify(ticketSelections))
+      // Log checkout initiation
+      const totalAmount = getTotalPrice()
+      await activityLogger.logCheckoutStarted(totalAmount, 'EUR', {
+        eventId: event._id,
+        eventTitle: event.title,
+        selectedTickets: selectedTicketsList,
+        totalTickets: getTotalTickets(),
+        source: 'event_detail_page'
+      })
+
+      // Reset selected tickets
+      setSelectedTickets({})
+
+      // Prepare checkout data in the correct format
+      const checkoutTickets = selectedTicketsList.map(([ticketName, quantity]) => {
+        const ticketType = event.ticketTypes.find(t => t.name === ticketName);
+        return {
+          ticketId: ticketName.toLowerCase().replace(/\s+/g, '-'),
+          ticketName: ticketName,
+          quantity: quantity,
+          price: ticketType?.price || 0
+        };
+      });
+
+      // Redirect directly to checkout with selected tickets
+      const checkoutUrl = `/checkout?eventId=${event._id}&tickets=${encodeURIComponent(JSON.stringify(checkoutTickets))}`;
+      router.push(checkoutUrl);
+    } catch (error) {
+      console.error('Error proceeding to checkout:', error)
+
+      // Log error
+      activityLogger.logError('checkout_redirect_failed', 'Failed to proceed to checkout', {
+        eventId: event._id,
+        eventTitle: event.title,
+        selectedTickets: selectedTicketsList,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+
+      alert('Failed to proceed to checkout. Please try again.')
+    } finally {
+      setBookingLoading(false)
     }
-
-    const checkoutUrl = `/checkout?eventId=${checkoutData.eventId}&tickets=${checkoutData.tickets}`
-    router.push(checkoutUrl)
   }
 
   const updateTicketQuantity = (ticketName: string, quantity: number) => {
     const ticket = event?.ticketTypes.find(t => t.name === ticketName)
     const maxQuantity = ticket ? Math.min(8, ticket.availableTickets) : 0
 
+    const newQuantity = Math.max(0, Math.min(quantity, maxQuantity))
+
     setSelectedTickets(prev => ({
       ...prev,
-      [ticketName]: Math.max(0, Math.min(quantity, maxQuantity))
+      [ticketName]: newQuantity
     }))
+
+    // Log ticket selection change if event is available
+    if (event && ticket && newQuantity > 0) {
+      activityLogger.log({
+        action: 'ticket_selection',
+        description: `User selected ${newQuantity} ${ticketName} ticket(s) for ${event.title}`,
+        eventId: event._id,
+        eventTitle: event.title,
+        ticketType: ticketName,
+        quantity: newQuantity,
+        amount: ticket.price * newQuantity,
+        status: 'success'
+      })
+    }
   }
 
   const getTotalPrice = () => {
@@ -689,12 +767,13 @@ export default function EventDetailPage() {
                     <div className="space-y-3">
                       <Button
                         onClick={handleBookTickets}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 flex items-center justify-center gap-2"
                         disabled={getTotalTickets() === 0 || bookingLoading}
                       >
-                        {bookingLoading ? 'Processing...' : (
+                        {bookingLoading ? 'Proceeding to Checkout...' : (
                           <>
-                            Continue to Checkout {getTotalTickets() > 0 ? `- ${getTotalTickets()} ` : ''}
+                            <CreditCard className="w-5 h-5" />
+                            Proceed to Checkout {getTotalTickets() > 0 ? `- ${getTotalTickets()} ` : ''}
                             {getTotalTickets() > 0 && `Ticket(s) for ${formatPrice(getTotalPrice())}`}
                           </>
                         )}

@@ -11,6 +11,7 @@ import { BackgroundWrapper } from '@/components/ui/background-wrapper'
 import { PageLoading, LoadingState } from '@/components/ui/loading'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { useLoading } from '@/hooks/useLoading'
+import { activityLogger } from '@/lib/activityLogger'
 import {
   Search,
   Calendar,
@@ -80,6 +81,12 @@ function EventsPageContent() {
     if (urlLocation) {
       setSelectedLocation(urlLocation)
     }
+
+    // Log page view
+    activityLogger.logPageView('/events', {
+      searchQuery: urlQuery,
+      location: urlLocation
+    })
   }, [searchParams])
 
   useEffect(() => {

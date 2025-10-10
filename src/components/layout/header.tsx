@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Search, ShoppingCart, Heart, Ticket } from 'lucide-react'
+import { Menu, X, Search, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useAuth, UserButton, useUser } from '@clerk/nextjs'
 
 interface HeaderProps {
-  cartCount?: number
 }
 
 interface SiteConfig {
@@ -24,7 +23,7 @@ interface SiteConfig {
   faviconUrl: string;
 }
 
-export function Header({ cartCount = 0 }: HeaderProps) {
+export function Header({ }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
@@ -131,21 +130,6 @@ export function Header({ cartCount = 0 }: HeaderProps) {
 
           {/* User Actions */}
           <div className="flex items-center gap-2">
-            {/* Cart */}
-            <Button variant="outline" size="icon" className="relative border border-white/40 hover:border-white/60 transition-colors rounded-full bg-white/30 backdrop-blur-sm shadow-sm group">
-              <ShoppingCart className="h-5 w-5 text-white/90 group-hover:text-white transition-colors" />
-              {cartCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-white/40 text-white shadow border border-white/50">
-                  {cartCount}
-                </Badge>
-              )}
-            </Button>
-
-            {/* Wishlist */}
-            <Button variant="outline" size="icon" className="border border-white/40 hover:border-white/60 transition-colors rounded-full bg-white/30 backdrop-blur-sm shadow-sm group">
-              <Heart className="h-5 w-5 text-white/90 group-hover:text-white transition-colors" />
-            </Button>
-
             {/* User Menu */}
             {isSignedIn ? (
               <UserButton afterSignOutUrl="/" />

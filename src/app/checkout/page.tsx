@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackgroundWrapper } from '@/components/ui/background-wrapper';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { StripePayment } from '@/components/StripePayment';
+import { activityLogger } from '@/lib/activityLogger';
 
 interface TicketSelection {
   ticketId: string;
@@ -69,11 +70,25 @@ function CheckoutContent() {
     try {
       const parsedTickets = JSON.parse(decodeURIComponent(tickets));
       setTicketSelections(parsedTickets);
+
+      // Log checkout started
+      const totalAmount = parsedTickets.reduce((sum: number, ticket: any) => sum + (ticket.price * ticket.quantity), 0);
+      activityLogger.logCheckoutStarted(totalAmount, 'EUR', {
+        eventId,
+        ticketSelections: parsedTickets,
+        totalTickets: parsedTickets.reduce((sum: number, ticket: any) => sum + ticket.quantity, 0)
+      });
+
       fetchEventAndSettings(eventId);
     } catch (err) {
       console.error('Error parsing tickets:', err);
       setError('Invalid checkout data');
       setLoading(false);
+
+      // Log error
+      activityLogger.logError('checkout_data_parse_failed', 'Failed to parse ticket data', {
+        error: err instanceof Error ? err.message : 'Unknown error'
+      });
     }
   }, [searchParams, isLoaded]);
 
@@ -86,6 +101,13 @@ function CheckoutContent() {
       }
       const eventData = await eventResponse.json();
       setEvent(eventData);
+
+      // Log event view during checkout
+      activityLogger.logEventView(
+        eventData._id,
+        eventData.title,
+        { source: 'checkout_page' }
+      );
 
       // Fetch payment settings
       const settingsResponse = await fetch('/api/payment-config');
@@ -101,23 +123,33 @@ function CheckoutContent() {
         if (settings.paymentProvider === 'stripe') {
           console.log('💳 Setting Stripe as payment method');
           setSelectedPaymentMethod('stripe');
+          // Log payment method selection
+          activityLogger.logPaymentMethodSelected('stripe', getTotalAmount());
         } else if (settings.paymentProvider === 'raiffeisen') {
           console.log('💳 Setting Raiffeisen as payment method');
           setSelectedPaymentMethod('raiffeisen');
+          // Log payment method selection
+          activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
         } else if (settings.paymentProvider === 'both') {
           // If both are enabled, we can show selection or default to one
           // For now, defaulting to Raiffeisen for general users
           console.log('💳 Both providers enabled, defaulting to Raiffeisen');
           setSelectedPaymentMethod('raiffeisen');
+          // Log payment method selection
+          activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
         } else {
           // Fallback: if no valid provider is set, default to Raiffeisen
           console.log('💳 No valid provider found, defaulting to Raiffeisen');
           setSelectedPaymentMethod('raiffeisen');
+          // Log payment method selection
+          activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
         }
       } else {
         // If settings API fails, default to Raiffeisen
         console.log('💳 Settings API failed, defaulting to Raiffeisen');
         setSelectedPaymentMethod('raiffeisen');
+        // Log payment method selection
+        activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -139,6 +171,9 @@ function CheckoutContent() {
     if (!event) return;
 
     setBookingLoading(true);
+
+    // Log payment attempt
+    activityLogger.logPaymentAttempted('stripe', getTotalAmount(), 'EUR');
 
     try {
       const ticketSelectionsMap = ticketSelections.reduce((acc, ticket) => {
@@ -164,11 +199,38 @@ function CheckoutContent() {
           orderSummary: data.orderSummary
         });
         setShowStripePayment(true);
+
+        // Log successful payment setup
+        activityLogger.log({
+          action: 'payment_setup_successful',
+          description: 'Stripe payment intent created successfully',
+          eventId: event._id,
+          eventTitle: event.title,
+          amount: getTotalAmount(),
+          currency: 'EUR',
+          paymentMethod: 'stripe',
+          status: 'success',
+          metadata: {
+            bookingReference: data.orderSummary?.bookingReference,
+            paymentIntentId: data.paymentIntent.id
+          }
+        });
       } else {
+        // Log payment failure
+        activityLogger.logPaymentFailed('stripe', getTotalAmount(), data.error, 'EUR');
         alert(`❌ Booking Failed: ${data.error}`);
       }
     } catch (error) {
       console.error('Error creating Stripe booking:', error);
+
+      // Log error
+      activityLogger.logPaymentFailed(
+        'stripe',
+        getTotalAmount(),
+        error instanceof Error ? error.message : 'Network error',
+        'EUR'
+      );
+
       alert('❌ Network error. Please try again.');
     } finally {
       setBookingLoading(false);
@@ -179,6 +241,9 @@ function CheckoutContent() {
     if (!event) return;
 
     setBookingLoading(true);
+
+    // Log payment attempt
+    activityLogger.logPaymentAttempted('raiffeisen', getTotalAmount(), 'EUR');
 
     try {
       const tickets = ticketSelections.map(ticket => ({
@@ -197,13 +262,40 @@ function CheckoutContent() {
       const data = await response.json();
 
       if (response.ok) {
+        // Log successful redirect to bank
+        activityLogger.log({
+          action: 'payment_redirect_successful',
+          description: 'User redirected to Raiffeisen Bank payment page',
+          eventId: event._id,
+          eventTitle: event.title,
+          amount: getTotalAmount(),
+          currency: 'EUR',
+          paymentMethod: 'raiffeisen',
+          status: 'pending',
+          metadata: {
+            paymentUrl: data.paymentUrl,
+            bookingReference: data.bookingReference
+          }
+        });
+
         // Redirect to Raiffeisen Bank payment page
         window.location.href = data.paymentUrl;
       } else {
+        // Log payment failure
+        activityLogger.logPaymentFailed('raiffeisen', getTotalAmount(), data.error, 'EUR');
         alert(`❌ Booking Failed: ${data.error}`);
       }
     } catch (error) {
       console.error('Error creating Raiffeisen booking:', error);
+
+      // Log error
+      activityLogger.logPaymentFailed(
+        'raiffeisen',
+        getTotalAmount(),
+        error instanceof Error ? error.message : 'Network error',
+        'EUR'
+      );
+
       alert('❌ Network error. Please try again.');
     } finally {
       setBookingLoading(false);
@@ -213,6 +305,23 @@ function CheckoutContent() {
   const handlePaymentSuccess = async () => {
     // Payment successful, redirect to success page
     const bookingReference = paymentIntentData?.orderSummary?.bookingReference;
+
+    // Log successful payment
+    if (event) {
+      activityLogger.logPaymentSuccessful(
+        'stripe',
+        getTotalAmount(),
+        'EUR',
+        bookingReference
+      );
+
+      activityLogger.logBookingCreated(
+        bookingReference || 'unknown',
+        event._id,
+        event.title,
+        getTotalAmount()
+      );
+    }
 
     // Optionally update booking status immediately (fallback before webhook)
     if (bookingReference) {
@@ -240,6 +349,12 @@ function CheckoutContent() {
 
   const handlePaymentError = (error: string) => {
     console.error('Payment error:', error);
+
+    // Log payment error
+    if (event) {
+      activityLogger.logPaymentFailed('stripe', getTotalAmount(), error, 'EUR');
+    }
+
     alert(`❌ Payment failed: ${error}`);
     setShowStripePayment(false);
     setPaymentIntentData(null);

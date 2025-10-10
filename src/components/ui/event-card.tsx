@@ -75,7 +75,17 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
     const min = Math.min(...prices)
     const max = Math.max(...prices)
 
-    const src = event.posterImage || event.bannerImage || '/placeholder-event.svg'
+    // Use Cloudinary images as fallback
+    const cloudinaryImages = [
+      'https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/v1/samples/music/guitar-player',
+      'https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/v1/samples/people/jazz',
+      'https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/v1/samples/music/drums',
+      'https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/v1/samples/people/dancing',
+      'https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/sample'
+    ];
+    const randomImage = cloudinaryImages[Math.floor(Math.random() * cloudinaryImages.length)];
+
+    const src = event.posterImage || event.bannerImage || randomImage
 
     const artists = event.artists.length > 0 ? ` featuring ${event.artists.slice(0, 2).join(' and ')}` : ''
     const date = formatDate(event.date)
@@ -142,7 +152,7 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
             <OptimizedImage
               src={imageSrc}
               alt={imageAlt}
-              fallbackSrc="/placeholder-event.svg"
+              fallbackSrc="https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/v1/samples/music/guitar-player"
               placeholder="blur"
               priority={variant === 'featured'}
               className="object-cover transition-transform duration-300 group-hover:scale-110"

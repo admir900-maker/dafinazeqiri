@@ -29,8 +29,7 @@ export interface IValidationLog extends Document {
 const ValidationLogSchema = new Schema<IValidationLog>({
   validatorId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   validatorName: {
     type: String,
@@ -38,13 +37,11 @@ const ValidationLogSchema = new Schema<IValidationLog>({
   },
   bookingId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   eventId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   eventTitle: {
     type: String,
@@ -52,8 +49,7 @@ const ValidationLogSchema = new Schema<IValidationLog>({
   },
   userId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   userName: {
     type: String,

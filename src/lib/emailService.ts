@@ -3,6 +3,7 @@ import { connectToDatabase } from './mongodb';
 import PaymentSettings from '@/models/PaymentSettings';
 import { logError, logEmailError, logDatabaseError } from './errorLogger';
 import { getEmailConfig, getSiteConfig } from './settings';
+import { generateTicketPDFs } from './ticketPdfGenerator';
 
 interface EmailOptions {
   to: string;
@@ -160,15 +161,66 @@ class EmailService {
       address?: string;
       city?: string;
       country?: string;
+      ageLimit?: number;
     },
     tickets: {
       ticketName: string;
       price: number;
       qrCode: string;
       ticketId?: string;
+      color?: string;
     }[]
   ): Promise<{ html: string; attachments: any[] }> {
     const siteConfig = await getSiteConfig();
+
+    // Generate PDF tickets
+    let pdfAttachments: any[] = [];
+    try {
+      console.log('📄 Generating PDF tickets...', { count: tickets.length });
+      const pdfTickets = await generateTicketPDFs(
+        tickets.map(t => ({
+          ticketId: t.ticketId || 'N/A',
+          ticketName: t.ticketName,
+          price: t.price,
+          qrCode: t.qrCode,
+          color: t.color || '#3B82F6'
+        })),
+        {
+          title: event.title,
+          date: event.date,
+          location: event.location,
+          venue: event.venue,
+          city: event.city,
+          country: event.country,
+          ageLimit: event.ageLimit
+        },
+        {
+          bookingReference: booking.bookingReference,
+          customerName: booking.customerName,
+          customerEmail: booking.customerEmail,
+          currency: booking.currency
+        },
+        siteConfig.logoUrl
+      );
+
+      pdfAttachments = pdfTickets.map((pdf, index) => {
+        const ticket = tickets[index];
+        if (!ticket || !ticket.ticketId) {
+          console.warn(`⚠️ Missing ticket or ticketId at index ${index}`);
+          return null;
+        }
+        return {
+          filename: `ticket-${ticket.ticketName.replace(/\s+/g, '-')}-${ticket.ticketId.substring(0, 8)}.pdf`,
+          content: pdf,
+          contentType: 'application/pdf'
+        };
+      }).filter((attachment): attachment is { filename: string; content: Buffer; contentType: string } => attachment !== null);
+
+      console.log('✅ PDF tickets generated successfully:', pdfAttachments.length);
+    } catch (error) {
+      console.error('❌ Error generating PDF tickets:', error);
+      logError('PDF Generation Failed', error, { action: 'generate-ticket-pdfs' });
+    }
 
     const ticketRows = tickets.map(ticket => `
       <tr>
@@ -178,57 +230,8 @@ class EmailService {
       </tr>
     `).join('');
 
-    const qrCodes = tickets.map((ticket, index) => {
-      console.log('🎫 Processing ticket for email:', {
-        ticketName: ticket.ticketName,
-        hasQrCode: !!ticket.qrCode,
-        qrCodeLength: ticket.qrCode ? ticket.qrCode.length : 0,
-        qrCodePreview: ticket.qrCode ? ticket.qrCode.substring(0, 50) + '...' : 'No QR code',
-        isDataUrl: ticket.qrCode ? ticket.qrCode.startsWith('data:image/') : false
-      });
-
-      // Create a unique CID for this QR code
-      const qrCodeCid = `qrcode_${ticket.ticketId || index}`;
-
-      return {
-        html: `
-        <div style="text-align: center; margin: 20px 0; padding: 20px; border: 2px dashed #7c3aed; border-radius: 12px; background-color: #fafafa;">
-          <h3 style="color: #7c3aed; margin-bottom: 15px; font-size: 18px;">${ticket.ticketName || 'Event Ticket'}</h3>
-          ${ticket.qrCode && ticket.qrCode.startsWith('data:image/') ?
-            `<div style="background-color: white; padding: 15px; border-radius: 8px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-               <img src="cid:${qrCodeCid}" alt="QR Code for ${ticket.ticketName || 'Event Ticket'}" style="width: 180px; height: 180px; display: block; border: none;" />
-             </div>` :
-            `<div style="width: 180px; height: 180px; margin: 15px auto; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; color: #6b7280; font-size: 14px;">
-               <div style="text-align: center;">
-                 <div>⚠️</div>
-                 <div>QR Code Missing</div>
-                 <div style="font-size: 12px; margin-top: 5px;">Please contact support</div>
-               </div>
-             </div>`
-          }
-          <div style="margin-top: 15px; padding: 10px; background-color: #f8fafc; border-radius: 6px;">
-            <p style="font-size: 14px; color: #475569; margin: 5px 0; font-weight: 600;">Ticket: ${ticket.ticketName || 'Event Ticket'}</p>
-            <p style="font-size: 12px; color: #64748b; margin: 5px 0;">ID: ${ticket.ticketId || 'N/A'}</p>
-            <p style="font-size: 11px; color: #94a3b8; margin: 5px 0;">Show this QR code at the entrance</p>
-          </div>
-        </div>
-      `,
-        attachment: ticket.qrCode && ticket.qrCode.startsWith('data:image/') ? {
-          filename: `qr_${ticket.ticketId || index}.png`,
-          content: ticket.qrCode.split(',')[1], // Remove data:image/png;base64, prefix
-          encoding: 'base64',
-          cid: qrCodeCid
-        } : null
-      };
-    });
-
-    // Generate HTML content from QR codes
-    const qrCodesHtml = qrCodes.map(qr => qr.html).join('');
-
-    // Create attachments array
-    const qrAttachments = qrCodes
-      .map(qr => qr.attachment)
-      .filter(attachment => attachment !== null);
+    // Create attachments array (only PDF tickets)
+    const allAttachments = [...pdfAttachments];
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -308,20 +311,40 @@ class EmailService {
               </table>
             </div>
 
-            <!-- QR Codes -->
+            <!-- PDF Tickets Notice -->
+            ${pdfAttachments.length > 0 ? `
+            <div style="background-color: #dbeafe; border-left: 4px solid #2563eb; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+              <p style="color: #1e40af; margin: 0; font-size: 14px; font-weight: 600;">
+                📎 Your tickets are attached as PDF files
+              </p>
+              <p style="color: #1e40af; margin: 8px 0 0 0; font-size: 13px;">
+                ${tickets.length} ticket PDF${tickets.length > 1 ? 's' : ''} ${tickets.length > 1 ? 'are' : 'is'} attached to this email. You can download, print, or save them to your device.
+              </p>
+            </div>
+            ` : ''}
+
+            <!-- Ticket List -->
             <div style="margin-bottom: 30px;">
-              <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">📱 Your Digital Tickets</h3>
+              <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">🎟️ Your Tickets</h3>
               <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
                 <p style="color: #1e40af; margin: 0; font-size: 14px; font-weight: 500;">
-                  <strong>Important:</strong> Show these QR codes at the event entrance for quick entry.
+                  <strong>Important:</strong> Your tickets are attached as PDF files to this email.
                 </p>
                 <ul style="color: #1e40af; margin: 8px 0 0 0; padding-left: 20px; font-size: 13px;">
-                  <li>Each QR code is unique and can only be used once</li>
-                  <li>Screenshots or printed copies work perfectly</li>
+                  <li>Download the PDF tickets from the attachments</li>
+                  <li>Each ticket contains a unique QR code for entry</li>
+                  <li>You can print the tickets or show them on your mobile device</li>
                   <li>Keep your tickets secure and don't share QR codes</li>
+                  <li>Each QR code can only be used once</li>
                 </ul>
               </div>
-              ${qrCodesHtml}
+              ${tickets.map((ticket, index) => `
+                <div style="text-align: center; margin: 15px 0; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; background-color: #fafafa;">
+                  <p style="font-size: 16px; color: #1e293b; margin: 5px 0; font-weight: 600;">${ticket.ticketName || 'Event Ticket'}</p>
+                  <p style="font-size: 13px; color: #64748b; margin: 5px 0;">Ticket ID: ${ticket.ticketId || 'N/A'}</p>
+                  <p style="font-size: 12px; color: #94a3b8; margin: 5px 0;">Price: ${ticket.price.toFixed(2)} ${booking.currency}</p>
+                </div>
+              `).join('')}
             </div>
 
             <!-- Important Info -->
@@ -333,6 +356,7 @@ class EmailService {
                 <li>Keep your tickets secure and don't share QR codes</li>
                 <li>Screenshots of QR codes are accepted</li>
                 <li>Each ticket allows one entry only</li>
+                ${event.ageLimit ? `<li>Minimum age requirement: ${event.ageLimit} years old</li>` : ''}
               </ul>
             </div>
 
@@ -360,7 +384,7 @@ class EmailService {
 
     return {
       html: emailHtml,
-      attachments: qrAttachments
+      attachments: allAttachments
     };
   }
 }
@@ -420,6 +444,7 @@ export async function sendBookingConfirmationEmail(booking: any): Promise<boolea
       address: booking.eventId?.address || 'Address Not Available',
       city: booking.eventId?.city || '',
       country: booking.eventId?.country || '',
+      ageLimit: booking.eventId?.ageLimit,
     };
 
     // Prepare booking information
@@ -443,13 +468,31 @@ export async function sendBookingConfirmationEmail(booking: any): Promise<boolea
       })) || []
     });
 
-    // Prepare tickets information
-    const ticketsInfo = booking.tickets.map((ticket: any) => ({
-      ticketName: ticket.ticketName,
-      price: ticket.price,
-      qrCode: ticket.qrCode,
-      ticketId: ticket.ticketId,
-    }));
+    // Prepare tickets information - look up colors from event ticket types if not in booking
+    const ticketsInfo = booking.tickets.map((ticket: any) => {
+      let ticketColor = ticket.color;
+
+      // If color not in booking ticket, try to get it from event's ticket types
+      if (!ticketColor && booking.eventId?.ticketTypes) {
+        const eventTicketType = booking.eventId.ticketTypes.find(
+          (tt: any) => tt.name === ticket.ticketName
+        );
+        ticketColor = eventTicketType?.color;
+      }
+
+      return {
+        ticketName: ticket.ticketName,
+        price: ticket.price,
+        qrCode: ticket.qrCode,
+        ticketId: ticket.ticketId,
+        color: ticketColor || '#3B82F6'
+      };
+    });
+
+    console.log('🎨 Tickets colors for PDF:', ticketsInfo.map((t: any) => ({
+      name: t.ticketName,
+      color: t.color
+    })));
 
     // Generate email HTML and attachments
     const emailContent = await emailServiceInstance.generateBookingConfirmationEmail(

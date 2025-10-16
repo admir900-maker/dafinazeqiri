@@ -188,10 +188,10 @@ export function FeaturedEventsSection() {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">
-            Featured Events
+            DafinaZeqiri.tickets
           </h2>
           <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow-md">
-            Discover the hottest upcoming concerts and live performances in your area
+            SUPERNOVA
           </p>
         </div>
 
@@ -199,14 +199,14 @@ export function FeaturedEventsSection() {
         {eventsGrid}
 
         {/* View All Events Button */}
-        <div className="text-center">
+        {/* <div className="text-center">
           <Link href="/events">
             <Button size="lg" className="bg-white/30 backdrop-blur-lg hover:bg-white/40 text-white border border-white/40 shadow-xl">
               View All Events
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </section>
   );

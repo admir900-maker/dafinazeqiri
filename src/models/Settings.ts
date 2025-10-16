@@ -93,6 +93,19 @@ export interface ISettings extends mongoose.Document {
     compressionQuality: number;
   };
 
+  // Homepage & UI Settings
+  homepage: {
+    showHeroSection: boolean;
+    showFeaturedEvents: boolean;
+    showCategories: boolean;
+    showStats: boolean;
+    heroAutoRotate: boolean;
+    heroRotationInterval: number; // seconds
+    theme: 'light' | 'dark' | 'auto';
+    primaryColor: string;
+    accentColor: string;
+  };
+
   // Booking & Event Settings
   booking: {
     defaultCapacity: number;
@@ -285,6 +298,18 @@ const SettingsSchema = new mongoose.Schema<ISettings>({
     allowedFileTypes: { type: [String], default: ['jpg', 'jpeg', 'png', 'gif', 'webp'] },
     compressionEnabled: { type: Boolean, default: true },
     compressionQuality: { type: Number, default: 80 }
+  },
+
+  homepage: {
+    showHeroSection: { type: Boolean, default: true },
+    showFeaturedEvents: { type: Boolean, default: true },
+    showCategories: { type: Boolean, default: true },
+    showStats: { type: Boolean, default: true },
+    heroAutoRotate: { type: Boolean, default: false },
+    heroRotationInterval: { type: Number, default: 5 }, // seconds
+    theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'auto' },
+    primaryColor: { type: String, default: '#2563eb' },
+    accentColor: { type: String, default: '#8b5cf6' }
   },
 
   booking: {

@@ -131,6 +131,8 @@ export async function POST(
       const ticketType = event.ticketTypes.find((t: any) => t.name === ticketName);
       if (!ticketType) continue;
 
+      console.log('🎨 Ticket type color:', ticketType.color, 'for ticket:', ticketName);
+
       for (let i = 0; i < quantity; i++) {
         try {
           const ticketId = uuidv4();
@@ -152,6 +154,7 @@ export async function POST(
             ticketId,
             qrCode,
             price: ticketType.price,
+            color: ticketType.color || '#3B82F6',
             isUsed: false
           });
         } catch (qrError) {

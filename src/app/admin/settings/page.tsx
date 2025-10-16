@@ -45,6 +45,7 @@ import {
 interface SettingsData {
   _id?: string;
   general: any;
+  homepage: any;
   email: any;
   payments: any;
   security: any;
@@ -65,6 +66,7 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState<SettingsData>({
     general: {},
+    homepage: {},
     email: {},
     payments: {},
     security: {},
@@ -333,10 +335,14 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 gap-1">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
           <TabsTrigger value="general" className="flex items-center gap-1">
             <Globe className="w-3 h-3" />
             <span className="hidden sm:inline">General</span>
+          </TabsTrigger>
+          <TabsTrigger value="homepage" className="flex items-center gap-1">
+            <Eye className="w-3 h-3" />
+            <span className="hidden sm:inline">Homepage</span>
           </TabsTrigger>
           <TabsTrigger value="email" className="flex items-center gap-1">
             <Mail className="w-3 h-3" />
@@ -435,6 +441,162 @@ export default function AdminSettingsPage() {
                 >
                   {saving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                   Save General Settings
+                </Button>
+              </div>
+            </AdminCardContent>
+          </AdminCard>
+        </TabsContent>
+
+        {/* Homepage Settings */}
+        <TabsContent value="homepage" className="space-y-6">
+          <AdminCard>
+            <AdminCardHeader>
+              <AdminCardTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Homepage Display Settings
+              </AdminCardTitle>
+            </AdminCardHeader>
+            <AdminCardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="text-base font-semibold">Show Hero Section</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Display the hero section with slides on the homepage
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.homepage?.showHeroSection ?? true}
+                    onCheckedChange={(checked) => updateNestedSetting('homepage', 'showHeroSection', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="text-base font-semibold">Show Featured Events</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Display featured events section on the homepage
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.homepage?.showFeaturedEvents ?? true}
+                    onCheckedChange={(checked) => updateNestedSetting('homepage', 'showFeaturedEvents', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="text-base font-semibold">Show Categories</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Display event categories on the homepage
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.homepage?.showCategories ?? true}
+                    onCheckedChange={(checked) => updateNestedSetting('homepage', 'showCategories', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="text-base font-semibold">Show Statistics</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Display statistics (events, attendees, rating) in hero section
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.homepage?.showStats ?? true}
+                    onCheckedChange={(checked) => updateNestedSetting('homepage', 'showStats', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="text-base font-semibold">Auto-Rotate Hero Slides</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Automatically rotate through hero slides (currently disabled)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.homepage?.heroAutoRotate ?? false}
+                    onCheckedChange={(checked) => updateNestedSetting('homepage', 'heroAutoRotate', checked)}
+                  />
+                </div>
+
+                {settings.homepage?.heroAutoRotate && (
+                  <div className="space-y-2 ml-4">
+                    <Label>Rotation Interval (seconds)</Label>
+                    <Input
+                      type="number"
+                      min="3"
+                      max="30"
+                      value={settings.homepage?.heroRotationInterval || 5}
+                      onChange={(e) => updateNestedSetting('homepage', 'heroRotationInterval', parseInt(e.target.value))}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-semibold mb-4">Theme & Colors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Theme</Label>
+                    <select
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={settings.homepage?.theme || 'auto'}
+                      onChange={(e) => updateNestedSetting('homepage', 'theme', e.target.value)}
+                    >
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                      <option value="auto">Auto (System)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Primary Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={settings.homepage?.primaryColor || '#2563eb'}
+                        onChange={(e) => updateNestedSetting('homepage', 'primaryColor', e.target.value)}
+                        className="w-20"
+                      />
+                      <Input
+                        type="text"
+                        value={settings.homepage?.primaryColor || '#2563eb'}
+                        onChange={(e) => updateNestedSetting('homepage', 'primaryColor', e.target.value)}
+                        placeholder="#2563eb"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Accent Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={settings.homepage?.accentColor || '#8b5cf6'}
+                        onChange={(e) => updateNestedSetting('homepage', 'accentColor', e.target.value)}
+                        className="w-20"
+                      />
+                      <Input
+                        type="text"
+                        value={settings.homepage?.accentColor || '#8b5cf6'}
+                        onChange={(e) => updateNestedSetting('homepage', 'accentColor', e.target.value)}
+                        placeholder="#8b5cf6"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => saveSection('homepage')}
+                  disabled={saving}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  {saving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Save Homepage Settings
                 </Button>
               </div>
             </AdminCardContent>

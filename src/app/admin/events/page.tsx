@@ -237,7 +237,19 @@ export default function EventsManagementPage() {
   };
 
   if (!isLoaded || loading) {
-    return <div className="text-white">Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-white">Events Management</h1>
+        </div>
+        <div className="flex items-center justify-center min-h-96 text-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-lg">Loading events...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

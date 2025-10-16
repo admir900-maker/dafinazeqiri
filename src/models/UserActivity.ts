@@ -58,6 +58,7 @@ const UserActivitySchema: Schema = new Schema({
       'remove_from_cart',
       'checkout_started',
       'payment_method_selected',
+      'payment_setup_successful',
       'payment_attempted',
       'payment_successful',
       'payment_failed',

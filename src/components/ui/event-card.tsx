@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, Clock, Users, Play } from 'lucide-react'
+import { Calendar, MapPin, Clock, Users, Play, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
@@ -261,12 +261,16 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Fancy Action Button */}
             <Button
-              className="bg-white/30 backdrop-blur-sm hover:bg-white/40 text-white border border-white/40 shadow-lg pointer-events-none"
-              aria-label={`${variant === 'featured' ? 'Get tickets' : 'View details'} for ${event.title}`}
+              className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white font-semibold border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 pointer-events-none group"
+              aria-label={`View details for ${event.title}`}
             >
-              {variant === 'featured' ? 'Get Tickets' : 'View Details'}
+              <span className="relative z-10 flex items-center gap-2">
+                Details
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
             </Button>
           </CardFooter>
         </div>

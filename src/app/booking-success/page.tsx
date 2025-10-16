@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Clock, Download, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { BackgroundWrapper } from '@/components/ui/background-wrapper';
 
 interface Booking {
   _id: string;
@@ -154,35 +155,39 @@ function BookingSuccessContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <Clock className="h-12 w-12 mx-auto text-yellow-500 animate-spin" />
-            <h1 className="text-2xl font-bold text-gray-900 mt-4">Loading...</h1>
-            <p className="text-gray-600 mt-2">Fetching your booking details...</p>
+      <BackgroundWrapper fullHeight={true}>
+        <div className="py-12">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg shadow-xl p-8 text-center border border-white/20">
+              <Clock className="h-12 w-12 mx-auto text-white/80 animate-spin" />
+              <h1 className="text-2xl font-bold text-white mt-4 drop-shadow-md">Loading...</h1>
+              <p className="text-white/90 mt-2 drop-shadow-sm">Fetching your booking details...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </BackgroundWrapper>
     );
   }
 
   if (error || !booking || !event) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <XCircle className="h-12 w-12 mx-auto text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900 mt-4">Error</h1>
-            <p className="text-gray-600 mt-2">{error || 'Booking not found'}</p>
-            <Link
-              href="/events"
-              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Browse Events
-            </Link>
+      <BackgroundWrapper fullHeight={true}>
+        <div className="py-12">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg shadow-xl p-8 text-center border border-white/20">
+              <XCircle className="h-12 w-12 mx-auto text-white/80" />
+              <h1 className="text-2xl font-bold text-white mt-4 drop-shadow-md">Error</h1>
+              <p className="text-white/90 mt-2 drop-shadow-sm">{error || 'Booking not found'}</p>
+              <Link
+                href="/events"
+                className="mt-4 inline-flex items-center px-4 py-2 border border-white/40 text-sm font-medium rounded-md text-white bg-white/20 backdrop-blur-sm hover:bg-white/30"
+              >
+                Browse Events
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </BackgroundWrapper>
     );
   }
 
@@ -224,239 +229,235 @@ function BookingSuccessContent() {
   const status = getStatusMessage();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow p-8">
-          {/* Status Header */}
-          <div className="text-center mb-8">
-            {getStatusIcon()}
-            <h1 className={`text-2xl font-bold mt-4 ${status.color}`}>
-              {status.title}
-            </h1>
-            <p className="text-gray-600 mt-2">{status.message}</p>
-
-            {/* Manual Confirmation Button for Pending Payments */}
-            {booking.paymentStatus === 'pending' && (
-              <div className="mt-4">
-                <button
-                  onClick={manuallyConfirmPayment}
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                >
-                  {loading ? 'Confirming...' : '✅ Confirm Payment Manually'}
-                </button>
-                <p className="text-sm text-gray-500 mt-2">
-                  Click if your payment was successful but still shows as pending
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Booking Details */}
-          <div className="border-t border-gray-200 pt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Details</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Booking Reference</p>
-                <p className="text-lg font-mono text-gray-900">{booking.bookingReference}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Payment Method</p>
-                <p className="text-lg text-gray-900 capitalize">
-                  {booking.paymentMethod === 'raiffeisen' ? 'Raiffeisen Bank' : booking.paymentMethod}
-                </p>
-              </div>
+    <BackgroundWrapper fullHeight={false}>
+      <div className="py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-lg shadow-xl p-8 border border-white/20">
+            {/* Status Header */}
+            <div className="text-center mb-8">
+              {getStatusIcon()}
+              <h1 className={`text-2xl font-bold mt-4 text-white drop-shadow-md`}>
+                {status.title}
+              </h1>
+              <p className="text-gray-600 mt-2">{status.message}</p>
             </div>
 
-            {/* 📅 Event Details */}
-            <div className="border-t border-gray-200 pt-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                📅 Event Details
-              </h3>
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <tbody className="divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50 w-24">Event:</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{event.title || event.name || 'undefined'}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Date:</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {event.date ? new Date(event.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) : 'Invalid Date'}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Venue:</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{event.venue || event.location || 'undefined'}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Address:</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{event.address || 'undefined'}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            {/* Booking Details */}
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Details</h2>
 
-            {/* 🎟️ Ticket Summary */}
-            <div className="border-t border-gray-200 pt-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                🎟️ Ticket Summary
-              </h3>
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Ticket Type</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Quantity</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Price</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {booking.tickets.map((ticket, index) => (
-                      <tr key={index}>
-                        <td className="px-4 py-3 text-sm text-gray-900">{ticket.ticketName}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">1</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{ticket.price.toFixed(2)} {booking.currency}</td>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Booking Reference</p>
+                  <p className="text-lg font-mono text-gray-900">{booking.bookingReference}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Payment Method</p>
+                  <p className="text-lg text-gray-900 capitalize">
+                    {booking.paymentMethod === 'raiffeisen' ? 'Raiffeisen Bank' : booking.paymentMethod}
+                  </p>
+                </div>
+              </div>
+
+              {/* 📅 Event Details */}
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  📅 Event Details
+                </h3>
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <tbody className="divide-y divide-gray-200">
+                      <tr>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50 w-24">Event:</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{event.title || event.name || 'undefined'}</td>
                       </tr>
-                    ))}
-                    <tr className="bg-gray-50 font-medium">
-                      <td className="px-4 py-3 text-sm text-gray-900">Total</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{booking.tickets.length}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{booking.totalAmount.toFixed(2)} {booking.currency}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                      <tr>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Date:</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {event.date ? new Date(event.date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 'Invalid Date'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Venue:</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{event.venue || event.location || 'undefined'}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Address:</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{event.address || 'undefined'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* 🎟️ Ticket Summary */}
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  🎟️ Ticket Summary
+                </h3>
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Ticket Type</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Quantity</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {booking.tickets.map((ticket, index) => (
+                        <tr key={index}>
+                          <td className="px-4 py-3 text-sm text-gray-900">{ticket.ticketName}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">1</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{ticket.price.toFixed(2)} {booking.currency}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-50 font-medium">
+                        <td className="px-4 py-3 text-sm text-gray-900">Total</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{booking.tickets.length}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{booking.totalAmount.toFixed(2)} {booking.currency}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 📱 Your Digital Tickets */}
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  📱 Your Digital Tickets
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Show these QR codes at the event entrance. Each QR code is unique and can only be used once.
+                </p>
+                <div className="space-y-4">
+                  {booking.tickets.map((ticket, index) => (
+                    <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-gray-900">{ticket.ticketName}</h4>
+                        <span className="text-sm font-medium text-purple-600">
+                          {ticket.price.toFixed(2)} {booking.currency}
+                        </span>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg text-center">
+                        {ticket.qrCode ? (
+                          <img
+                            src={ticket.qrCode}
+                            alt={`QR Code for ${ticket.ticketName}`}
+                            className="w-32 h-32 mx-auto mb-2"
+                          />
+                        ) : (
+                          <div className="w-32 h-32 mx-auto mb-2 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <div className="text-xs text-gray-500">QR Code</div>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-600">Ticket: {ticket.ticketName}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              {booking.paymentStatus === 'paid' && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={downloadTickets}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Tickets
+                  </button>
+                  <button
+                    onClick={resendConfirmationEmail}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Resend Email
+                  </button>
+                </div>
+              )}
+
+              {booking.paymentStatus === 'failed' && (
+                <div className="text-center">
+                  <Link
+                    href={`/events/${event._id}`}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    Try Again
+                  </Link>
+                </div>
+              )}
             </div>
 
-            {/* 📱 Your Digital Tickets */}
+            {/* ⚠️ Important Information */}
             <div className="border-t border-gray-200 pt-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                📱 Your Digital Tickets
+                ⚠️ Important Information
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Show these QR codes at the event entrance. Each QR code is unique and can only be used once.
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li>• Arrive at least 90 minutes before the event starts</li>
+                  <li>• Bring a valid ID for verification</li>
+                  <li>• Keep your tickets secure and don't share QR codes</li>
+                  <li>• Screenshots of QR codes are accepted</li>
+                  <li>• Each ticket allows one entry only</li>
+                  <li>• Need help? Contact our support team</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-200 pt-6 mt-8 text-center">
+              <p className="text-sm text-gray-500">
+                Need help? Contact our support team
               </p>
-              <div className="space-y-4">
-                {booking.tickets.map((ticket, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-gray-900">{ticket.ticketName}</h4>
-                      <span className="text-sm font-medium text-purple-600">
-                        {ticket.price.toFixed(2)} {booking.currency}
-                      </span>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg text-center">
-                      <div className="w-32 h-32 mx-auto mb-2 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <div className="text-xs text-gray-500">QR Code</div>
-                      </div>
-                      <p className="text-xs text-gray-600">Ticket: {ticket.ticketName}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                📧{' '}
+                <a href="mailto:support@biletara.com" className="text-indigo-600 hover:text-indigo-500">
+                  support@biletara.com
+                </a>
+                {' | '}
+                🌐{' '}
+                <a href="https://biletara.com" className="text-indigo-600 hover:text-indigo-500">
+                  biletara.com
+                </a>
+              </p>
+              <Link
+                href="/events"
+                className="mt-3 inline-flex items-center text-sm text-white/90 hover:text-white"
+              >
+                ← Browse More Events
+              </Link>
             </div>
-
-            {/* Actions */}
-            {booking.paymentStatus === 'paid' && (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={downloadTickets}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Tickets
-                </button>
-                <button
-                  onClick={resendConfirmationEmail}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Resend Email
-                </button>
-              </div>
-            )}
-
-            {booking.paymentStatus === 'failed' && (
-              <div className="text-center">
-                <Link
-                  href={`/events/${event._id}`}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Try Again
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* ⚠️ Important Information */}
-          <div className="border-t border-gray-200 pt-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              ⚠️ Important Information
-            </h3>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <ul className="text-sm text-gray-700 space-y-2">
-                <li>• Arrive at least 90 minutes before the event starts</li>
-                <li>• Bring a valid ID for verification</li>
-                <li>• Keep your tickets secure and don't share QR codes</li>
-                <li>• Screenshots of QR codes are accepted</li>
-                <li>• Each ticket allows one entry only</li>
-                <li>• Need help? Contact our support team</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-gray-200 pt-6 mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              Need help? Contact our support team
-            </p>
-            <p className="text-sm text-gray-600 mt-2">
-              📧{' '}
-              <a href="mailto:support@biletara.com" className="text-indigo-600 hover:text-indigo-500">
-                support@biletara.com
-              </a>
-              {' | '}
-              🌐{' '}
-              <a href="https://biletara.com" className="text-indigo-600 hover:text-indigo-500">
-                biletara.com
-              </a>
-            </p>
-            <Link
-              href="/events"
-              className="mt-3 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500"
-            >
-              ← Browse More Events
-            </Link>
           </div>
         </div>
       </div>
-    </div>
+    </BackgroundWrapper>
   );
 }
 
 export default function BookingSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <Clock className="h-12 w-12 mx-auto text-yellow-500 animate-spin" />
-            <h1 className="text-2xl font-bold text-gray-900 mt-4">Loading...</h1>
-            <p className="text-gray-600 mt-2">Fetching your booking details...</p>
+      <BackgroundWrapper fullHeight={true}>
+        <div className="py-12">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-lg shadow-xl p-8 text-center border border-white/20">
+              <Clock className="h-12 w-12 mx-auto text-white/80 animate-spin" />
+              <h1 className="text-2xl font-bold text-white mt-4 drop-shadow-md">Loading...</h1>
+              <p className="text-white/90 mt-2 drop-shadow-sm">Fetching your booking details...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </BackgroundWrapper>
     }>
       <BookingSuccessContent />
     </Suspense>

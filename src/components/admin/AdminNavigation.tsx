@@ -99,6 +99,12 @@ const adminNavItems: NavItem[] = [
     description: 'Payment settings and methods'
   },
   {
+    href: '/admin/payment-options',
+    label: 'Payment Options',
+    icon: CreditCard,
+    description: 'Configure payment methods'
+  },
+  {
     href: '/admin/settings',
     label: 'Settings',
     icon: Settings,

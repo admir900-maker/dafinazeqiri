@@ -12,6 +12,7 @@ import {
   Music,
   Share2,
   ArrowLeft,
+  ArrowRight,
   Play,
   ExternalLink,
   ShoppingCart,
@@ -474,14 +475,12 @@ export default function EventDetailPage() {
                               <div className="flex items-center gap-4 mt-2 text-sm">
                                 <span className={`flex items-center gap-1 font-medium ${ticket.availableTickets === 0
                                   ? 'text-red-400'
-                                  : ticket.availableTickets <= 10
-                                    ? 'text-yellow-400'
-                                    : 'text-green-400'
+                                  : 'text-green-400'
                                   }`}>
                                   <Users className="w-4 h-4" />
                                   {ticket.availableTickets === 0
-                                    ? 'Sold Out'
-                                    : `${ticket.availableTickets} available`
+                                    ? 'Not Available'
+                                    : 'Available'
                                   }
                                 </span>
                                 {ticket.availableTickets <= 10 && ticket.availableTickets > 0 && (
@@ -681,13 +680,11 @@ export default function EventDetailPage() {
                               <div className="flex items-center gap-2 mt-1">
                                 <p className={`text-xs font-medium ${ticket.availableTickets === 0
                                   ? 'text-red-400'
-                                  : ticket.availableTickets <= 10
-                                    ? 'text-yellow-400'
-                                    : 'text-green-400'
+                                  : 'text-green-400'
                                   }`}>
                                   {ticket.availableTickets === 0
                                     ? 'Sold Out'
-                                    : `${ticket.availableTickets} available`
+                                    : 'Available'
                                   }
                                 </p>
                                 {ticket.availableTickets <= 10 && ticket.availableTickets > 0 && (
@@ -767,16 +764,29 @@ export default function EventDetailPage() {
                     <div className="space-y-3">
                       <Button
                         onClick={handleBookTickets}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3 flex items-center justify-center gap-2"
+                        className="w-full relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white font-bold border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 py-6 group"
                         disabled={getTotalTickets() === 0 || bookingLoading}
+                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)' }}
                       >
-                        {bookingLoading ? 'Proceeding to Checkout...' : (
-                          <>
-                            <CreditCard className="w-5 h-5" />
-                            Proceed to Checkout {getTotalTickets() > 0 ? `- ${getTotalTickets()} ` : ''}
-                            {getTotalTickets() > 0 && `Ticket(s) for ${formatPrice(getTotalPrice())}`}
-                          </>
-                        )}
+                        <span className="relative z-10 flex flex-col items-center justify-center gap-1 drop-shadow-lg">
+                          {bookingLoading ? (
+                            <span className="text-base">Proceeding to Checkout...</span>
+                          ) : (
+                            <>
+                              <span className="flex items-center gap-2 text-base">
+                                <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
+                                Proceed to Checkout
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300 drop-shadow-md" />
+                              </span>
+                              {getTotalTickets() > 0 && (
+                                <span className="text-xs opacity-90">
+                                  {getTotalTickets()} Ticket(s) · {formatPrice(getTotalPrice())}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </span>
+                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
                       </Button>
                     </div>
                   </>

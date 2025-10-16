@@ -56,6 +56,8 @@ export async function POST(
         }, { status: 400 });
       }
 
+      console.log('🎨 Ticket type color:', ticketType.color, 'for ticket:', ticketType.name);
+
       // Create individual ticket entries
       for (let i = 0; i < ticket.quantity; i++) {
         const ticketId = uuidv4();
@@ -66,6 +68,7 @@ export async function POST(
           ticketId: ticketId,
           qrCode: qrCode,
           price: ticketType.price,
+          color: ticketType.color || '#3B82F6',
           isUsed: false
         });
 

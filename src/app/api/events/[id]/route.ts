@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Event from '@/models/Event';
+import Category from '@/models/Category';
 import Booking from '@/models/Booking';
 import { auth } from '@clerk/nextjs/server';
 import { validateAndSanitize, validateEvent } from '@/lib/validation';

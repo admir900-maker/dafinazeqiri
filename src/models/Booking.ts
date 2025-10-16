@@ -5,6 +5,7 @@ export interface BookingTicket {
   ticketId: string;
   qrCode: string;
   price: number;
+  color?: string;
   isUsed: boolean;
   usedAt?: Date;
   validatedBy?: string;
@@ -38,6 +39,7 @@ const BookingTicketSchema = new mongoose.Schema({
   ticketId: { type: String, required: true },
   qrCode: { type: String, required: true, unique: true },
   price: { type: Number, required: true },
+  color: { type: String },
   isUsed: { type: Boolean, default: false },
   usedAt: { type: Date },
   validatedBy: { type: String }, // userId of validator

@@ -26,6 +26,7 @@ interface SiteConfig {
 export function Header({ }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
     siteName: 'BiletAra', // fallback
     siteDescription: '',
@@ -46,6 +47,7 @@ export function Header({ }: HeaderProps) {
   useEffect(() => {
     const fetchSiteConfig = async () => {
       try {
+        setIsLoading(true)
         const response = await fetch('/api/site-config')
         if (response.ok) {
           const config = await response.json()
@@ -53,6 +55,8 @@ export function Header({ }: HeaderProps) {
         }
       } catch (error) {
         console.error('Failed to fetch site config:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -68,11 +72,11 @@ export function Header({ }: HeaderProps) {
 
   const navItems = [
     { href: '/', label: 'Home' },
-    { href: '/events', label: 'Events' },
-    { href: '/categories', label: 'Categories' },
+    // { href: '/events', label: 'Events' },
+    // { href: '/categories', label: 'Categories' },
     ...(isSignedIn ? [{ href: '/bookings', label: 'My Bookings' }] : []),
-    { href: '/about', label: 'About' },
-    { href: '/contact', label: 'Contact' },
+    // { href: '/about', label: 'About' },
+    // { href: '/contact', label: 'Contact' },
     ...(isValidator || isAdmin ? [{ href: '/validator', label: 'Validator' }] : []),
     ...(isAdmin ? [{ href: '/admin', label: 'Admin' }] : []),
   ]
@@ -95,7 +99,13 @@ export function Header({ }: HeaderProps) {
           <Link href="/" className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <Ticket className="h-8 w-8 text-white" />
-              <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md">{siteConfig.siteName}</span>
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-32 bg-white/30 animate-pulse rounded"></div>
+                </div>
+              ) : (
+                <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md">{siteConfig.siteName}</span>
+              )}
             </div>
           </Link>
 

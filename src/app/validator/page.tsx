@@ -739,15 +739,14 @@ Please try:
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Scanner Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Camera className="w-6 h-6" />
-                QR Scanner
-              </h2>
+          {/* Scanner Section - Full Width */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <Camera className="w-6 h-6" />
+              QR Scanner
+            </h2>
 
-              <div className="space-y-4">
+            <div className="space-y-4">
                 {/* Camera View */}
                 <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
                   <video
@@ -765,7 +764,7 @@ Please try:
                     </div>
                   )}
 
-                  {isScanning && !qrDetected && (
+                  {isScanning && !qrDetected && !countdown && !validationResult && (
                     <div className="absolute inset-0 border-4 border-purple-500 rounded-xl">
                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-purple-500 rounded-lg"></div>
                     </div>
@@ -786,6 +785,104 @@ Please try:
                             TAP TO SCAN
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Countdown Overlay on Camera */}
+                  {isScanning && countdown !== null && (
+                    <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-40 h-40 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+                            <span className="text-7xl font-bold text-white">{countdown}</span>
+                          </div>
+                          <p className="text-2xl font-bold text-white mt-6 mb-2">Processing QR Code...</p>
+                          <p className="text-lg text-white opacity-90">Validating ticket in {countdown} seconds</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Validation Result Overlay on Camera */}
+                  {isScanning && validationResult && (
+                    <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm overflow-auto">
+                      <div className="p-6 min-h-full flex flex-col justify-center">
+                        {/* Status */}
+                        <div className={`p-6 rounded-xl flex items-center gap-4 mb-4 ${validationResult.success ? 'bg-green-500' : 'bg-red-500'}`}>
+                          {validationResult.success ? (
+                            <CheckCircle className="w-12 h-12 text-white flex-shrink-0" />
+                          ) : (
+                            <XCircle className="w-12 h-12 text-white flex-shrink-0" />
+                          )}
+                          <div className="text-white">
+                            <p className="text-2xl font-bold">
+                              {validationResult.success ? 'Valid Ticket' : 'Invalid Ticket'}
+                            </p>
+                            <p className="text-lg opacity-90">
+                              {validationResult.message}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Ticket Details */}
+                        {validationResult.success && validationResult.ticket && validationResult.event && (
+                          <div className="space-y-3">
+                            <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                              <h3 className="font-bold text-gray-800 mb-3 text-lg">Event Details</h3>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex items-center gap-2 text-gray-700">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>{new Date(validationResult.event.date).toLocaleString()}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-700">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{validationResult.event.venue}, {validationResult.event.location}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                              <h3 className="font-bold text-gray-800 mb-3 text-lg">Ticket Details</h3>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between text-gray-700">
+                                  <span>Type:</span>
+                                  <span className="font-semibold">{validationResult.ticket.ticketName}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                  <span>Price:</span>
+                                  <span className="font-semibold">{validationResult.ticket.price.toFixed(2)} EUR</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                  <span>Validated:</span>
+                                  <span className="font-semibold">{new Date(validationResult.ticket.usedAt).toLocaleString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Error Details */}
+                        {!validationResult.success && (
+                          <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                            <h3 className="font-bold text-red-800 mb-2">Error Details</h3>
+                            <div className="space-y-1 text-sm text-red-600">
+                              {validationResult.error && <p>Error: {validationResult.error}</p>}
+                              {validationResult.status && <p>Status: {validationResult.status}</p>}
+                              {validationResult.eventDate && <p>Event Date: {new Date(validationResult.eventDate).toLocaleDateString()}</p>}
+                              {validationResult.usedAt && <p>Previously Used: {new Date(validationResult.usedAt).toLocaleString()}</p>}
+                              {validationResult.validatedBy && <p>Validated By: {validationResult.validatedBy}</p>}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Clear Button */}
+                        <button
+                          onClick={() => setValidationResult(null)}
+                          className="mt-4 w-full bg-white text-gray-800 py-3 px-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
+                        >
+                          Scan Next Ticket
+                        </button>
                       </div>
                     </div>
                   )}
@@ -890,128 +987,6 @@ Please try:
                 )}
               </div>
             </div>
-
-            {/* Validation Result */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Ticket className="w-6 h-6" />
-                Validation Result
-              </h2>
-
-              {!validationResult ? (
-                countdown !== null ? (
-                  <div className="text-center py-8">
-                    <div className="mb-6">
-                      <div className="w-32 h-32 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl animate-pulse">
-                        <span className="text-6xl font-bold text-white">{countdown}</span>
-                      </div>
-                    </div>
-                    <p className="text-xl font-semibold text-gray-800 mb-2">Processing QR Code...</p>
-                    <p className="text-gray-600">Validating ticket in {countdown} seconds</p>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <AlertTriangle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Scan a QR code to see validation results</p>
-                  </div>
-                )
-              ) : (
-                <div className="space-y-4">
-                  {/* Status */}
-                  <div className={`p-4 rounded-lg flex items-center gap-3 ${validationResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-                    }`}>
-                    {validationResult.success ? (
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-red-600" />
-                    )}
-                    <div>
-                      <p className={`font-semibold ${validationResult.success ? 'text-green-800' : 'text-red-800'
-                        }`}>
-                        {validationResult.success ? 'Valid Ticket' : 'Invalid Ticket'}
-                      </p>
-                      <p className={`text-sm ${validationResult.success ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                        {validationResult.message}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Ticket Details */}
-                  {validationResult.success && validationResult.ticket && validationResult.event && (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-semibold text-gray-800 mb-3">Event Details</h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Calendar className="w-4 h-4" />
-                            <span>{new Date(validationResult.event.date).toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>{validationResult.event.venue}, {validationResult.event.location}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-semibold text-gray-800 mb-3">Ticket Details</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Type:</span>
-                            <span className="font-medium">{validationResult.ticket.ticketName}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Price:</span>
-                            <span className="font-medium">{validationResult.ticket.price.toFixed(2)} EUR</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Validated:</span>
-                            <span className="font-medium">{new Date(validationResult.ticket.usedAt).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Error Details */}
-                  {!validationResult.success && (
-                    <div className="p-4 bg-red-50 rounded-lg">
-                      <h3 className="font-semibold text-red-800 mb-2">Error Details</h3>
-                      <div className="space-y-1 text-sm text-red-600">
-                        {validationResult.error && <p>Error: {validationResult.error}</p>}
-                        {validationResult.status && <p>Status: {validationResult.status}</p>}
-                        {validationResult.eventDate && <p>Event Date: {new Date(validationResult.eventDate).toLocaleDateString()}</p>}
-                        {validationResult.usedAt && <p>Previously Used: {new Date(validationResult.usedAt).toLocaleString()}</p>}
-                        {validationResult.validatedBy && <p>Validated By: {validationResult.validatedBy}</p>}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    {!isScanning && (
-                      <button
-                        onClick={() => {
-                          setValidationResult(null);
-                          startScanning();
-                        }}
-                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Camera className="w-5 h-5" />
-                        Scan Next Ticket
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setValidationResult(null)}
-                      className={`${isScanning ? 'w-full' : 'flex-1'} bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors`}
-                    >
-                      Clear Result
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Validation Logs Section */}
           <div className="mt-8">

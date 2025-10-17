@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { EventCard } from '@/components/ui/event-card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -40,13 +41,34 @@ interface Event {
 
 // Memoized loading skeleton component
 const LoadingSkeleton = () => (
-  <section className="py-16">
-    <div className="container mx-auto px-4">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-white mb-4 drop-shadow-lg">Featured Events</h2>
-        <p className="text-white/90 max-w-2xl mx-auto drop-shadow-md">
-          Discover the hottest upcoming concerts and live performances
-        </p>
+  <section className="py-20 relative overflow-hidden">
+    {/* Glamorous background effect */}
+    <div className="absolute inset-0 pointer-events-none opacity-20">
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div className="container mx-auto px-4 relative z-10">
+      <div className="text-center mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-5xl md:text-6xl font-bold mb-6" style={{
+            background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontFamily: "'Playfair Display', serif",
+            letterSpacing: '1px'
+          }}>
+            Featured Events
+          </h2>
+          <p className="text-white/90 text-lg max-w-2xl mx-auto drop-shadow-lg font-light">
+            Experience the magic of live performances
+          </p>
+        </motion.div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {Array.from({ length: 4 }, (_, i) => (
@@ -180,30 +202,55 @@ export function FeaturedEventsSection() {
   }
 
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
+    <section className="py-20 relative overflow-hidden">
+      {/* Glamorous background effect */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-lg rounded-full mb-4 border border-white/30">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">
-            DafinaZeqiri.tickets
-          </h2>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow-md">
-            SUPERNOVA
-          </p>
+        <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-2xl" style={{
+              background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+              animation: 'glow 2s ease-in-out infinite'
+            }}>
+              <Sparkles className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-5xl md:text-6xl font-bold mb-4" style={{
+              background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: '1px'
+            }}>
+              DafinaZeqiri.tickets
+            </h2>
+            <p className="text-2xl font-light text-white/95 max-w-2xl mx-auto drop-shadow-xl tracking-wide">
+              SUPERNOVA
+            </p>
+          </motion.div>
         </div>
 
         {/* Events Grid */}
         {eventsGrid}
 
         {/* View All Events Button */}
-        {/* <div className="text-center">
+        {/* <div className="text-center mt-12">
           <Link href="/events">
-            <Button size="lg" className="bg-white/30 backdrop-blur-lg hover:bg-white/40 text-white border border-white/40 shadow-xl">
-              View All Events
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button size="lg" className="rounded-full font-bold px-10 py-6 text-lg shadow-2xl transition-all transform hover:scale-105" style={{ 
+              background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+              border: '2px solid rgba(255, 255, 255, 0.3)'
+            }}>
+              <span className="text-white">View All Events</span>
+              <ArrowRight className="w-5 h-5 ml-2 text-white" />
             </Button>
           </Link>
         </div> */}

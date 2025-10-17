@@ -106,8 +106,8 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
   // Memoize card classes
   const cardClasses = useMemo(() => {
     return variant === 'featured'
-      ? 'group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl'
-      : 'group cursor-pointer transition-all duration-300 hover:scale-102 hover:shadow-lg bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl'
+      ? 'group cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-pink-900/40 via-purple-900/40 to-pink-800/40 backdrop-blur-xl border-2 border-pink-400/30 shadow-2xl rounded-2xl overflow-hidden'
+      : 'group cursor-pointer transition-all duration-500 hover:scale-102 hover:shadow-xl bg-gradient-to-br from-pink-900/40 via-purple-900/40 to-pink-800/40 backdrop-blur-xl border-2 border-pink-400/30 shadow-xl rounded-2xl overflow-hidden'
   }, [variant])
 
   // Memoize tags display
@@ -161,17 +161,18 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
 
             {/* Category Badge */}
             <Badge
-              className="absolute top-4 left-4 bg-white/30 backdrop-blur-sm hover:bg-white/40 text-white border border-white/40"
+              className="absolute top-4 left-4 backdrop-blur-md hover:bg-pink-500/80 text-white border-2 border-pink-300/60 font-semibold shadow-lg transition-all"
+              style={{ background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.7), rgba(168, 85, 247, 0.7))' }}
             >
               {typeof event.category === 'object' ? event.category.name : event.category}
             </Badge>
 
             {/* Date Badge */}
-            <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-sm rounded-lg p-2 text-center min-w-[60px] border border-white/40">
-              <div className="text-xs font-medium text-white/90">
+            <div className="absolute top-4 right-4 backdrop-blur-md rounded-xl p-3 text-center min-w-[70px] border-2 border-pink-300/60 shadow-xl" style={{ background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.8), rgba(168, 85, 247, 0.8))' }}>
+              <div className="text-xs font-bold text-white/95 uppercase tracking-wider">
                 {formattedDate.split(' ')[0]}
               </div>
-              <div className="text-lg font-bold text-white">
+              <div className="text-2xl font-bold text-white">
                 {formattedDate.split(' ')[1].replace(',', '')}
               </div>
             </div>
@@ -188,7 +189,11 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
             {/* Title */}
             <h3
               id={`event-title-${event._id}`}
-              className={`font-bold text-white mb-2 group-hover:text-white transition-colors drop-shadow-md ${variant === 'featured' ? 'text-xl' : 'text-lg'}`}
+              className={`font-bold text-white mb-2 transition-all drop-shadow-lg ${variant === 'featured' ? 'text-2xl' : 'text-xl'}`}
+              style={{ 
+                fontFamily: "'Playfair Display', serif",
+                letterSpacing: '0.5px'
+              }}
             >
               {event.title}
             </h3>

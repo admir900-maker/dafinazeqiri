@@ -82,42 +82,51 @@ export function Header({ }: HeaderProps) {
   ]
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-white/30 shadow-xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%)' }}>
-      {/* Music notes background */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1920 300" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ zIndex: 0 }}>
-        <g opacity="0.05">
-          <text x="120" y="200" fontSize="120" fontFamily="sans-serif" fill="#fff">&#9835;</text>
-          <text x="800" y="150" fontSize="80" fontFamily="sans-serif" fill="#fff">&#119070;</text>
-          <text x="1500" y="180" fontSize="100" fontFamily="sans-serif" fill="#fff">&#9833;</text>
-          <text x="1700" y="120" fontSize="70" fontFamily="sans-serif" fill="#fff">&#119070;</text>
-        </g>
-      </svg>
-      {/* Subtle glass effect, no music notes */}
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-pink-500/20 shadow-2xl relative overflow-hidden backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(45, 27, 78, 0.95) 0%, rgba(123, 44, 111, 0.95) 50%, rgba(201, 75, 139, 0.95) 100%)' }}>
+      {/* Glamorous sparkle overlay */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.4) 0%, transparent 50%)' }}></div>
+      
+      {/* Shimmer effect */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" style={{ animation: 'shimmer 3s infinite' }}></div>
+      </div>
+      
       <div className="container mx-auto px-4 py-0 relative z-10">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Ticket className="h-8 w-8 text-white" />
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Ticket className="h-9 w-9 text-pink-300 group-hover:text-pink-200 transition-all transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 0 8px rgba(236, 72, 153, 0.6))' }} />
+              </div>
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <div className="h-6 w-32 bg-white/30 animate-pulse rounded"></div>
+                  <div className="h-7 w-32 bg-white/30 animate-pulse rounded"></div>
                 </div>
               ) : (
-                <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md">{siteConfig.siteName}</span>
+                <span className="text-3xl font-bold tracking-tight" style={{ 
+                  background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  fontFamily: "'Playfair Display', serif"
+                }}>{siteConfig.siteName}</span>
               )}
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-base font-medium text-white/90 hover:text-white px-2 py-1 rounded transition-colors drop-shadow-sm"
+                className="text-base font-semibold text-white/95 hover:text-pink-200 px-3 py-2 rounded-lg transition-all relative group"
+                style={{ letterSpacing: '0.5px' }}
               >
                 {item.label}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
           </nav>
@@ -125,14 +134,15 @@ export function Header({ }: HeaderProps) {
           {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-xs mx-6">
             <form onSubmit={handleSearch} className="w-full">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/70" />
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-pink-200/80 group-hover:text-pink-300 transition-colors" />
                 <Input
                   type="search"
                   placeholder="Search events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 rounded border border-white/40 focus:border-white/60 bg-white/30 backdrop-blur-sm text-white placeholder-white/70"
+                  className="pl-12 pr-4 rounded-full border-2 border-pink-300/40 focus:border-pink-400/80 bg-white/20 backdrop-blur-md text-white placeholder-pink-200/60 h-11 transition-all shadow-lg group-hover:shadow-pink-500/30"
+                  style={{ fontWeight: '500' }}
                 />
               </div>
             </form>
@@ -142,14 +152,19 @@ export function Header({ }: HeaderProps) {
           <div className="flex items-center gap-2">
             {/* User Menu */}
             {isSignedIn ? (
-              <UserButton afterSignOutUrl="/" />
+              <div className="ring-2 ring-pink-300/50 rounded-full p-0.5 bg-gradient-to-br from-pink-400 to-purple-500">
+                <UserButton afterSignOutUrl="/" />
+              </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <Button variant="outline" asChild className="border border-white/40 hover:border-white/60 transition-colors rounded-full bg-white/30 backdrop-blur-sm shadow-sm text-white">
+              <div className="hidden md:flex items-center gap-3">
+                <Button variant="outline" asChild className="border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:shadow-pink-500/40 text-white font-semibold px-6">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild className="border border-white/50 hover:border-white/70 transition-colors rounded-full bg-white/40 backdrop-blur-sm text-white shadow-sm">
-                  <Link href="/auth/signup">Sign Up</Link>
+                <Button asChild className="rounded-full font-bold px-7 shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ 
+                  background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+                  border: '2px solid rgba(255, 255, 255, 0.3)'
+                }}>
+                  <Link href="/auth/signup" className="text-white">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -158,10 +173,10 @@ export function Header({ }: HeaderProps) {
             <Button
               variant="outline"
               size="icon"
-              className="md:hidden border border-white/40 hover:border-white/60 transition-colors rounded-full bg-white/30 backdrop-blur-sm shadow-sm"
+              className="md:hidden border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
+              {isMenuOpen ? <X className="h-6 w-6 text-pink-200" /> : <Menu className="h-6 w-6 text-pink-200" />}
             </Button>
           </div>
         </div>
@@ -173,39 +188,34 @@ export function Header({ }: HeaderProps) {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="md:hidden border-t border-white/30 shadow-xl relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%)' }}
+              className="md:hidden border-t border-pink-400/30 shadow-2xl relative overflow-hidden backdrop-blur-lg"
+              style={{ background: 'linear-gradient(135deg, rgba(45, 27, 78, 0.98) 0%, rgba(123, 44, 111, 0.98) 50%, rgba(201, 75, 139, 0.98) 100%)' }}
             >
-              {/* Music notes background for mobile menu */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1920 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ zIndex: 0 }}>
-                <g opacity="0.05">
-                  <text x="80" y="160" fontSize="60" fontFamily="sans-serif" fill="#fff">&#9835;</text>
-                  <text x="300" y="120" fontSize="40" fontFamily="sans-serif" fill="#fff">&#119070;</text>
-                  <text x="200" y="200" fontSize="50" fontFamily="sans-serif" fill="#fff">&#9833;</text>
-                </g>
-              </svg>
+              {/* Glamour overlay for mobile menu */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 30% 40%, rgba(236, 72, 153, 0.5) 0%, transparent 60%)' }}></div>
+              
               <div className="px-4 py-4 space-y-4 relative z-10">
                 {/* Mobile Search */}
                 <form onSubmit={handleSearch}>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/70" />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-pink-200/80" />
                     <Input
                       type="search"
                       placeholder="Search events..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 rounded border border-white/40 focus:border-white/60 bg-white/30 backdrop-blur-sm text-white placeholder-white/70"
+                      className="pl-12 rounded-full border-2 border-pink-300/40 focus:border-pink-400/80 bg-white/20 backdrop-blur-md text-white placeholder-pink-200/60 h-11 shadow-lg"
                     />
                   </div>
                 </form>
 
                 {/* Mobile Navigation */}
-                <nav className="flex flex-col gap-2">
+                <nav className="flex flex-col gap-3">
                   {navItems.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-base font-medium text-white/90 hover:text-white px-2 py-1 rounded transition-colors drop-shadow-sm"
+                      className="text-base font-semibold text-white/95 hover:text-pink-200 px-4 py-2.5 rounded-lg transition-all bg-white/10 hover:bg-white/20 backdrop-blur-sm"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {item.label}
@@ -215,22 +225,27 @@ export function Header({ }: HeaderProps) {
 
                 {/* Mobile Auth */}
                 {!isSignedIn && (
-                  <div className="flex flex-col gap-2 pt-4 border-t border-white/30">
-                    <Button variant="outline" asChild className="justify-start border border-white/40 hover:border-white/60 transition-colors rounded-full bg-white/30 backdrop-blur-sm shadow-sm text-white">
+                  <div className="flex flex-col gap-3 pt-4 border-t border-pink-400/30">
+                    <Button variant="outline" asChild className="justify-start border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg text-white font-semibold h-12">
                       <Link href="/auth/signin" onClick={() => setIsMenuOpen(false)}>
                         Sign In
                       </Link>
                     </Button>
-                    <Button asChild className="justify-start border border-white/50 hover:border-white/70 transition-colors rounded-full bg-white/40 backdrop-blur-sm text-white shadow-sm">
-                      <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
+                    <Button asChild className="justify-start rounded-full font-bold h-12 shadow-xl transition-all" style={{ 
+                      background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+                      border: '2px solid rgba(255, 255, 255, 0.3)'
+                    }}>
+                      <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)} className="text-white">
                         Sign Up
                       </Link>
                     </Button>
                   </div>
                 )}
                 {isSignedIn && (
-                  <div className="pt-4 border-t border-white/30">
-                    <UserButton afterSignOutUrl="/" />
+                  <div className="pt-4 border-t border-pink-400/30 flex justify-center">
+                    <div className="ring-2 ring-pink-300/50 rounded-full p-0.5 bg-gradient-to-br from-pink-400 to-purple-500">
+                      <UserButton afterSignOutUrl="/" />
+                    </div>
                   </div>
                 )}
               </div>

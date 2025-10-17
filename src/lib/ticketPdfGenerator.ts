@@ -148,7 +148,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     const logoSize = 70;
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
-    
+
     const letterSize = 40;
     const letter = 'M';
     const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);

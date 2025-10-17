@@ -15,10 +15,10 @@ export async function GET(
     console.log('🔍 API: Fetching event...');
     await connectToDatabase();
     console.log('✅ API: Database connected');
-    
+
     const { id } = await params;
     console.log('🔍 API: Looking for event ID:', id);
-    
+
     // Find event without populate first to avoid category issues
     const event = await Event.findById(id);
     console.log('📦 API: Event found:', event ? 'YES' : 'NO');
@@ -27,7 +27,7 @@ export async function GET(
       console.log('❌ API: Event not found in database');
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
-    
+
     // Try to populate category, but don't fail if it doesn't exist
     try {
       await event.populate('category', 'name slug icon color');
@@ -35,7 +35,7 @@ export async function GET(
     } catch (catError) {
       console.log('⚠️ API: Category population failed, continuing without it');
     }
-    
+
     console.log('✅ API: Returning event data');
 
     // Calculate actual available tickets based on bookings
@@ -83,9 +83,9 @@ export async function GET(
       name: error.name
     });
     logError('Error fetching event by ID', error, { action: 'events-api-get-by-id' });
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to fetch event',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 }

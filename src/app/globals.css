@@ -2,47 +2,47 @@
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 320 100% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 320 100% 10%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
+  --popover-foreground: 320 100% 10%;
+  --primary: 330 81% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 280 70% 55%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 330 40% 96%;
+  --muted-foreground: 320 20% 50%;
+  --accent: 45 100% 60%;
+  --accent-foreground: 320 100% 10%;
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
+  --destructive-foreground: 0 0% 100%;
+  --border: 330 30% 90%;
+  --input: 330 30% 90%;
+  --ring: 330 81% 60%;
+  --radius: 1rem;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 84% 4.9%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 94.1%;
+  --background: 320 40% 8%;
+  --foreground: 330 100% 98%;
+  --card: 320 35% 12%;
+  --card-foreground: 330 100% 98%;
+  --popover: 320 35% 12%;
+  --popover-foreground: 330 100% 98%;
+  --primary: 330 81% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 280 70% 55%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 320 30% 20%;
+  --muted-foreground: 330 40% 70%;
+  --accent: 45 100% 60%;
+  --accent-foreground: 320 100% 10%;
+  --destructive: 0 62.8% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 330 30% 25%;
+  --input: 330 30% 25%;
+  --ring: 330 81% 60%;
 }
 
 * {
@@ -51,10 +51,13 @@
 
 body {
   color: hsl(var(--foreground));
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), 'Playfair Display', 'Georgia', serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 25%, #4a2358 50%, #7b2c6f 75%, #c94b8b 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Custom scrollbar */
@@ -98,6 +101,33 @@ html {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(168, 85, 247, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.8), 0 0 60px rgba(168, 85, 247, 0.5);
+  }
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -117,17 +147,28 @@ html {
   animation: slideIn 0.5s ease-out;
 }
 
-/* Gradient backgrounds */
+/* Gradient backgrounds - Dafina Zeqiri Style */
 .gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f59e0b 100%);
 }
 
 .gradient-secondary {
-  background: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #a855f7 100%);
+}
+
+.gradient-glamour {
+  background: linear-gradient(135deg, #2d1b4e 0%, #7b2c6f 50%, #c94b8b 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ec4899, #a855f7, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Glass morphism */

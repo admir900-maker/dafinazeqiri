@@ -436,7 +436,7 @@ function CheckoutContent() {
     );
   }
 
-  if (error || (!event && !loading)) {
+  if (error || !event) {
     return (
       <BackgroundWrapper>
         <div className="min-h-screen flex items-center justify-center">
@@ -459,6 +459,7 @@ function CheckoutContent() {
     );
   }
 
+  // At this point, TypeScript knows event is not null
   if (showStripePayment && paymentIntentData) {
     return (
       <BackgroundWrapper>

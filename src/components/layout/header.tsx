@@ -85,12 +85,12 @@ export function Header({ }: HeaderProps) {
     <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-pink-500/20 shadow-2xl relative overflow-hidden backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(45, 27, 78, 0.95) 0%, rgba(123, 44, 111, 0.95) 50%, rgba(201, 75, 139, 0.95) 100%)' }}>
       {/* Glamorous sparkle overlay */}
       <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.4) 0%, transparent 50%)' }}></div>
-      
+
       {/* Shimmer effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" style={{ animation: 'shimmer 3s infinite' }}></div>
       </div>
-      
+
       <div className="container mx-auto px-4 py-0 relative z-10">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -104,7 +104,7 @@ export function Header({ }: HeaderProps) {
                   <div className="h-7 w-32 bg-white/30 animate-pulse rounded"></div>
                 </div>
               ) : (
-                <span className="text-3xl font-bold tracking-tight" style={{ 
+                <span className="text-3xl font-bold tracking-tight" style={{
                   background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -160,7 +160,7 @@ export function Header({ }: HeaderProps) {
                 <Button variant="outline" asChild className="border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:shadow-pink-500/40 text-white font-semibold px-6">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild className="rounded-full font-bold px-7 shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{ 
+                <Button asChild className="rounded-full font-bold px-7 shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{
                   background: 'linear-gradient(135deg, #ec4899, #a855f7)',
                   border: '2px solid rgba(255, 255, 255, 0.3)'
                 }}>
@@ -193,7 +193,7 @@ export function Header({ }: HeaderProps) {
             >
               {/* Glamour overlay for mobile menu */}
               <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 30% 40%, rgba(236, 72, 153, 0.5) 0%, transparent 60%)' }}></div>
-              
+
               <div className="px-4 py-4 space-y-4 relative z-10">
                 {/* Mobile Search */}
                 <form onSubmit={handleSearch}>
@@ -231,7 +231,7 @@ export function Header({ }: HeaderProps) {
                         Sign In
                       </Link>
                     </Button>
-                    <Button asChild className="justify-start rounded-full font-bold h-12 shadow-xl transition-all" style={{ 
+                    <Button asChild className="justify-start rounded-full font-bold h-12 shadow-xl transition-all" style={{
                       background: 'linear-gradient(135deg, #ec4899, #a855f7)',
                       border: '2px solid rgba(255, 255, 255, 0.3)'
                     }}>

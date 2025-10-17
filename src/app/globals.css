@@ -55,8 +55,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 25%, #4a2358 50%, #7b2c6f 75%, #c94b8b 100%);
-  background-attachment: fixed;
+  background: #0a0a0a;
   min-height: 100vh;
 }
 

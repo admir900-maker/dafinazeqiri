@@ -190,7 +190,7 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
             <h3
               id={`event-title-${event._id}`}
               className={`font-bold text-white mb-2 transition-all drop-shadow-lg ${variant === 'featured' ? 'text-2xl' : 'text-xl'}`}
-              style={{ 
+              style={{
                 fontFamily: "'Playfair Display', serif",
                 letterSpacing: '0.5px'
               }}

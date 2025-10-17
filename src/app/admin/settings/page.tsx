@@ -433,6 +433,41 @@ export default function AdminSettingsPage() {
                   rows={3}
                 />
               </div>
+              
+              {/* Logo Upload Section */}
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Image className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold">Site Logo</h3>
+                </div>
+                <div className="space-y-2">
+                  <Label>Logo URL (used in PDF tickets and emails)</Label>
+                  <Input
+                    value={settings.general?.logoUrl || ''}
+                    onChange={(e) => updateNestedSetting('general', 'logoUrl', e.target.value)}
+                    placeholder="https://res.cloudinary.com/your-cloud/image/upload/logo.png"
+                  />
+                  <p className="text-sm text-gray-500">
+                    Upload your logo to Cloudinary first, then paste the URL here. 
+                    Recommended: PNG format, transparent background, 512x512px minimum.
+                  </p>
+                  {settings.general?.logoUrl && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium mb-2">Logo Preview:</p>
+                      <img 
+                        src={settings.general.logoUrl} 
+                        alt="Site logo" 
+                        className="w-24 h-24 object-contain bg-white rounded border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '';
+                          (e.target as HTMLImageElement).alt = 'Failed to load image';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <Button
                   onClick={() => saveSection('general')}

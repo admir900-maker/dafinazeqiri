@@ -223,10 +223,10 @@ class EmailService {
     }
 
     const ticketRows = tickets.map(ticket => `
-      <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${ticket.ticketName}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">1</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">${ticket.price.toFixed(2)} ${booking.currency}</td>
+      <tr style="background-color: rgba(255, 255, 255, 0.5);">
+        <td style="padding: 14px; border-bottom: 2px solid rgba(236, 72, 153, 0.15); color: #2d1b4e; font-weight: 600;">${ticket.ticketName}</td>
+        <td style="padding: 14px; border-bottom: 2px solid rgba(236, 72, 153, 0.15); text-align: center; color: #2d1b4e; font-weight: 600;">1</td>
+        <td style="padding: 14px; border-bottom: 2px solid rgba(236, 72, 153, 0.15); text-align: right; color: #ec4899; font-weight: 700;">${ticket.price.toFixed(2)} ${booking.currency}</td>
       </tr>
     `).join('');
 
@@ -241,35 +241,36 @@ class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Booking Confirmation - ${siteConfig.siteName}</title>
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+      <body style="font-family: 'Playfair Display', Georgia, serif; line-height: 1.6; color: #1a0a1e; margin: 0; padding: 0; background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 25%, #4a2358 50%, #7b2c6f 75%, #c94b8b 100%);">
+        <div style="max-width: 600px; margin: 40px auto; background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(236, 72, 153, 0.4), 0 0 40px rgba(168, 85, 247, 0.3);">
           
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">🎫 ${siteConfig.siteName}</h1>
-            <p style="margin: 8px 0 0 0; opacity: 0.9;">Your tickets are confirmed!</p>
+          <!-- Header with Dafina Zeqiri Style -->
+          <div style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f59e0b 100%); color: white; padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.2) 0%, transparent 60%); pointer-events: none;"></div>
+            <h1 style="margin: 0; font-size: 32px; font-weight: 900; font-family: 'Playfair Display', Georgia, serif; position: relative; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);">✨ ${siteConfig.siteName}</h1>
+            <p style="margin: 12px 0 0 0; font-size: 18px; font-weight: 300; position: relative; letter-spacing: 1px;">Your tickets are confirmed!</p>
           </div>
 
           <!-- Content -->
-          <div style="padding: 30px;">
+          <div style="padding: 40px 30px;">
             
             <!-- Success Message -->
-            <div style="background-color: #10b981; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
-              <h2 style="margin: 0 0 8px 0; font-size: 20px;">✅ Booking Confirmed!</h2>
-              <p style="margin: 0; opacity: 0.9;">Booking Reference: <strong>${booking.bookingReference}</strong></p>
+            <div style="background: linear-gradient(135deg, #ec4899, #a855f7); color: white; padding: 25px; border-radius: 16px; text-align: center; margin-bottom: 30px; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);">
+              <h2 style="margin: 0 0 10px 0; font-size: 24px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">✅ Booking Confirmed!</h2>
+              <p style="margin: 0; font-size: 16px; font-weight: 500; letter-spacing: 0.5px;">Booking Reference: <strong style="font-size: 18px;">${booking.bookingReference}</strong></p>
             </div>
 
             <!-- Event Details -->
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-              <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">📅 Event Details</h3>
+            <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08)); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 2px solid rgba(236, 72, 153, 0.2);">
+              <h3 style="margin: 0 0 20px 0; color: #7b2c6f; font-size: 22px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">🎭 Event Details</h3>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 8px 0; font-weight: 600; color: #64748b; width: 100px;">Event:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${event.title}</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; width: 100px; font-size: 15px;">Event:</td>
+                  <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px; font-weight: 600;">${event.title}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; font-weight: 600; color: #64748b;">Date:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${new Date(event.date).toLocaleDateString('en-US', {
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Date:</td>
+                  <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px;">${new Date(event.date).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -279,33 +280,33 @@ class EmailService {
     })}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; font-weight: 600; color: #64748b;">Venue:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${event.venue || event.location}</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Venue:</td>
+                  <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px;">${event.venue || event.location}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; font-weight: 600; color: #64748b;">Address:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${event.address || event.location}${event.city ? `, ${event.city}` : ''}${event.country ? `, ${event.country}` : ''}</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Address:</td>
+                  <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px;">${event.address || event.location}${event.city ? `, ${event.city}` : ''}${event.country ? `, ${event.country}` : ''}</td>
                 </tr>
               </table>
             </div>
 
             <!-- Ticket Summary -->
             <div style="margin-bottom: 30px;">
-              <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">🎟️ Ticket Summary</h3>
-              <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <h3 style="margin: 0 0 20px 0; color: #7b2c6f; font-size: 22px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">🎟️ Ticket Summary</h3>
+              <table style="width: 100%; border-collapse: collapse; border: 2px solid rgba(236, 72, 153, 0.3); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);">
                 <thead>
-                  <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e2e8f0;">Ticket Type</th>
-                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #374151; border-bottom: 1px solid #e2e8f0;">Quantity</th>
-                    <th style="padding: 12px; text-align: right; font-weight: 600; color: #374151; border-bottom: 1px solid #e2e8f0;">Price</th>
+                  <tr style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15));">
+                    <th style="padding: 15px; text-align: left; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Ticket Type</th>
+                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Quantity</th>
+                    <th style="padding: 15px; text-align: right; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Price</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${ticketRows}
-                  <tr style="background-color: #f8fafc;">
-                    <td style="padding: 12px; font-weight: 600; color: #1e293b;">Total</td>
-                    <td style="padding: 12px; text-align: center; font-weight: 600; color: #1e293b;">${tickets.length}</td>
-                    <td style="padding: 12px; text-align: right; font-weight: 600; color: #1e293b; font-size: 18px;">${booking.totalAmount.toFixed(2)} ${booking.currency}</td>
+                  <tr style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2));">
+                    <td style="padding: 15px; font-weight: 700; color: #2d1b4e; font-size: 16px;">Total</td>
+                    <td style="padding: 15px; text-align: center; font-weight: 700; color: #2d1b4e; font-size: 16px;">${tickets.length}</td>
+                    <td style="padding: 15px; text-align: right; font-weight: 700; color: #ec4899; font-size: 20px;">${booking.totalAmount.toFixed(2)} ${booking.currency}</td>
                   </tr>
                 </tbody>
               </table>
@@ -313,11 +314,11 @@ class EmailService {
 
             <!-- PDF Tickets Notice -->
             ${pdfAttachments.length > 0 ? `
-            <div style="background-color: #dbeafe; border-left: 4px solid #2563eb; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-              <p style="color: #1e40af; margin: 0; font-size: 14px; font-weight: 600;">
+            <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(168, 85, 247, 0.1)); border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);">
+              <p style="color: #7b2c6f; margin: 0; font-size: 16px; font-weight: 700; font-family: 'Playfair Display', Georgia, serif;">
                 📎 Your tickets are attached as PDF files
               </p>
-              <p style="color: #1e40af; margin: 8px 0 0 0; font-size: 13px;">
+              <p style="color: #2d1b4e; margin: 10px 0 0 0; font-size: 14px; font-weight: 500;">
                 ${tickets.length} ticket PDF${tickets.length > 1 ? 's' : ''} ${tickets.length > 1 ? 'are' : 'is'} attached to this email. You can download, print, or save them to your device.
               </p>
             </div>
@@ -325,12 +326,12 @@ class EmailService {
 
             <!-- Ticket List -->
             <div style="margin-bottom: 30px;">
-              <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px;">🎟️ Your Tickets</h3>
-              <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-                <p style="color: #1e40af; margin: 0; font-size: 14px; font-weight: 500;">
-                  <strong>Important:</strong> Your tickets are attached as PDF files to this email.
+              <h3 style="margin: 0 0 20px 0; color: #7b2c6f; font-size: 22px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">🎟️ Your Tickets</h3>
+              <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.08)); border-left: 5px solid #a855f7; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15);">
+                <p style="color: #7b2c6f; margin: 0; font-size: 16px; font-weight: 600;">
+                  <strong style="font-family: 'Playfair Display', Georgia, serif;">Important:</strong> Your tickets are attached as PDF files to this email.
                 </p>
-                <ul style="color: #1e40af; margin: 8px 0 0 0; padding-left: 20px; font-size: 13px;">
+                <ul style="color: #2d1b4e; margin: 12px 0 0 0; padding-left: 24px; font-size: 14px; line-height: 1.8;">
                   <li>Download the PDF tickets from the attachments</li>
                   <li>Each ticket contains a unique QR code for entry</li>
                   <li>You can print the tickets or show them on your mobile device</li>
@@ -339,24 +340,24 @@ class EmailService {
                 </ul>
               </div>
               ${tickets.map((ticket, index) => `
-                <div style="text-align: center; margin: 15px 0; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; background-color: #fafafa;">
-                  <p style="font-size: 16px; color: #1e293b; margin: 5px 0; font-weight: 600;">${ticket.ticketName || 'Event Ticket'}</p>
-                  <p style="font-size: 13px; color: #64748b; margin: 5px 0;">Ticket ID: ${ticket.ticketId || 'N/A'}</p>
-                  <p style="font-size: 12px; color: #94a3b8; margin: 5px 0;">Price: ${ticket.price.toFixed(2)} ${booking.currency}</p>
+                <div style="text-align: center; margin: 15px 0; padding: 20px; border: 2px solid rgba(236, 72, 153, 0.3); border-radius: 16px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(168, 85, 247, 0.05)); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);">
+                  <p style="font-size: 18px; color: #7b2c6f; margin: 5px 0; font-weight: 700; font-family: 'Playfair Display', Georgia, serif;">${ticket.ticketName || 'Event Ticket'}</p>
+                  <p style="font-size: 14px; color: #a855f7; margin: 8px 0; font-weight: 600;">Ticket ID: ${ticket.ticketId || 'N/A'}</p>
+                  <p style="font-size: 15px; color: #ec4899; margin: 8px 0; font-weight: 700;">Price: ${ticket.price.toFixed(2)} ${booking.currency}</p>
                 </div>
               `).join('')}
             </div>
 
             <!-- Important Info -->
-            <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-              <h4 style="margin: 0 0 12px 0; color: #92400e; font-size: 16px;">⚠️ Important Information</h4>
-              <ul style="margin: 0; padding-left: 20px; color: #92400e;">
+            <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(236, 72, 153, 0.1)); border: 2px solid rgba(251, 191, 36, 0.6); padding: 24px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);">
+              <h4 style="margin: 0 0 16px 0; color: #7b2c6f; font-size: 20px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">⚠️ Important Information</h4>
+              <ul style="margin: 0; padding-left: 24px; color: #2d1b4e; font-size: 14px; line-height: 1.8;">
                 <li>Arrive at least 30 minutes before the event starts</li>
                 <li>Bring a valid ID for verification</li>
                 <li>Keep your tickets secure and don't share QR codes</li>
                 <li>Screenshots of QR codes are accepted</li>
                 <li>Each ticket allows one entry only</li>
-                ${event.ageLimit ? `<li>Minimum age requirement: ${event.ageLimit} years old</li>` : ''}
+                ${event.ageLimit ? `<li><strong>Minimum age requirement: ${event.ageLimit} years old</strong></li>` : ''}
               </ul>
             </div>
 
@@ -371,10 +372,10 @@ class EmailService {
 
           </div>
 
-          <!-- Footer -->
-          <div style="background-color: #1e293b; color: #94a3b8; padding: 20px; text-align: center;">
-            <p style="margin: 0; font-size: 14px;">© 2025 ${siteConfig.siteName}. All rights reserved.</p>
-            <p style="margin: 8px 0 0 0; font-size: 12px;">You received this email because you booked tickets with ${siteConfig.siteName}.</p>
+          <!-- Footer with Dafina Zeqiri Glamorous Style -->
+          <div style="background: linear-gradient(135deg, #2d1b4e, #7b2c6f); color: rgba(255, 255, 255, 0.9); padding: 30px; text-align: center; border-top: 3px solid rgba(236, 72, 153, 0.5);">
+            <p style="margin: 0; font-size: 16px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">✨ © 2025 ${siteConfig.siteName}. All rights reserved.</p>
+            <p style="margin: 12px 0 0 0; font-size: 14px; opacity: 0.9;">You received this email because you booked tickets with ${siteConfig.siteName}.</p>
           </div>
 
         </div>

@@ -32,9 +32,9 @@ export function BackgroundWrapper({
 
       {/* Sparkle overlay */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div 
+        <div
           className="absolute inset-0 opacity-5"
-          style={{ 
+          style={{
             backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.3) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.2) 0%, transparent 60%)'
           }}
         ></div>

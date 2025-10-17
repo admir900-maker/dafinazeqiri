@@ -81,16 +81,29 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const margin = 40;
   const contentWidth = width - (margin * 2);
 
-  const ticketColor = ticket.color || '#3b51f7';
+  const ticketColor = ticket.color || '#ec4899'; // Dafina Zeqiri pink
   const colorRgb = hexToRgb(ticketColor);
 
+  // Glamorous gradient effect - Draw multiple layers for gradient look
   const headerHeight = 200;
+  
+  // Base gradient layer (purple to pink)
   page.drawRectangle({
     x: 0,
     y: height - headerHeight,
     width: width,
     height: headerHeight,
+    color: rgb(0.69, 0.17, 0.44), // #b12c70 deep pink-purple
+  });
+  
+  // Top gradient overlay (lighter pink)
+  page.drawRectangle({
+    x: 0,
+    y: height - headerHeight / 2,
+    width: width,
+    height: headerHeight / 2,
     color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
+    opacity: 0.7,
   });
 
   // Draw logo - embed provided logo or use default
@@ -99,14 +112,21 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
 
-    // Draw white circle background
+    // Draw glamorous white circle background with pink border
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2,
       color: rgb(1, 1, 1),
-      borderColor: rgb(1, 1, 1),
-      borderWidth: 2,
+    });
+    
+    // Draw pink/purple gradient border effect
+    page.drawCircle({
+      x: logoX + logoSize / 2,
+      y: logoY + logoSize / 2,
+      size: logoSize / 2 + 3,
+      borderColor: rgb(0.93, 0.28, 0.60), // #ec4899 pink
+      borderWidth: 3,
     });
 
     // Embed and draw logo image
@@ -144,10 +164,27 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     });
   } catch (error) {
     console.error('Error embedding logo, using text fallback:', error);
-    // Fallback: Draw "M" letter if logo fails
+    // Fallback: Draw "M" letter with glamorous style
     const logoSize = 70;
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
+
+    // Draw white circle
+    page.drawCircle({
+      x: logoX + logoSize / 2,
+      y: logoY + logoSize / 2,
+      size: logoSize / 2,
+      color: rgb(1, 1, 1),
+    });
+    
+    // Draw pink border
+    page.drawCircle({
+      x: logoX + logoSize / 2,
+      y: logoY + logoSize / 2,
+      size: logoSize / 2 + 3,
+      borderColor: rgb(0.93, 0.28, 0.60), // #ec4899 pink
+      borderWidth: 3,
+    });
 
     const letterSize = 40;
     const letter = 'M';
@@ -157,7 +194,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
       y: logoY + logoSize / 2 - letterSize / 2 + 5,
       size: letterSize,
       font: helveticaBold,
-      color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
+      color: rgb(0.93, 0.28, 0.60), // #ec4899 pink
     });
   }
 

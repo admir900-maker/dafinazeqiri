@@ -144,13 +144,13 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     });
   } catch (error) {
     console.error('Error embedding logo, using text fallback:', error);
-    // Fallback: Draw "B" letter if logo fails
+    // Fallback: Draw "M" letter if logo fails
     const logoSize = 70;
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
     
     const letterSize = 40;
-    const letter = 'B';
+    const letter = 'M';
     const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);
     page.drawText(letter, {
       x: logoX + logoSize / 2 - letterWidth / 2,

@@ -93,87 +93,68 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
   });
 
-  // Always try to embed logo (use provided or default)
-  const finalLogoUrl = logoUrl || DEFAULT_LOGO;
-  if (finalLogoUrl) {
-    try {
-      // Skip SVG files as they're not supported by pdf-lib
-      if (finalLogoUrl.includes('svg') || finalLogoUrl.startsWith('data:image/svg')) {
-        console.log('⚠️ SVG logos are not supported. Using default PNG logo instead.');
-        // Use default PNG logo instead of SVG
-        const base64Data = DEFAULT_LOGO.split(',')[1];
-        const binaryString = Buffer.from(base64Data, 'base64');
-        const logoImageBytes = binaryString.buffer;
-        const logoImage = await pdfDoc.embedPng(logoImageBytes);
+  // Always embed logo (use provided or default PNG)
+  try {
+    const finalLogoUrl = logoUrl || DEFAULT_LOGO;
+    let logoImageBytes: ArrayBuffer;
+    let logoImage;
 
-        const logoSize = 60;
-        const logoX = margin + 10;
-        const logoY = height - headerHeight / 2 - logoSize / 2;
+    // Skip SVG files and use default PNG instead
+    const logoToUse = (finalLogoUrl.includes('svg') || finalLogoUrl.startsWith('data:image/svg')) 
+      ? DEFAULT_LOGO 
+      : finalLogoUrl;
 
-        page.drawCircle({
-          x: logoX + logoSize / 2,
-          y: logoY + logoSize / 2,
-          size: logoSize / 2,
-          color: rgb(1, 1, 1),
-        });
-
-        page.drawImage(logoImage, {
-          x: logoX + 5,
-          y: logoY + 5,
-          width: logoSize - 10,
-          height: logoSize - 10,
-        });
-      } else {
-        // Handle PNG and JPG
-        let logoImageBytes: ArrayBuffer;
-        let logoImage;
-
-        if (finalLogoUrl.startsWith('data:')) {
-          const base64Data = finalLogoUrl.split(',')[1];
-          const binaryString = Buffer.from(base64Data, 'base64');
-          logoImageBytes = binaryString.buffer;
-        } else {
-          const logoResponse = await fetch(finalLogoUrl);
-          logoImageBytes = await logoResponse.arrayBuffer();
-        }
-
-        // Detect image format from data URL or file extension
-        const isPng = finalLogoUrl.includes('png') || finalLogoUrl.startsWith('data:image/png');
-
-        if (isPng) {
-          logoImage = await pdfDoc.embedPng(logoImageBytes);
-        } else {
-          logoImage = await pdfDoc.embedJpg(logoImageBytes);
-        }
-
-        const logoSize = 60;
-        const logoX = margin + 10;
-        const logoY = height - headerHeight / 2 - logoSize / 2;
-
-        page.drawCircle({
-          x: logoX + logoSize / 2,
-          y: logoY + logoSize / 2,
-          size: logoSize / 2,
-          color: rgb(1, 1, 1),
-        });
-
-        page.drawImage(logoImage, {
-          x: logoX + 5,
-          y: logoY + 5,
-          width: logoSize - 10,
-          height: logoSize - 10,
-        });
-      }
-    } catch (error) {
-      console.error('Error embedding logo:', error);
+    if (logoToUse !== DEFAULT_LOGO) {
+      console.log('⚠️ SVG logos are not supported. Using default PNG logo instead.');
     }
+
+    // Get image bytes
+    if (logoToUse.startsWith('data:')) {
+      const base64Data = logoToUse.split(',')[1];
+      const binaryString = Buffer.from(base64Data, 'base64');
+      logoImageBytes = binaryString.buffer;
+    } else {
+      const logoResponse = await fetch(logoToUse);
+      logoImageBytes = await logoResponse.arrayBuffer();
+    }
+
+    // Embed as PNG (default logo is always PNG)
+    const isPng = logoToUse.includes('png') || logoToUse.startsWith('data:image/png');
+    if (isPng) {
+      logoImage = await pdfDoc.embedPng(logoImageBytes);
+    } else {
+      logoImage = await pdfDoc.embedJpg(logoImageBytes);
+    }
+
+    // Draw white circle background and logo
+    const logoSize = 60;
+    const logoX = margin + 10;
+    const logoY = height - headerHeight / 2 - logoSize / 2;
+
+    page.drawCircle({
+      x: logoX + logoSize / 2,
+      y: logoY + logoSize / 2,
+      size: logoSize / 2 + 2,
+      color: rgb(1, 1, 1),
+    });
+
+    page.drawImage(logoImage, {
+      x: logoX + 5,
+      y: logoY + 5,
+      width: logoSize - 10,
+      height: logoSize - 10,
+    });
+  } catch (error) {
+    console.error('Error embedding logo:', error);
   }
 
   const titleFontSize = 28;
   const titleY = height - headerHeight / 2 + 10;
   const eventTitle = event.eventTitle || event.title || 'Event';
+  
+  // Always offset title for logo since we always show it
   page.drawText(eventTitle.toUpperCase(), {
-    x: margin + (logoUrl ? 90 : 0),
+    x: margin + 90,
     y: titleY,
     size: titleFontSize,
     font: helveticaBold,
@@ -185,7 +166,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const badgeWidth = helveticaBold.widthOfTextAtSize(badgeText, 12) + 20;
 
   page.drawRectangle({
-    x: margin + (logoUrl ? 90 : 0),
+    x: margin + 90,
     y: badgeY - 5,
     width: badgeWidth,
     height: 25,
@@ -195,7 +176,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   });
 
   page.drawText(badgeText, {
-    x: margin + (logoUrl ? 90 : 0) + 10,
+    x: margin + 90 + 10,
     y: badgeY,
     size: 12,
     font: helveticaBold,
@@ -412,13 +393,12 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     });
   }
 
-  currentY = 300;
+  // Important Information Section - start from a safe Y position
+  currentY = 280;
 
-  // Important Information Section
-  const infoSectionY = currentY - 40;
   page.drawText('IMPORTANT INFORMATION', {
     x: margin,
-    y: infoSectionY,
+    y: currentY,
     size: 12,
     font: helveticaBold,
     color: rgb(0.2, 0.2, 0.2),
@@ -431,19 +411,20 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     '• No refunds or exchanges unless event is cancelled',
   ];
 
-  let instructionY = infoSectionY - 20;
+  currentY -= 20;
   instructions.forEach(instruction => {
     page.drawText(instruction, {
       x: margin + 5,
-      y: instructionY,
+      y: currentY,
       size: 9,
       font: helvetica,
       color: rgb(0.3, 0.3, 0.3),
     });
-    instructionY -= 14;
+    currentY -= 14;
   });
 
-  currentY = 190;
+  // Set QR section position with proper spacing
+  currentY = 180;
 
   const qrSectionHeight = 150;
   page.drawRectangle({

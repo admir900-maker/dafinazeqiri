@@ -93,32 +93,73 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
   });
 
-  // Draw logo - white circle with letter
-  const logoSize = 70;
-  const logoX = margin + 10;
-  const logoY = height - headerHeight / 2 - logoSize / 2;
+  // Draw logo - embed provided logo or use default
+  try {
+    const logoSize = 70;
+    const logoX = margin + 10;
+    const logoY = height - headerHeight / 2 - logoSize / 2;
 
-  // Draw white circle background
-  page.drawCircle({
-    x: logoX + logoSize / 2,
-    y: logoY + logoSize / 2,
-    size: logoSize / 2,
-    color: rgb(1, 1, 1),
-    borderColor: rgb(1, 1, 1),
-    borderWidth: 2,
-  });
+    // Draw white circle background
+    page.drawCircle({
+      x: logoX + logoSize / 2,
+      y: logoY + logoSize / 2,
+      size: logoSize / 2,
+      color: rgb(1, 1, 1),
+      borderColor: rgb(1, 1, 1),
+      borderWidth: 2,
+    });
 
-  // Draw "B" letter in the circle
-  const letterSize = 40;
-  const letter = 'B';
-  const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);
-  page.drawText(letter, {
-    x: logoX + logoSize / 2 - letterWidth / 2,
-    y: logoY + logoSize / 2 - letterSize / 2 + 5,
-    size: letterSize,
-    font: helveticaBold,
-    color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
-  });
+    // Embed and draw logo image
+    const finalLogoUrl = logoUrl || DEFAULT_LOGO;
+    let logoImageBytes: ArrayBuffer;
+    let logoImage;
+
+    // Get image bytes
+    if (finalLogoUrl.startsWith('data:')) {
+      const base64Data = finalLogoUrl.split(',')[1];
+      const binaryString = Buffer.from(base64Data, 'base64');
+      logoImageBytes = binaryString.buffer;
+    } else {
+      const logoResponse = await fetch(finalLogoUrl);
+      logoImageBytes = await logoResponse.arrayBuffer();
+    }
+
+    // Detect format and embed
+    if (finalLogoUrl.includes('png') || finalLogoUrl.startsWith('data:image/png')) {
+      logoImage = await pdfDoc.embedPng(logoImageBytes);
+    } else if (finalLogoUrl.includes('jpg') || finalLogoUrl.includes('jpeg')) {
+      logoImage = await pdfDoc.embedJpg(logoImageBytes);
+    } else {
+      // Default to PNG
+      logoImage = await pdfDoc.embedPng(logoImageBytes);
+    }
+
+    // Draw logo inside the white circle
+    const logoInnerSize = logoSize - 20;
+    page.drawImage(logoImage, {
+      x: logoX + 10,
+      y: logoY + 10,
+      width: logoInnerSize,
+      height: logoInnerSize,
+    });
+  } catch (error) {
+    console.error('Error embedding logo, using text fallback:', error);
+    // Fallback: Draw "B" letter if logo fails
+    const logoSize = 70;
+    const logoX = margin + 10;
+    const logoY = height - headerHeight / 2 - logoSize / 2;
+    
+    const letterSize = 40;
+    const letter = 'B';
+    const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);
+    page.drawText(letter, {
+      x: logoX + logoSize / 2 - letterWidth / 2,
+      y: logoY + logoSize / 2 - letterSize / 2 + 5,
+      size: letterSize,
+      font: helveticaBold,
+      color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
+    });
+  }
 
   const titleFontSize = 28;
   const titleY = height - headerHeight / 2 + 10;
@@ -365,8 +406,8 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     });
   }
 
-  // Important Information Section - start from a safe Y position
-  currentY = 290;
+  // Important Information Section - moved lower to avoid QR section overlap
+  currentY = 340;
 
   page.drawText('IMPORTANT INFORMATION', {
     x: margin,
@@ -395,8 +436,8 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     currentY -= 15;
   });
 
-  // QR Code Section - completely separate from footer
-  currentY = 220;
+  // QR Code Section - positioned below Important Information
+  currentY = 260;
 
   // Draw "SCAN TO VALIDATE" title above the box
   const scanTitle = 'SCAN TO VALIDATE';

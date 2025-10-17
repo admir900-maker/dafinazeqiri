@@ -19,12 +19,21 @@ export async function GET(
     const { id } = await params;
     console.log('🔍 API: Looking for event ID:', id);
     
-    const event = await Event.findById(id).populate('category', 'name slug icon color');
+    // Find event without populate first to avoid category issues
+    const event = await Event.findById(id);
     console.log('📦 API: Event found:', event ? 'YES' : 'NO');
 
     if (!event) {
       console.log('❌ API: Event not found in database');
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+    
+    // Try to populate category, but don't fail if it doesn't exist
+    try {
+      await event.populate('category', 'name slug icon color');
+      console.log('✅ API: Category populated');
+    } catch (catError) {
+      console.log('⚠️ API: Category population failed, continuing without it');
     }
     
     console.log('✅ API: Returning event data');

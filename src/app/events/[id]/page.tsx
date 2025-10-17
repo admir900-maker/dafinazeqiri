@@ -87,7 +87,7 @@ export default function EventDetailPage() {
       try {
         setLoading(true)
         setError(null)
-        
+
         const response = await fetch(`/api/events/${eventId}`)
         if (!response.ok) {
           throw new Error('Event not found')
@@ -103,27 +103,23 @@ export default function EventDetailPage() {
           venue: data.venue,
           date: data.date
         })
-        
+
         setLoading(false)
       } catch (err) {
         console.error('Error fetching event:', err)
+
+        // Keep retrying indefinitely with exponential backoff (max 5 seconds)
+        const delay = Math.min((retryCount + 1) * 1000, 5000) // 1s, 2s, 3s, 4s, 5s, then stay at 5s
+        console.log(`Retrying in ${delay}ms... (attempt ${retryCount + 1})`)
         
-        // Retry up to 3 times with increasing delays
-        if (retryCount < 3) {
-          const delay = (retryCount + 1) * 1000 // 1s, 2s, 3s
-          console.log(`Retrying in ${delay}ms... (attempt ${retryCount + 1}/3)`)
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1)
-          }, delay)
-        } else {
-          // Only show error after all retries failed
-          setError('Failed to load event details')
-          setLoading(false)
-          
-          // Log error
-          activityLogger.logError('event_fetch_failed', 'Failed to load event details after retries', {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1)
+        }, delay)
+        
+        // Log retry attempt
+        if (retryCount === 0) {
+          activityLogger.logError('event_fetch_retry', 'Retrying to fetch event', {
             eventId,
-            retryCount,
             error: err instanceof Error ? err.message : 'Unknown error'
           })
         }
@@ -282,33 +278,15 @@ export default function EventDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading || !event) {
     return (
       <BackgroundWrapper fullHeight={true} className="flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white/60 mx-auto mb-4"></div>
           <p className="text-white/80 text-lg">Loading event details...</p>
           {retryCount > 0 && (
-            <p className="text-white/60 text-sm mt-2">Retrying... (attempt {retryCount}/3)</p>
+            <p className="text-white/60 text-sm mt-2">Connecting to database... (attempt {retryCount})</p>
           )}
-        </div>
-      </BackgroundWrapper>
-    )
-  }
-
-  if (error || !event) {
-    return (
-      <BackgroundWrapper fullHeight={true} className="flex items-center justify-center">
-        <div className="text-center">
-          <Music className="w-16 h-16 text-white/60 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Event Not Found</h2>
-          <p className="text-white/80 mb-4">{error || 'The event you are looking for does not exist.'}</p>
-          <Link href="/events">
-            <Button className="bg-white/20 text-white hover:bg-white/30">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Events
-            </Button>
-          </Link>
         </div>
       </BackgroundWrapper>
     )

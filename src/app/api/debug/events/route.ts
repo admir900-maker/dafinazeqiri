@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: events.length,
-      events: events.map(e => ({
-        id: e._id.toString(),
-        title: e.title,
-        date: e.date
+      events: events.map((e: any) => ({
+        id: e._id?.toString() || 'unknown',
+        title: e.title || 'No title',
+        date: e.date || 'No date'
       })),
       message: 'This is a debug endpoint showing all events in the database'
     });

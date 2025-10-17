@@ -86,7 +86,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   // Glamorous gradient effect - Draw multiple layers for gradient look
   const headerHeight = 200;
-  
+
   // Base gradient layer (purple to pink)
   page.drawRectangle({
     x: 0,
@@ -95,7 +95,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     height: headerHeight,
     color: rgb(0.69, 0.17, 0.44), // #b12c70 deep pink-purple
   });
-  
+
   // Top gradient overlay (lighter pink)
   page.drawRectangle({
     x: 0,
@@ -119,7 +119,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
       size: logoSize / 2,
       color: rgb(1, 1, 1),
     });
-    
+
     // Draw pink/purple gradient border effect
     page.drawCircle({
       x: logoX + logoSize / 2,
@@ -176,7 +176,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
       size: logoSize / 2,
       color: rgb(1, 1, 1),
     });
-    
+
     // Draw pink border
     page.drawCircle({
       x: logoX + logoSize / 2,

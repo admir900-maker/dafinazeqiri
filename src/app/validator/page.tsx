@@ -84,9 +84,11 @@ export default function ValidatorPage() {
   const [showManualInput, setShowManualInput] = useState(false);
   const [validationSettings, setValidationSettings] = useState<ValidationSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Validation logs state
   const [validationLogs, setValidationLogs] = useState<ValidationLog[]>([]);
@@ -175,6 +177,9 @@ export default function ValidatorPage() {
       if (readerRef.current) {
         readerRef.current.reset();
       }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
     };
   }, []);
 
@@ -260,7 +265,7 @@ export default function ValidatorPage() {
   // Validation feedback functions
   const playValidationSound = (isSuccess: boolean) => {
     console.log('🔊 Playing validation sound:', { isSuccess, soundEnabled: validationSettings?.validationSoundEnabled });
-    
+
     if (!validationSettings?.validationSoundEnabled) {
       console.log('❌ Sound disabled in settings');
       return;
@@ -287,7 +292,7 @@ export default function ValidatorPage() {
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
-      
+
       console.log('✅ Sound played successfully');
     } catch (error) {
       console.error('❌ Audio error:', error);
@@ -296,12 +301,12 @@ export default function ValidatorPage() {
 
   const triggerVibration = (isSuccess: boolean) => {
     console.log('📳 Triggering vibration:', { isSuccess, vibrationEnabled: validationSettings?.vibrationEnabled, hasVibrate: !!navigator.vibrate });
-    
+
     if (!validationSettings?.vibrationEnabled) {
       console.log('❌ Vibration disabled in settings');
       return;
     }
-    
+
     if (!navigator.vibrate) {
       console.log('❌ Vibration not supported by browser');
       return;
@@ -324,10 +329,38 @@ export default function ValidatorPage() {
     setIsScanning(false);
   };
 
+  // Countdown function for next scan
+  const startCountdown = () => {
+    // Clear any existing countdown
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+
+    // Start at 5 seconds
+    setCountdown(5);
+
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          // Countdown finished
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+          // Reset validation result and countdown
+          setValidationResult(null);
+          setCountdown(null);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const validateTicket = async (qrData: string) => {
     console.log('🎫 Validating ticket with QR data:', qrData);
     console.log('⚙️ Validation settings:', validationSettings);
-    
+
     try {
       // Add validation timeout if enabled
       const timeoutDuration = validationSettings?.validationTimeout ? validationSettings.validationTimeout * 1000 : 30000;
@@ -354,6 +387,9 @@ export default function ValidatorPage() {
         console.log('✅ Validation successful - triggering success feedback');
         playValidationSound(true);
         triggerVibration(true);
+        
+        // Start countdown for next scan
+        startCountdown();
       } else {
         console.log('❌ Validation failed - triggering error feedback');
         playValidationSound(false);
@@ -841,6 +877,19 @@ Please try:
                       </p>
                     </div>
                   </div>
+
+                  {/* Countdown for next scan */}
+                  {validationResult.success && countdown !== null && (
+                    <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200">
+                      <div className="flex items-center justify-center gap-3">
+                        <RefreshCw className="w-5 h-5 text-purple-600 animate-spin" />
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-purple-600">{countdown}</p>
+                          <p className="text-sm text-purple-600">Scanning next ticket...</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Ticket Details */}
                   {validationResult.success && validationResult.ticket && validationResult.event && (

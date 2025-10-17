@@ -85,6 +85,8 @@ export default function ValidatorPage() {
   const [validationSettings, setValidationSettings] = useState<ValidationSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingQrData, setPendingQrData] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -243,11 +245,12 @@ export default function ValidatorPage() {
       const reader = readerRef.current;
 
       await reader.decodeFromVideoDevice(null, videoRef.current!, (result, error) => {
-        if (result) {
+        if (result && !isProcessing) {
           const qrData = result.getText();
-          validateTicket(qrData);
-          // Don't stop scanning automatically - let user control it
-          // stopScanning();
+          // Store QR data and start countdown before validation
+          setPendingQrData(qrData);
+          setIsProcessing(true);
+          startCountdown(qrData);
         }
       });
 
@@ -329,8 +332,8 @@ export default function ValidatorPage() {
     setIsScanning(false);
   };
 
-  // Countdown function for next scan
-  const startCountdown = () => {
+  // Countdown function before validation
+  const startCountdown = (qrData: string) => {
     // Clear any existing countdown
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
@@ -342,14 +345,14 @@ export default function ValidatorPage() {
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev === null || prev <= 1) {
-          // Countdown finished
+          // Countdown finished - now validate
           if (countdownIntervalRef.current) {
             clearInterval(countdownIntervalRef.current);
             countdownIntervalRef.current = null;
           }
-          // Reset validation result and countdown
-          setValidationResult(null);
           setCountdown(null);
+          // Validate the ticket after countdown
+          validateTicket(qrData);
           return null;
         }
         return prev - 1;
@@ -387,14 +390,17 @@ export default function ValidatorPage() {
         console.log('✅ Validation successful - triggering success feedback');
         playValidationSound(true);
         triggerVibration(true);
-        
-        // Start countdown for next scan
-        startCountdown();
       } else {
         console.log('❌ Validation failed - triggering error feedback');
         playValidationSound(false);
         triggerVibration(false);
       }
+
+      // Reset processing state after validation completes
+      setTimeout(() => {
+        setIsProcessing(false);
+        setPendingQrData(null);
+      }, 2000); // Wait 2 seconds before allowing next scan
 
     } catch (error: any) {
       console.error('Error validating ticket:', error);
@@ -413,6 +419,12 @@ export default function ValidatorPage() {
       setValidationResult(errorResult);
       playValidationSound(false);
       triggerVibration(false);
+      
+      // Reset processing state on error too
+      setTimeout(() => {
+        setIsProcessing(false);
+        setPendingQrData(null);
+      }, 2000);
     }
   };
 
@@ -852,10 +864,22 @@ Please try:
               </h2>
 
               {!validationResult ? (
-                <div className="text-center py-8">
-                  <AlertTriangle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Scan a QR code to see validation results</p>
-                </div>
+                countdown !== null ? (
+                  <div className="text-center py-8">
+                    <div className="mb-6">
+                      <div className="w-32 h-32 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+                        <span className="text-6xl font-bold text-white">{countdown}</span>
+                      </div>
+                    </div>
+                    <p className="text-xl font-semibold text-gray-800 mb-2">Processing QR Code...</p>
+                    <p className="text-gray-600">Validating ticket in {countdown} seconds</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <AlertTriangle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">Scan a QR code to see validation results</p>
+                  </div>
+                )
               ) : (
                 <div className="space-y-4">
                   {/* Status */}
@@ -877,19 +901,6 @@ Please try:
                       </p>
                     </div>
                   </div>
-
-                  {/* Countdown for next scan */}
-                  {validationResult.success && countdown !== null && (
-                    <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200">
-                      <div className="flex items-center justify-center gap-3">
-                        <RefreshCw className="w-5 h-5 text-purple-600 animate-spin" />
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-purple-600">{countdown}</p>
-                          <p className="text-sm text-purple-600">Scanning next ticket...</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Ticket Details */}
                   {validationResult.success && validationResult.ticket && validationResult.event && (

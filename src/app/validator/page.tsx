@@ -339,22 +339,28 @@ export default function ValidatorPage() {
 
   // Manual scan trigger - called when user taps to scan
   const handleManualScan = () => {
+    console.log('👆 Manual scan triggered', { detectedQrData, isProcessing });
     if (detectedQrData && !isProcessing) {
+      console.log('✅ Starting processing...');
       setIsProcessing(true);
       setQrDetected(false);
       startCountdown(detectedQrData);
+    } else {
+      console.log('❌ Cannot start processing:', { hasQrData: !!detectedQrData, isProcessing });
     }
   };
 
   // Countdown function before validation
   const startCountdown = (qrData: string) => {
+    console.log('🕐 Starting countdown from 3 seconds');
     // Clear any existing countdown
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
     }
 
-    // Start at 2 seconds
-    setCountdown(2);
+    // Start at 3 seconds
+    setCountdown(3);
+    console.log('✅ Countdown set to 3');
 
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {

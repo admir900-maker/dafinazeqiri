@@ -353,8 +353,8 @@ export default function ValidatorPage() {
       clearInterval(countdownIntervalRef.current);
     }
 
-    // Start at 5 seconds
-    setCountdown(5);
+    // Start at 2 seconds
+    setCountdown(2);
 
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -808,6 +808,14 @@ Please try:
                   {isScanning && validationResult && (
                     <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm overflow-auto">
                       <div className="p-6 min-h-full flex flex-col justify-center">
+                        {/* Scan Next Ticket Button - At Top */}
+                        <button
+                          onClick={() => setValidationResult(null)}
+                          className="mb-4 w-full bg-white text-gray-800 py-3 px-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
+                        >
+                          Scan Next Ticket
+                        </button>
+
                         {/* Status */}
                         <div className={`p-6 rounded-xl flex items-center gap-4 mb-4 ${validationResult.success ? 'bg-green-500' : 'bg-red-500'}`}>
                           {validationResult.success ? (
@@ -875,14 +883,6 @@ Please try:
                             </div>
                           </div>
                         )}
-
-                        {/* Clear Button */}
-                        <button
-                          onClick={() => setValidationResult(null)}
-                          className="mt-4 w-full bg-white text-gray-800 py-3 px-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
-                        >
-                          Scan Next Ticket
-                        </button>
                       </div>
                     </div>
                   )}

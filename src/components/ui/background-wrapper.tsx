@@ -17,29 +17,28 @@ export function BackgroundWrapper({
     <div
       className={`relative overflow-hidden ${fullHeight ? 'min-h-screen' : ''} ${className}`}
     >
-      {/* Blue gradient background */}
+      {/* Dafina Zeqiri Glamorous Dark Background */}
       <div
         className="absolute inset-0 -z-10"
-        style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%)' }}
+        style={{ background: '#0a0a0a' }}
       />
 
-      {/* Music notes background */}
-      <svg
-        className="absolute inset-0 w-full h-full pointer-events-none -z-10"
-        viewBox="0 0 1920 1080"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <g opacity="0.08">
-          <text x="120" y="300" fontSize="180" fontFamily="sans-serif" fill="#fff">&#9835;</text>
-          <text x="800" y="180" fontSize="120" fontFamily="sans-serif" fill="#fff">&#119070;</text>
-          <text x="1500" y="600" fontSize="160" fontFamily="sans-serif" fill="#fff">&#9833;</text>
-          <text x="1700" y="400" fontSize="100" fontFamily="sans-serif" fill="#fff">&#119070;</text>
-          <text x="300" y="800" fontSize="140" fontFamily="sans-serif" fill="#fff">&#9834;</text>
-          <text x="1200" y="900" fontSize="110" fontFamily="sans-serif" fill="#fff">&#9835;</text>
-        </g>
-      </svg>
+      {/* Subtle glamour glow effects */}
+      <div className="absolute inset-0 -z-10 pointer-events-none opacity-30">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-600 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      {/* Sparkle overlay */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{ 
+            backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.3) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.2) 0%, transparent 60%)'
+          }}
+        ></div>
+      </div>
 
       {/* Content */}
       <div className="relative z-10">

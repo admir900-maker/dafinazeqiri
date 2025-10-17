@@ -42,6 +42,12 @@ interface Event {
 // Memoized loading skeleton component
 const LoadingSkeleton = () => (
   <section className="py-20 relative overflow-hidden">
+    {/* Glamorous background effect */}
+    <div className="absolute inset-0 pointer-events-none opacity-20">
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+    </div>
+
     <div className="container mx-auto px-4 relative z-10">
       <div className="text-center mb-16">
         <motion.div
@@ -197,6 +203,12 @@ export function FeaturedEventsSection() {
 
   return (
     <section className="py-20 relative overflow-hidden">
+      {/* Glamorous background effect */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+
       <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">

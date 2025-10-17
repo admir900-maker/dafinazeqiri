@@ -12,13 +12,22 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log('🔍 API: Fetching event...');
     await connectToDatabase();
+    console.log('✅ API: Database connected');
+    
     const { id } = await params;
+    console.log('🔍 API: Looking for event ID:', id);
+    
     const event = await Event.findById(id).populate('category', 'name slug icon color');
+    console.log('📦 API: Event found:', event ? 'YES' : 'NO');
 
     if (!event) {
+      console.log('❌ API: Event not found in database');
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
+    
+    console.log('✅ API: Returning event data');
 
     // Calculate actual available tickets based on bookings
     if (event.ticketTypes && event.ticketTypes.length > 0) {
@@ -58,8 +67,17 @@ export async function GET(
 
     return NextResponse.json(event);
   } catch (error: any) {
+    console.error('❌ API ERROR:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     logError('Error fetching event by ID', error, { action: 'events-api-get-by-id' });
-    return NextResponse.json({ error: 'Failed to fetch event' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch event',
+      details: error.message 
+    }, { status: 500 });
   }
 }
 

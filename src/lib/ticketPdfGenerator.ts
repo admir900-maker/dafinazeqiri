@@ -100,8 +100,8 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     let logoImage;
 
     // Skip SVG files and use default PNG instead
-    const logoToUse = (finalLogoUrl.includes('svg') || finalLogoUrl.startsWith('data:image/svg')) 
-      ? DEFAULT_LOGO 
+    const logoToUse = (finalLogoUrl.includes('svg') || finalLogoUrl.startsWith('data:image/svg'))
+      ? DEFAULT_LOGO
       : finalLogoUrl;
 
     if (logoToUse !== DEFAULT_LOGO) {
@@ -151,7 +151,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const titleFontSize = 28;
   const titleY = height - headerHeight / 2 + 10;
   const eventTitle = event.eventTitle || event.title || 'Event';
-  
+
   // Always offset title for logo since we always show it
   page.drawText(eventTitle.toUpperCase(), {
     x: margin + 90,
@@ -394,7 +394,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   }
 
   // Important Information Section - start from a safe Y position
-  currentY = 280;
+  currentY = 290;
 
   page.drawText('IMPORTANT INFORMATION', {
     x: margin,
@@ -411,7 +411,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     '• No refunds or exchanges unless event is cancelled',
   ];
 
-  currentY -= 20;
+  currentY -= 22;
   instructions.forEach(instruction => {
     page.drawText(instruction, {
       x: margin + 5,
@@ -420,13 +420,13 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
       font: helvetica,
       color: rgb(0.3, 0.3, 0.3),
     });
-    currentY -= 14;
+    currentY -= 15;
   });
 
   // Set QR section position with proper spacing
-  currentY = 180;
+  currentY = 190;
 
-  const qrSectionHeight = 150;
+  const qrSectionHeight = 160;
   page.drawRectangle({
     x: margin,
     y: currentY - qrSectionHeight,
@@ -435,9 +435,10 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(0.95, 0.95, 0.95),
   });
 
+  // Draw "SCAN TO VALIDATE" above the gray box
   page.drawText('SCAN TO VALIDATE', {
     x: width / 2 - helveticaBold.widthOfTextAtSize('SCAN TO VALIDATE', 14) / 2,
-    y: currentY - 25,
+    y: currentY + 8,
     size: 14,
     font: helveticaBold,
     color: rgb(0, 0, 0),
@@ -463,7 +464,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   const qrSize = 110;
   const qrX = (width - qrSize) / 2;
-  const qrY = currentY - qrSectionHeight + 20;
+  const qrY = currentY - qrSectionHeight + 25;
 
   page.drawImage(qrImage, {
     x: qrX,
@@ -475,7 +476,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const instructionText = 'Present this QR code at the entrance for validation';
   page.drawText(instructionText, {
     x: width / 2 - helvetica.widthOfTextAtSize(instructionText, 9) / 2,
-    y: qrY - 15,
+    y: qrY - 18,
     size: 9,
     font: helvetica,
     color: rgb(0.4, 0.4, 0.4),

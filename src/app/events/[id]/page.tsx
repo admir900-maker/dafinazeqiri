@@ -111,11 +111,11 @@ export default function EventDetailPage() {
         // Keep retrying indefinitely with exponential backoff (max 5 seconds)
         const delay = Math.min((retryCount + 1) * 1000, 5000) // 1s, 2s, 3s, 4s, 5s, then stay at 5s
         console.log(`Retrying in ${delay}ms... (attempt ${retryCount + 1})`)
-        
+
         setTimeout(() => {
           setRetryCount(prev => prev + 1)
         }, delay)
-        
+
         // Log retry attempt
         if (retryCount === 0) {
           activityLogger.logError('event_fetch_retry', 'Retrying to fetch event', {

@@ -92,12 +92,18 @@ function CheckoutContent() {
     }
   }, [searchParams, isLoaded]);
 
-  const fetchEventAndSettings = async (eventId: string) => {
+  const fetchEventAndSettings = async (eventId: string, retryCount = 0) => {
     try {
-      // Fetch event details
+      // Fetch event details with retry logic
       const eventResponse = await fetch(`/api/events/${eventId}`);
       if (!eventResponse.ok) {
-        throw new Error('Event not found');
+        // If event not found and we haven't retried too many times, retry
+        if (retryCount < 5) {
+          console.log(`⏳ Event not found, retrying in ${retryCount + 1} seconds... (attempt ${retryCount + 1}/5)`);
+          setTimeout(() => fetchEventAndSettings(eventId, retryCount + 1), (retryCount + 1) * 1000);
+          return;
+        }
+        throw new Error('Event not found after multiple attempts');
       }
       const eventData = await eventResponse.json();
       setEvent(eventData);
@@ -152,8 +158,14 @@ function CheckoutContent() {
         activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
-      setError('Failed to load checkout data');
+      console.error('❌ Error fetching checkout data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load checkout data';
+      console.error('Full error details:', {
+        error: err,
+        eventId: searchParams.get('eventId'),
+        tickets: searchParams.get('tickets')
+      });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -424,15 +436,20 @@ function CheckoutContent() {
     );
   }
 
-  if (error || !event) {
+  if (error || (!event && !loading)) {
     return (
       <BackgroundWrapper>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-white">Error</h1>
-            <p className="text-white/80 mt-2">{error || 'Checkout data not found'}</p>
+          <div className="text-center max-w-md mx-auto px-4">
+            <h1 className="text-2xl font-bold text-white mb-4">Unable to Load Checkout</h1>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-4">
+              <p className="text-white/90 mb-2">{error || 'Checkout data not found'}</p>
+              <p className="text-white/70 text-sm">
+                The event you're trying to book may not be available. Please try again or select a different event.
+              </p>
+            </div>
             <Link href="/events">
-              <Button className="mt-4 bg-purple-600 hover:bg-purple-700">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700">
                 Browse Events
               </Button>
             </Link>

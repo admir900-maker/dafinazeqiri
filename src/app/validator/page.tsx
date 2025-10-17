@@ -241,7 +241,8 @@ export default function ValidatorPage() {
         if (result) {
           const qrData = result.getText();
           validateTicket(qrData);
-          stopScanning();
+          // Don't stop scanning automatically - let user control it
+          // stopScanning();
         }
       });
 
@@ -258,7 +259,12 @@ export default function ValidatorPage() {
 
   // Validation feedback functions
   const playValidationSound = (isSuccess: boolean) => {
-    if (!validationSettings?.validationSoundEnabled) return;
+    console.log('🔊 Playing validation sound:', { isSuccess, soundEnabled: validationSettings?.validationSoundEnabled });
+    
+    if (!validationSettings?.validationSoundEnabled) {
+      console.log('❌ Sound disabled in settings');
+      return;
+    }
 
     try {
       // Create audio context for playing validation sounds
@@ -281,20 +287,33 @@ export default function ValidatorPage() {
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
+      
+      console.log('✅ Sound played successfully');
     } catch (error) {
-      console.log('Audio not supported or failed:', error);
+      console.error('❌ Audio error:', error);
     }
   };
 
   const triggerVibration = (isSuccess: boolean) => {
-    if (!validationSettings?.vibrationEnabled || !navigator.vibrate) return;
+    console.log('📳 Triggering vibration:', { isSuccess, vibrationEnabled: validationSettings?.vibrationEnabled, hasVibrate: !!navigator.vibrate });
+    
+    if (!validationSettings?.vibrationEnabled) {
+      console.log('❌ Vibration disabled in settings');
+      return;
+    }
+    
+    if (!navigator.vibrate) {
+      console.log('❌ Vibration not supported by browser');
+      return;
+    }
 
     try {
       // Different vibration patterns for success/failure
       const pattern = isSuccess ? [100] : [300, 100, 300];
-      navigator.vibrate(pattern);
+      const result = navigator.vibrate(pattern);
+      console.log('✅ Vibration triggered:', result);
     } catch (error) {
-      console.log('Vibration not supported:', error);
+      console.error('❌ Vibration error:', error);
     }
   };
 
@@ -306,6 +325,9 @@ export default function ValidatorPage() {
   };
 
   const validateTicket = async (qrData: string) => {
+    console.log('🎫 Validating ticket with QR data:', qrData);
+    console.log('⚙️ Validation settings:', validationSettings);
+    
     try {
       // Add validation timeout if enabled
       const timeoutDuration = validationSettings?.validationTimeout ? validationSettings.validationTimeout * 1000 : 30000;
@@ -324,13 +346,16 @@ export default function ValidatorPage() {
 
       clearTimeout(timeoutId);
       const result = await response.json();
+      console.log('✅ Validation result:', result);
       setValidationResult(result);
 
       // Trigger feedback based on result
       if (result.success) {
+        console.log('✅ Validation successful - triggering success feedback');
         playValidationSound(true);
         triggerVibration(true);
       } else {
+        console.log('❌ Validation failed - triggering error feedback');
         playValidationSound(false);
         triggerVibration(false);
       }
@@ -868,12 +893,26 @@ Please try:
                     </div>
                   )}
 
-                  <button
-                    onClick={() => setValidationResult(null)}
-                    className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Clear Result
-                  </button>
+                  <div className="flex gap-3">
+                    {!isScanning && (
+                      <button
+                        onClick={() => {
+                          setValidationResult(null);
+                          startScanning();
+                        }}
+                        className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Camera className="w-5 h-5" />
+                        Scan Next Ticket
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setValidationResult(null)}
+                      className={`${isScanning ? 'w-full' : 'flex-1'} bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors`}
+                    >
+                      Clear Result
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

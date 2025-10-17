@@ -87,6 +87,8 @@ export default function ValidatorPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingQrData, setPendingQrData] = useState<string | null>(null);
+  const [qrDetected, setQrDetected] = useState(false);
+  const [detectedQrData, setDetectedQrData] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -236,6 +238,8 @@ export default function ValidatorPage() {
 
     setIsScanning(true);
     setValidationResult(null);
+    setQrDetected(false);
+    setDetectedQrData(null);
 
     try {
       if (!readerRef.current) {
@@ -245,12 +249,11 @@ export default function ValidatorPage() {
       const reader = readerRef.current;
 
       await reader.decodeFromVideoDevice(null, videoRef.current!, (result, error) => {
-        if (result && !isProcessing) {
+        if (result && !isProcessing && !qrDetected) {
           const qrData = result.getText();
-          // Store QR data and start countdown before validation
-          setPendingQrData(qrData);
-          setIsProcessing(true);
-          startCountdown(qrData);
+          // Just detect and highlight - don't auto-scan
+          setQrDetected(true);
+          setDetectedQrData(qrData);
         }
       });
 
@@ -330,6 +333,17 @@ export default function ValidatorPage() {
       readerRef.current.reset();
     }
     setIsScanning(false);
+    setQrDetected(false);
+    setDetectedQrData(null);
+  };
+
+  // Manual scan trigger - called when user taps to scan
+  const handleManualScan = () => {
+    if (detectedQrData && !isProcessing) {
+      setIsProcessing(true);
+      setQrDetected(false);
+      startCountdown(detectedQrData);
+    }
   };
 
   // Countdown function before validation
@@ -400,6 +414,7 @@ export default function ValidatorPage() {
       setTimeout(() => {
         setIsProcessing(false);
         setPendingQrData(null);
+        setDetectedQrData(null);
       }, 2000); // Wait 2 seconds before allowing next scan
 
     } catch (error: any) {
@@ -424,6 +439,7 @@ export default function ValidatorPage() {
       setTimeout(() => {
         setIsProcessing(false);
         setPendingQrData(null);
+        setDetectedQrData(null);
       }, 2000);
     }
   };
@@ -749,9 +765,28 @@ Please try:
                     </div>
                   )}
 
-                  {isScanning && (
+                  {isScanning && !qrDetected && (
                     <div className="absolute inset-0 border-4 border-purple-500 rounded-xl">
                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-purple-500 rounded-lg"></div>
+                    </div>
+                  )}
+
+                  {/* QR Detected - Click to Scan */}
+                  {isScanning && qrDetected && !isProcessing && (
+                    <div 
+                      onClick={handleManualScan}
+                      className="absolute inset-0 bg-green-500 bg-opacity-20 backdrop-blur-sm cursor-pointer animate-pulse"
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center bg-white bg-opacity-95 p-6 rounded-2xl shadow-2xl border-4 border-green-500">
+                          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-3 animate-bounce" />
+                          <p className="text-xl font-bold text-gray-800 mb-2">QR Code Detected!</p>
+                          <p className="text-gray-600 mb-4">Tap to scan and validate</p>
+                          <div className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold text-lg">
+                            TAP TO SCAN
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

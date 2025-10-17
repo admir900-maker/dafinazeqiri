@@ -80,16 +80,21 @@ export default function EventDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedTickets, setSelectedTickets] = useState<{ [key: string]: number }>({})
   const [bookingLoading, setBookingLoading] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
+        setLoading(true)
+        setError(null)
+        
         const response = await fetch(`/api/events/${eventId}`)
         if (!response.ok) {
           throw new Error('Event not found')
         }
         const data = await response.json()
         setEvent(data)
+        setRetryCount(0) // Reset retry count on success
 
         // Log event view
         activityLogger.logEventView(data._id, data.title, {
@@ -98,24 +103,37 @@ export default function EventDetailPage() {
           venue: data.venue,
           date: data.date
         })
+        
+        setLoading(false)
       } catch (err) {
         console.error('Error fetching event:', err)
-        setError('Failed to load event details')
-
-        // Log error
-        activityLogger.logError('event_fetch_failed', 'Failed to load event details', {
-          eventId,
-          error: err instanceof Error ? err.message : 'Unknown error'
-        })
-      } finally {
-        setLoading(false)
+        
+        // Retry up to 3 times with increasing delays
+        if (retryCount < 3) {
+          const delay = (retryCount + 1) * 1000 // 1s, 2s, 3s
+          console.log(`Retrying in ${delay}ms... (attempt ${retryCount + 1}/3)`)
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1)
+          }, delay)
+        } else {
+          // Only show error after all retries failed
+          setError('Failed to load event details')
+          setLoading(false)
+          
+          // Log error
+          activityLogger.logError('event_fetch_failed', 'Failed to load event details after retries', {
+            eventId,
+            retryCount,
+            error: err instanceof Error ? err.message : 'Unknown error'
+          })
+        }
       }
     }
 
     if (eventId) {
       fetchEvent()
     }
-  }, [eventId])
+  }, [eventId, retryCount])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -267,7 +285,13 @@ export default function EventDetailPage() {
   if (loading) {
     return (
       <BackgroundWrapper fullHeight={true} className="flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white/60"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white/60 mx-auto mb-4"></div>
+          <p className="text-white/80 text-lg">Loading event details...</p>
+          {retryCount > 0 && (
+            <p className="text-white/60 text-sm mt-2">Retrying... (attempt {retryCount}/3)</p>
+          )}
+        </div>
       </BackgroundWrapper>
     )
   }

@@ -93,60 +93,32 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
   });
 
-  // Always embed logo (use provided or default PNG)
-  try {
-    const finalLogoUrl = logoUrl || DEFAULT_LOGO;
-    let logoImageBytes: ArrayBuffer;
-    let logoImage;
+  // Draw logo - white circle with letter
+  const logoSize = 70;
+  const logoX = margin + 10;
+  const logoY = height - headerHeight / 2 - logoSize / 2;
 
-    // Skip SVG files and use default PNG instead
-    const logoToUse = (finalLogoUrl.includes('svg') || finalLogoUrl.startsWith('data:image/svg'))
-      ? DEFAULT_LOGO
-      : finalLogoUrl;
+  // Draw white circle background
+  page.drawCircle({
+    x: logoX + logoSize / 2,
+    y: logoY + logoSize / 2,
+    size: logoSize / 2,
+    color: rgb(1, 1, 1),
+    borderColor: rgb(1, 1, 1),
+    borderWidth: 2,
+  });
 
-    if (logoToUse !== DEFAULT_LOGO) {
-      console.log('⚠️ SVG logos are not supported. Using default PNG logo instead.');
-    }
-
-    // Get image bytes
-    if (logoToUse.startsWith('data:')) {
-      const base64Data = logoToUse.split(',')[1];
-      const binaryString = Buffer.from(base64Data, 'base64');
-      logoImageBytes = binaryString.buffer;
-    } else {
-      const logoResponse = await fetch(logoToUse);
-      logoImageBytes = await logoResponse.arrayBuffer();
-    }
-
-    // Embed as PNG (default logo is always PNG)
-    const isPng = logoToUse.includes('png') || logoToUse.startsWith('data:image/png');
-    if (isPng) {
-      logoImage = await pdfDoc.embedPng(logoImageBytes);
-    } else {
-      logoImage = await pdfDoc.embedJpg(logoImageBytes);
-    }
-
-    // Draw white circle background and logo
-    const logoSize = 60;
-    const logoX = margin + 10;
-    const logoY = height - headerHeight / 2 - logoSize / 2;
-
-    page.drawCircle({
-      x: logoX + logoSize / 2,
-      y: logoY + logoSize / 2,
-      size: logoSize / 2 + 2,
-      color: rgb(1, 1, 1),
-    });
-
-    page.drawImage(logoImage, {
-      x: logoX + 5,
-      y: logoY + 5,
-      width: logoSize - 10,
-      height: logoSize - 10,
-    });
-  } catch (error) {
-    console.error('Error embedding logo:', error);
-  }
+  // Draw "B" letter in the circle
+  const letterSize = 40;
+  const letter = 'B';
+  const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);
+  page.drawText(letter, {
+    x: logoX + logoSize / 2 - letterWidth / 2,
+    y: logoY + logoSize / 2 - letterSize / 2 + 5,
+    size: letterSize,
+    font: helveticaBold,
+    color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
+  });
 
   const titleFontSize = 28;
   const titleY = height - headerHeight / 2 + 10;
@@ -423,29 +395,33 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     currentY -= 15;
   });
 
-  // Set QR section position with proper spacing
-  currentY = 190;
+  // QR Code Section - completely separate from footer
+  currentY = 220;
 
-  const qrSectionHeight = 160;
-  page.drawRectangle({
-    x: margin,
-    y: currentY - qrSectionHeight,
-    width: contentWidth,
-    height: qrSectionHeight,
-    color: rgb(0.95, 0.95, 0.95),
-  });
-
-  // Draw "SCAN TO VALIDATE" above the gray box
-  page.drawText('SCAN TO VALIDATE', {
-    x: width / 2 - helveticaBold.widthOfTextAtSize('SCAN TO VALIDATE', 14) / 2,
-    y: currentY + 8,
+  // Draw "SCAN TO VALIDATE" title above the box
+  const scanTitle = 'SCAN TO VALIDATE';
+  page.drawText(scanTitle, {
+    x: width / 2 - helveticaBold.widthOfTextAtSize(scanTitle, 14) / 2,
+    y: currentY,
     size: 14,
     font: helveticaBold,
     color: rgb(0, 0, 0),
   });
 
-  let qrCodeDataUrl: string;
+  currentY -= 20;
 
+  // Draw gray box for QR code
+  const qrBoxHeight = 150;
+  page.drawRectangle({
+    x: margin,
+    y: currentY - qrBoxHeight,
+    width: contentWidth,
+    height: qrBoxHeight,
+    color: rgb(0.95, 0.95, 0.95),
+  });
+
+  // Generate and embed QR code
+  let qrCodeDataUrl: string;
   if (ticket.qrCode.startsWith('data:image')) {
     qrCodeDataUrl = ticket.qrCode;
   } else {
@@ -462,9 +438,10 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const qrImageBytes = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
   const qrImage = await pdfDoc.embedPng(qrImageBytes);
 
-  const qrSize = 110;
+  // Draw QR code centered in the box
+  const qrSize = 100;
   const qrX = (width - qrSize) / 2;
-  const qrY = currentY - qrSectionHeight + 25;
+  const qrY = currentY - qrBoxHeight / 2 - qrSize / 2 + 10;
 
   page.drawImage(qrImage, {
     x: qrX,
@@ -473,41 +450,42 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     height: qrSize,
   });
 
+  // Instruction text below QR code
   const instructionText = 'Present this QR code at the entrance for validation';
   page.drawText(instructionText, {
-    x: width / 2 - helvetica.widthOfTextAtSize(instructionText, 9) / 2,
-    y: qrY - 18,
-    size: 9,
+    x: width / 2 - helvetica.widthOfTextAtSize(instructionText, 8) / 2,
+    y: qrY - 15,
+    size: 8,
     font: helvetica,
     color: rgb(0.4, 0.4, 0.4),
   });
 
-  // Add ticket serial number at bottom of QR section
+  // Serial number at bottom of box
   const serialText = `Serial: ${ticket.ticketId}`;
   page.drawText(serialText, {
     x: width / 2 - helvetica.widthOfTextAtSize(serialText, 7) / 2,
-    y: currentY - qrSectionHeight + 5,
+    y: currentY - qrBoxHeight + 8,
     size: 7,
     font: helvetica,
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  // Footer section
-  const footerY = 60;
+  // Footer section - well separated from QR box
+  const footerY = 48;
 
   // Draw footer separator line
   page.drawLine({
-    start: { x: margin, y: footerY + 10 },
-    end: { x: width - margin, y: footerY + 10 },
+    start: { x: margin, y: footerY + 8 },
+    end: { x: width - margin, y: footerY + 8 },
     thickness: 0.5,
     color: rgb(0.8, 0.8, 0.8),
   });
 
   const disclaimer = 'This ticket is non-transferable and valid for single entry only';
   page.drawText(disclaimer, {
-    x: width / 2 - helvetica.widthOfTextAtSize(disclaimer, 8) / 2,
+    x: width / 2 - helvetica.widthOfTextAtSize(disclaimer, 7) / 2,
     y: footerY,
-    size: 8,
+    size: 7,
     font: helvetica,
     color: rgb(0.5, 0.5, 0.5),
   });
@@ -515,7 +493,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const contactInfo = 'For support: support@biletara.com | www.biletara.com';
   page.drawText(contactInfo, {
     x: width / 2 - helvetica.widthOfTextAtSize(contactInfo, 7) / 2,
-    y: footerY - 12,
+    y: footerY - 10,
     size: 7,
     font: helvetica,
     color: rgb(0.6, 0.6, 0.6),
@@ -523,9 +501,9 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   const branding = 'Powered by Biletara Ticketing Platform';
   page.drawText(branding, {
-    x: width / 2 - helveticaBold.widthOfTextAtSize(branding, 8) / 2,
-    y: footerY - 27,
-    size: 8,
+    x: width / 2 - helveticaBold.widthOfTextAtSize(branding, 7) / 2,
+    y: footerY - 20,
+    size: 7,
     font: helveticaBold,
     color: rgb(0.4, 0.4, 0.4),
   });
@@ -538,7 +516,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const timestampText = `Generated: ${timestamp}`;
   page.drawText(timestampText, {
     x: width / 2 - helvetica.widthOfTextAtSize(timestampText, 6) / 2,
-    y: footerY - 40,
+    y: footerY - 30,
     size: 6,
     font: helvetica,
     color: rgb(0.7, 0.7, 0.7),

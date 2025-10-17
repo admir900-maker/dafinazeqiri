@@ -434,7 +434,7 @@ export default function ValidatorPage() {
       setValidationResult(errorResult);
       playValidationSound(false);
       triggerVibration(false);
-      
+
       // Reset processing state on error too
       setTimeout(() => {
         setIsProcessing(false);
@@ -747,246 +747,246 @@ Please try:
             </h2>
 
             <div className="space-y-4">
-                {/* Camera View */}
-                <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    style={{ display: isScanning ? 'block' : 'none' }}
-                  />
+              {/* Camera View */}
+              <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                <video
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  style={{ display: isScanning ? 'block' : 'none' }}
+                />
 
-                  {!isScanning && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">Click &quot;Start Scanning&quot; to begin</p>
-                      </div>
+                {!isScanning && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">Click &quot;Start Scanning&quot; to begin</p>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {isScanning && !qrDetected && !countdown && !validationResult && (
-                    <div className="absolute inset-0 border-4 border-purple-500 rounded-xl">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-purple-500 rounded-lg"></div>
-                    </div>
-                  )}
+                {isScanning && !qrDetected && !countdown && !validationResult && (
+                  <div className="absolute inset-0 border-4 border-purple-500 rounded-xl">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-purple-500 rounded-lg"></div>
+                  </div>
+                )}
 
-                  {/* QR Detected - Click to Scan */}
-                  {isScanning && qrDetected && !isProcessing && (
-                    <div 
-                      onClick={handleManualScan}
-                      className="absolute inset-0 bg-green-500 bg-opacity-20 backdrop-blur-sm cursor-pointer animate-pulse"
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center bg-white bg-opacity-95 p-6 rounded-2xl shadow-2xl border-4 border-green-500">
-                          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-3 animate-bounce" />
-                          <p className="text-xl font-bold text-gray-800 mb-2">QR Code Detected!</p>
-                          <p className="text-gray-600 mb-4">Tap to scan and validate</p>
-                          <div className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold text-lg">
-                            TAP TO SCAN
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Countdown Overlay on Camera */}
-                  {isScanning && countdown !== null && (
-                    <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-40 h-40 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl animate-pulse">
-                            <span className="text-7xl font-bold text-white">{countdown}</span>
-                          </div>
-                          <p className="text-2xl font-bold text-white mt-6 mb-2">Processing QR Code...</p>
-                          <p className="text-lg text-white opacity-90">Validating ticket in {countdown} seconds</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Validation Result Overlay on Camera */}
-                  {isScanning && validationResult && (
-                    <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm overflow-auto">
-                      <div className="p-6 min-h-full flex flex-col justify-center">
-                        {/* Scan Next Ticket Button - At Top */}
-                        <button
-                          onClick={() => setValidationResult(null)}
-                          className="mb-4 w-full bg-white text-gray-800 py-3 px-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
-                        >
-                          Scan Next Ticket
-                        </button>
-
-                        {/* Status */}
-                        <div className={`p-6 rounded-xl flex items-center gap-4 mb-4 ${validationResult.success ? 'bg-green-500' : 'bg-red-500'}`}>
-                          {validationResult.success ? (
-                            <CheckCircle className="w-12 h-12 text-white flex-shrink-0" />
-                          ) : (
-                            <XCircle className="w-12 h-12 text-white flex-shrink-0" />
-                          )}
-                          <div className="text-white">
-                            <p className="text-2xl font-bold">
-                              {validationResult.success ? 'Valid Ticket' : 'Invalid Ticket'}
-                            </p>
-                            <p className="text-lg opacity-90">
-                              {validationResult.message}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Ticket Details */}
-                        {validationResult.success && validationResult.ticket && validationResult.event && (
-                          <div className="space-y-3">
-                            <div className="p-4 bg-white bg-opacity-95 rounded-xl">
-                              <h3 className="font-bold text-gray-800 mb-3 text-lg">Event Details</h3>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex items-center gap-2 text-gray-700">
-                                  <Calendar className="w-4 h-4" />
-                                  <span>{new Date(validationResult.event.date).toLocaleString()}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-gray-700">
-                                  <MapPin className="w-4 h-4" />
-                                  <span>{validationResult.event.venue}, {validationResult.event.location}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="p-4 bg-white bg-opacity-95 rounded-xl">
-                              <h3 className="font-bold text-gray-800 mb-3 text-lg">Ticket Details</h3>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between text-gray-700">
-                                  <span>Type:</span>
-                                  <span className="font-semibold">{validationResult.ticket.ticketName}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-700">
-                                  <span>Price:</span>
-                                  <span className="font-semibold">{validationResult.ticket.price.toFixed(2)} EUR</span>
-                                </div>
-                                <div className="flex justify-between text-gray-700">
-                                  <span>Validated:</span>
-                                  <span className="font-semibold">{new Date(validationResult.ticket.usedAt).toLocaleString()}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Error Details */}
-                        {!validationResult.success && (
-                          <div className="p-4 bg-white bg-opacity-95 rounded-xl">
-                            <h3 className="font-bold text-red-800 mb-2">Error Details</h3>
-                            <div className="space-y-1 text-sm text-red-600">
-                              {validationResult.error && <p>Error: {validationResult.error}</p>}
-                              {validationResult.status && <p>Status: {validationResult.status}</p>}
-                              {validationResult.eventDate && <p>Event Date: {new Date(validationResult.eventDate).toLocaleDateString()}</p>}
-                              {validationResult.usedAt && <p>Previously Used: {new Date(validationResult.usedAt).toLocaleString()}</p>}
-                              {validationResult.validatedBy && <p>Validated By: {validationResult.validatedBy}</p>}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Controls */}
-                <div className="flex gap-3">
-                  {!isScanning ? (
-                    <button
-                      onClick={startScanning}
-                      className="flex-1 bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Camera className="w-5 h-5" />
-                      Start Scanning
-                    </button>
-                  ) : (
-                    <button
-                      onClick={stopScanning}
-                      className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <CameraOff className="w-5 h-5" />
-                      Stop Scanning
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => setShowManualInput(!showManualInput)}
-                    className="bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                {/* QR Detected - Click to Scan */}
+                {isScanning && qrDetected && !isProcessing && (
+                  <div
+                    onClick={handleManualScan}
+                    className="absolute inset-0 bg-green-500 bg-opacity-20 backdrop-blur-sm cursor-pointer animate-pulse"
                   >
-                    <FileText className="w-5 h-5" />
-                    Manual
-                  </button>
-                </div>
-
-                {/* Manual Input Section */}
-                {showManualInput && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Manual QR Code Input</h3>
-
-                    {/* Text Input */}
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Enter QR Code Data
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={manualQrInput}
-                            onChange={(e) => setManualQrInput(e.target.value)}
-                            placeholder="Paste or type QR code data here..."
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          />
-                          <button
-                            onClick={manualValidation}
-                            disabled={!manualQrInput.trim()}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                          >
-                            Validate
-                          </button>
-                        </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                          💡 <strong>Tip:</strong> To get QR data manually, go to your <a href="/bookings" className="text-purple-600 hover:underline" target="_blank">bookings page</a>, right-click &quot;View QR&quot;, select &quot;Inspect Element&quot;, and look for the JSON data in the image src or page source.
-                        </p>
-                      </div>
-
-                      {/* File Upload */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Upload QR Code Image
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                          >
-                            <Upload className="w-4 h-4" />
-                            Choose Image
-                          </button>
-                          <span className="text-sm text-gray-500">
-                            Select QR code image (PNG, JPG, etc.)
-                          </span>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center bg-white bg-opacity-95 p-6 rounded-2xl shadow-2xl border-4 border-green-500">
+                        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-3 animate-bounce" />
+                        <p className="text-xl font-bold text-gray-800 mb-2">QR Code Detected!</p>
+                        <p className="text-gray-600 mb-4">Tap to scan and validate</p>
+                        <div className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold text-lg">
+                          TAP TO SCAN
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {cameraPermission === 'denied' && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 text-sm">
-                      Camera permission denied. Please enable camera access in your browser settings.
-                    </p>
+                {/* Countdown Overlay on Camera */}
+                {isScanning && countdown !== null && (
+                  <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-40 h-40 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+                          <span className="text-7xl font-bold text-white">{countdown}</span>
+                        </div>
+                        <p className="text-2xl font-bold text-white mt-6 mb-2">Processing QR Code...</p>
+                        <p className="text-lg text-white opacity-90">Validating ticket in {countdown} seconds</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Validation Result Overlay on Camera */}
+                {isScanning && validationResult && (
+                  <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm overflow-auto">
+                    <div className="p-6 min-h-full flex flex-col justify-center">
+                      {/* Scan Next Ticket Button - At Top */}
+                      <button
+                        onClick={() => setValidationResult(null)}
+                        className="mb-4 w-full bg-white text-gray-800 py-3 px-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
+                      >
+                        Scan Next Ticket
+                      </button>
+
+                      {/* Status */}
+                      <div className={`p-6 rounded-xl flex items-center gap-4 mb-4 ${validationResult.success ? 'bg-green-500' : 'bg-red-500'}`}>
+                        {validationResult.success ? (
+                          <CheckCircle className="w-12 h-12 text-white flex-shrink-0" />
+                        ) : (
+                          <XCircle className="w-12 h-12 text-white flex-shrink-0" />
+                        )}
+                        <div className="text-white">
+                          <p className="text-2xl font-bold">
+                            {validationResult.success ? 'Valid Ticket' : 'Invalid Ticket'}
+                          </p>
+                          <p className="text-lg opacity-90">
+                            {validationResult.message}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Ticket Details */}
+                      {validationResult.success && validationResult.ticket && validationResult.event && (
+                        <div className="space-y-3">
+                          <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                            <h3 className="font-bold text-gray-800 mb-3 text-lg">Event Details</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center gap-2 text-gray-700">
+                                <Calendar className="w-4 h-4" />
+                                <span>{new Date(validationResult.event.date).toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-700">
+                                <MapPin className="w-4 h-4" />
+                                <span>{validationResult.event.venue}, {validationResult.event.location}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                            <h3 className="font-bold text-gray-800 mb-3 text-lg">Ticket Details</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between text-gray-700">
+                                <span>Type:</span>
+                                <span className="font-semibold">{validationResult.ticket.ticketName}</span>
+                              </div>
+                              <div className="flex justify-between text-gray-700">
+                                <span>Price:</span>
+                                <span className="font-semibold">{validationResult.ticket.price.toFixed(2)} EUR</span>
+                              </div>
+                              <div className="flex justify-between text-gray-700">
+                                <span>Validated:</span>
+                                <span className="font-semibold">{new Date(validationResult.ticket.usedAt).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error Details */}
+                      {!validationResult.success && (
+                        <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                          <h3 className="font-bold text-red-800 mb-2">Error Details</h3>
+                          <div className="space-y-1 text-sm text-red-600">
+                            {validationResult.error && <p>Error: {validationResult.error}</p>}
+                            {validationResult.status && <p>Status: {validationResult.status}</p>}
+                            {validationResult.eventDate && <p>Event Date: {new Date(validationResult.eventDate).toLocaleDateString()}</p>}
+                            {validationResult.usedAt && <p>Previously Used: {new Date(validationResult.usedAt).toLocaleString()}</p>}
+                            {validationResult.validatedBy && <p>Validated By: {validationResult.validatedBy}</p>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
+
+              {/* Controls */}
+              <div className="flex gap-3">
+                {!isScanning ? (
+                  <button
+                    onClick={startScanning}
+                    className="flex-1 bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-5 h-5" />
+                    Start Scanning
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopScanning}
+                    className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CameraOff className="w-5 h-5" />
+                    Stop Scanning
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowManualInput(!showManualInput)}
+                  className="bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                >
+                  <FileText className="w-5 h-5" />
+                  Manual
+                </button>
+              </div>
+
+              {/* Manual Input Section */}
+              {showManualInput && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Manual QR Code Input</h3>
+
+                  {/* Text Input */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Enter QR Code Data
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={manualQrInput}
+                          onChange={(e) => setManualQrInput(e.target.value)}
+                          placeholder="Paste or type QR code data here..."
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={manualValidation}
+                          disabled={!manualQrInput.trim()}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Validate
+                        </button>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        💡 <strong>Tip:</strong> To get QR data manually, go to your <a href="/bookings" className="text-purple-600 hover:underline" target="_blank">bookings page</a>, right-click &quot;View QR&quot;, select &quot;Inspect Element&quot;, and look for the JSON data in the image src or page source.
+                      </p>
+                    </div>
+
+                    {/* File Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Upload QR Code Image
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          <Upload className="w-4 h-4" />
+                          Choose Image
+                        </button>
+                        <span className="text-sm text-gray-500">
+                          Select QR code image (PNG, JPG, etc.)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {cameraPermission === 'denied' && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">
+                    Camera permission denied. Please enable camera access in your browser settings.
+                  </p>
+                </div>
+              )}
             </div>
+          </div>
 
           {/* Validation Logs Section */}
           <div className="mt-8">

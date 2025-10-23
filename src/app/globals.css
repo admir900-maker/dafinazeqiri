@@ -128,6 +128,35 @@ html {
   }
 }
 
+/* Floating music notes animation */
+@keyframes note-float-up {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-60vh) translateX(-10px) rotate(10deg);
+  }
+  100% {
+    transform: translateY(-120vh) translateX(10px) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+.music-note {
+  position: absolute;
+  bottom: -2.5rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  animation-name: note-float-up;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;

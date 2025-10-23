@@ -40,6 +40,39 @@ export function BackgroundWrapper({
         ></div>
       </div>
 
+      {/* Floating music notes overlay */}
+      <div className="absolute inset-0 -z-5 pointer-events-none overflow-hidden">
+        {/* Predefined positions/durations to avoid SSR randomness */}
+        {[
+          { left: '5%', size: '18px', dur: '14s', delay: '0s', char: '♪' },
+          { left: '12%', size: '22px', dur: '16s', delay: '2s', char: '♬' },
+          { left: '20%', size: '14px', dur: '12s', delay: '1s', char: '♫' },
+          { left: '28%', size: '20px', dur: '18s', delay: '3s', char: '♪' },
+          { left: '36%', size: '16px', dur: '15s', delay: '5s', char: '♩' },
+          { left: '44%', size: '24px', dur: '19s', delay: '2.5s', char: '♬' },
+          { left: '52%', size: '18px', dur: '13s', delay: '4s', char: '♫' },
+          { left: '60%', size: '20px', dur: '17s', delay: '1.5s', char: '♪' },
+          { left: '68%', size: '14px', dur: '12s', delay: '3.5s', char: '♩' },
+          { left: '76%', size: '22px', dur: '16s', delay: '0.5s', char: '♬' },
+          { left: '84%', size: '16px', dur: '15s', delay: '2.2s', char: '♫' },
+          { left: '92%', size: '20px', dur: '18s', delay: '4.2s', char: '♪' },
+        ].map((n, i) => (
+          <span
+            key={i}
+            aria-hidden="true"
+            className="music-note select-none"
+            style={{
+              left: n.left as string,
+              fontSize: n.size,
+              animationDuration: n.dur,
+              animationDelay: n.delay,
+            }}
+          >
+            {n.char}
+          </span>
+        ))}
+      </div>
+
       {/* Content */}
       <div className="relative z-10">
         {children}

@@ -1,23 +1,17 @@
-import { HeroBanner } from "@/components/sections/hero-banner"
-import { CategoryIcons } from "@/components/sections/category-icons"
-import { SearchBar } from "@/components/sections/search-bar"
+import { HeroSection } from "@/components/sections/hero-section"
 import { FeaturedEventsSection } from "@/components/sections/featured-events-section"
 import { BackgroundWrapper } from "@/components/ui/background-wrapper"
 
 export default function Home() {
   return (
     <BackgroundWrapper fullHeight={false}>
-      {/* Hero Banner */}
-      <HeroBanner />
-      
-      {/* Category Icons */}
-      <CategoryIcons />
-      
-      {/* Search Bar */}
-      <SearchBar />
-      
-      {/* Featured Events Section */}
+
+            {/* Featured Events Section */}
       <FeaturedEventsSection />
+      {/* Hero Section */}
+      <HeroSection />
+
+
     </BackgroundWrapper>
   )
 }

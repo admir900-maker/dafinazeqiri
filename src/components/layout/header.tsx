@@ -82,89 +82,59 @@ export function Header({ }: HeaderProps) {
   ]
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-pink-500/20 shadow-2xl relative overflow-hidden backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(45, 27, 78, 0.95) 0%, rgba(123, 44, 111, 0.95) 50%, rgba(201, 75, 139, 0.95) 100%)' }}>
-      {/* Glamorous sparkle overlay */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.4) 0%, transparent 50%)' }}></div>
-
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" style={{ animation: 'shimmer 3s infinite' }}></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-0 relative z-10">
+    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4 py-0">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Ticket className="h-9 w-9 text-pink-300 group-hover:text-pink-200 transition-all transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 0 8px rgba(236, 72, 153, 0.6))' }} />
-              </div>
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-32 bg-white/30 animate-pulse rounded"></div>
-                </div>
-              ) : (
-                <span className="text-3xl font-bold tracking-tight" style={{
-                  background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
-                  fontFamily: "'Playfair Display', serif"
-                }}>{siteConfig.siteName}</span>
-              )}
-            </div>
+          <Link href="/" className="flex items-center gap-2 group">
+            <Ticket className="h-7 w-7 text-blue-600 group-hover:text-blue-700 transition-colors" />
+            {isLoading ? (
+              <div className="h-6 w-24 bg-gray-200 animate-pulse rounded"></div>
+            ) : (
+              <span className="text-2xl font-bold text-gray-900">{siteConfig.siteName}</span>
+            )}
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-base font-semibold text-white/95 hover:text-pink-200 px-3 py-2 rounded-lg transition-all relative group"
-                style={{ letterSpacing: '0.5px' }}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               >
                 {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
           </nav>
 
           {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-xs mx-6">
+          <div className="hidden md:flex flex-1 max-w-sm mx-6">
             <form onSubmit={handleSearch} className="w-full">
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-pink-200/80 group-hover:text-pink-300 transition-colors" />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
                   placeholder="Search events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 rounded-full border-2 border-pink-300/40 focus:border-pink-400/80 bg-white/20 backdrop-blur-md text-white placeholder-pink-200/60 h-11 transition-all shadow-lg group-hover:shadow-pink-500/30"
-                  style={{ fontWeight: '500' }}
+                  className="pl-10 pr-4 h-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
                 />
               </div>
             </form>
           </div>
 
           {/* User Actions */}
-          <div className="flex items-center gap-2">
-            {/* User Menu */}
+          <div className="flex items-center gap-3">
             {isSignedIn ? (
-              <div className="ring-2 ring-pink-300/50 rounded-full p-0.5 bg-gradient-to-br from-pink-400 to-purple-500">
-                <UserButton afterSignOutUrl="/" />
-              </div>
+              <UserButton afterSignOutUrl="/" />
             ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <Button variant="outline" asChild className="border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:shadow-pink-500/40 text-white font-semibold px-6">
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" asChild className="h-9 rounded-lg">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button asChild className="rounded-full font-bold px-7 shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{
-                  background: 'linear-gradient(135deg, #ec4899, #a855f7)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)'
-                }}>
-                  <Link href="/auth/signup" className="text-white">Sign Up</Link>
+                <Button asChild className="h-9 rounded-lg bg-blue-600 hover:bg-blue-700">
+                  <Link href="/auth/signup">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -173,10 +143,10 @@ export function Header({ }: HeaderProps) {
             <Button
               variant="outline"
               size="icon"
-              className="md:hidden border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg"
+              className="md:hidden h-9 w-9"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-6 w-6 text-pink-200" /> : <Menu className="h-6 w-6 text-pink-200" />}
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -185,37 +155,33 @@ export function Header({ }: HeaderProps) {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="md:hidden border-t border-pink-400/30 shadow-2xl relative overflow-hidden backdrop-blur-lg"
-              style={{ background: 'linear-gradient(135deg, rgba(45, 27, 78, 0.98) 0%, rgba(123, 44, 111, 0.98) 50%, rgba(201, 75, 139, 0.98) 100%)' }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-gray-200 bg-white"
             >
-              {/* Glamour overlay for mobile menu */}
-              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 30% 40%, rgba(236, 72, 153, 0.5) 0%, transparent 60%)' }}></div>
-
-              <div className="px-4 py-4 space-y-4 relative z-10">
+              <div className="px-4 py-4 space-y-3">
                 {/* Mobile Search */}
                 <form onSubmit={handleSearch}>
                   <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-pink-200/80" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       type="search"
                       placeholder="Search events..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-12 rounded-full border-2 border-pink-300/40 focus:border-pink-400/80 bg-white/20 backdrop-blur-md text-white placeholder-pink-200/60 h-11 shadow-lg"
+                      className="pl-10 h-10 rounded-lg border border-gray-300 focus:border-blue-500"
                     />
                   </div>
                 </form>
 
                 {/* Mobile Navigation */}
-                <nav className="flex flex-col gap-3">
+                <nav className="flex flex-col gap-1">
                   {navItems.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-base font-semibold text-white/95 hover:text-pink-200 px-4 py-2.5 rounded-lg transition-all bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+                      className="text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {item.label}
@@ -225,27 +191,22 @@ export function Header({ }: HeaderProps) {
 
                 {/* Mobile Auth */}
                 {!isSignedIn && (
-                  <div className="flex flex-col gap-3 pt-4 border-t border-pink-400/30">
-                    <Button variant="outline" asChild className="justify-start border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg text-white font-semibold h-12">
+                  <div className="flex flex-col gap-2 pt-3 border-t border-gray-200">
+                    <Button variant="outline" asChild className="w-full">
                       <Link href="/auth/signin" onClick={() => setIsMenuOpen(false)}>
                         Sign In
                       </Link>
                     </Button>
-                    <Button asChild className="justify-start rounded-full font-bold h-12 shadow-xl transition-all" style={{
-                      background: 'linear-gradient(135deg, #ec4899, #a855f7)',
-                      border: '2px solid rgba(255, 255, 255, 0.3)'
-                    }}>
-                      <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)} className="text-white">
+                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
+                      <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
                         Sign Up
                       </Link>
                     </Button>
                   </div>
                 )}
                 {isSignedIn && (
-                  <div className="pt-4 border-t border-pink-400/30 flex justify-center">
-                    <div className="ring-2 ring-pink-300/50 rounded-full p-0.5 bg-gradient-to-br from-pink-400 to-purple-500">
-                      <UserButton afterSignOutUrl="/" />
-                    </div>
+                  <div className="pt-3 border-t border-gray-200 flex justify-center">
+                    <UserButton afterSignOutUrl="/" />
                   </div>
                 )}
               </div>

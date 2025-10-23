@@ -2,47 +2,47 @@
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 320 100% 10%;
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 320 100% 10%;
+  --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;
-  --popover-foreground: 320 100% 10%;
-  --primary: 330 81% 60%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 280 70% 55%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 330 40% 96%;
-  --muted-foreground: 320 20% 50%;
-  --accent: 45 100% 60%;
-  --accent-foreground: 320 100% 10%;
-  --destructive: 0 84.2% 60.2%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 330 30% 90%;
-  --input: 330 30% 90%;
-  --ring: 330 81% 60%;
-  --radius: 1rem;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 221 83% 53%;
+  --radius: 0.5rem;
 }
 
 .dark {
-  --background: 320 40% 8%;
-  --foreground: 330 100% 98%;
-  --card: 320 35% 12%;
-  --card-foreground: 330 100% 98%;
-  --popover: 320 35% 12%;
-  --popover-foreground: 330 100% 98%;
-  --primary: 330 81% 60%;
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 280 70% 55%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 320 30% 20%;
-  --muted-foreground: 330 40% 70%;
-  --accent: 45 100% 60%;
-  --accent-foreground: 320 100% 10%;
-  --destructive: 0 62.8% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 330 30% 25%;
-  --input: 330 30% 25%;
-  --ring: 330 81% 60%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 224 77% 57%;
 }
 
 * {
@@ -51,12 +51,11 @@
 
 body {
   color: hsl(var(--foreground));
-  font-family: var(--font-inter), 'Playfair Display', 'Georgia', serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 25%, #4a2358 50%, #7b2c6f 75%, #c94b8b 100%);
-  background-attachment: fixed;
+  background: #f8f9fa;
   min-height: 100vh;
 }
 

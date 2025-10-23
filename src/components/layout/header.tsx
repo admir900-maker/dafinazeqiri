@@ -82,59 +82,45 @@ export function Header({ }: HeaderProps) {
   ]
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 left-0 right-0 z-50 w-full bg-orange-500 shadow-md">
       <div className="container mx-auto px-4 py-0">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <Ticket className="h-7 w-7 text-blue-600 group-hover:text-blue-700 transition-colors" />
+            <Ticket className="h-8 w-8 text-white group-hover:text-orange-100 transition-colors" />
             {isLoading ? (
-              <div className="h-6 w-24 bg-gray-200 animate-pulse rounded"></div>
+              <div className="h-6 w-24 bg-orange-400 animate-pulse rounded"></div>
             ) : (
-              <span className="text-2xl font-bold text-gray-900">{siteConfig.siteName}</span>
+              <span className="text-2xl font-bold text-white">{siteConfig.siteName}</span>
             )}
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
+            <span className="text-sm font-medium text-white">Yaklaşan Etkinlikler</span>
           </nav>
-
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-sm mx-6">
-            <form onSubmit={handleSearch} className="w-full">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Search events..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 h-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
-                />
-              </div>
-            </form>
-          </div>
 
           {/* User Actions */}
           <div className="flex items-center gap-3">
             {isSignedIn ? (
-              <UserButton afterSignOutUrl="/" />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" asChild className="h-9 rounded-lg bg-white text-orange-500 border-0 hover:bg-orange-50">
+                  <Link href="/auth/signin">Kayıt Ol</Link>
+                </Button>
+                <Button asChild className="h-9 w-9 rounded-lg bg-white text-orange-500 hover:bg-orange-50 p-0">
+                  <Link href="/auth/signup">
+                    <Menu className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <UserButton afterSignOutUrl="/" />
+              </div>
             ) : (
               <div className="hidden md:flex items-center gap-2">
-                <Button variant="outline" asChild className="h-9 rounded-lg">
-                  <Link href="/auth/signin">Sign In</Link>
+                <Button variant="outline" asChild className="h-9 rounded-lg bg-white text-orange-500 border-0 hover:bg-orange-50">
+                  <Link href="/auth/signin">Kayıt Ol</Link>
                 </Button>
-                <Button asChild className="h-9 rounded-lg bg-blue-600 hover:bg-blue-700">
-                  <Link href="/auth/signup">Sign Up</Link>
+                <Button asChild className="h-9 rounded-lg bg-white text-orange-500 hover:bg-orange-50">
+                  <Link href="/auth/signup">Giriş Yap</Link>
                 </Button>
               </div>
             )}
@@ -143,7 +129,7 @@ export function Header({ }: HeaderProps) {
             <Button
               variant="outline"
               size="icon"
-              className="md:hidden h-9 w-9"
+              className="md:hidden h-9 w-9 bg-white text-orange-500 border-0 hover:bg-orange-50"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -158,7 +144,7 @@ export function Header({ }: HeaderProps) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-gray-200 bg-white"
+              className="md:hidden border-t border-orange-400 bg-orange-500"
             >
               <div className="px-4 py-4 space-y-3">
                 {/* Mobile Search */}
@@ -170,7 +156,7 @@ export function Header({ }: HeaderProps) {
                       placeholder="Search events..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 h-10 rounded-lg border border-gray-300 focus:border-blue-500"
+                      className="pl-10 h-10 rounded-lg border-0 bg-white"
                     />
                   </div>
                 </form>
@@ -181,7 +167,7 @@ export function Header({ }: HeaderProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
+                      className="text-sm font-medium text-white hover:text-orange-100 hover:bg-orange-600 px-3 py-2 rounded-md transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {item.label}
@@ -191,21 +177,21 @@ export function Header({ }: HeaderProps) {
 
                 {/* Mobile Auth */}
                 {!isSignedIn && (
-                  <div className="flex flex-col gap-2 pt-3 border-t border-gray-200">
-                    <Button variant="outline" asChild className="w-full">
+                  <div className="flex flex-col gap-2 pt-3 border-t border-orange-400">
+                    <Button variant="outline" asChild className="w-full bg-white text-orange-500 border-0 hover:bg-orange-50">
                       <Link href="/auth/signin" onClick={() => setIsMenuOpen(false)}>
-                        Sign In
+                        Kayıt Ol
                       </Link>
                     </Button>
-                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button asChild className="w-full bg-white text-orange-500 hover:bg-orange-50">
                       <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
-                        Sign Up
+                        Giriş Yap
                       </Link>
                     </Button>
                   </div>
                 )}
                 {isSignedIn && (
-                  <div className="pt-3 border-t border-gray-200 flex justify-center">
+                  <div className="pt-3 border-t border-orange-400 flex justify-center">
                     <UserButton afterSignOutUrl="/" />
                   </div>
                 )}

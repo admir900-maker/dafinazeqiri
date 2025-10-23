@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, Clock, Users, Play, ArrowRight } from 'lucide-react'
+import { Calendar, MapPin, Clock, Users, Play, ArrowRight, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
@@ -117,17 +117,19 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
           
-          {/* Category Badge */}
-          <Badge className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-medium px-2 py-1">
-            {typeof event.category === 'object' ? event.category.name : event.category}
-          </Badge>
+          {/* Session Badge (if multiple dates/times) */}
+          {event.ticketTypes && event.ticketTypes.length > 1 && (
+            <Badge className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-medium px-2 py-1">
+              +{event.ticketTypes.length} Seans
+            </Badge>
+          )}
         </div>
 
         <CardContent className="p-4">
           {/* Title */}
           <h3
             id={`event-title-${event._id}`}
-            className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 group-hover:text-blue-600 transition-colors"
+            className="font-semibold text-gray-900 mb-2 text-base line-clamp-2 group-hover:text-orange-600 transition-colors"
           >
             {event.title}
           </h3>
@@ -144,16 +146,21 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
             <span>{formattedDate} - {formattedTime}</span>
           </div>
 
-          {/* Price */}
+          {/* Price and Cart Button */}
           <div className="flex items-center justify-between">
-            <div className="text-lg font-bold text-blue-600">
+            <div className="text-lg font-bold text-orange-600">
               {formatPrice(minPrice)}
             </div>
-            {maxPrice > minPrice && (
-              <div className="text-xs text-gray-500">
-                Starting from
-              </div>
-            )}
+            <Button 
+              size="sm" 
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full h-8 w-8 p-0"
+              onClick={(e) => {
+                e.preventDefault()
+                // Add to cart functionality here
+              }}
+            >
+              <ShoppingCart className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>

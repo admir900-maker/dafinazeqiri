@@ -4,7 +4,7 @@ import { BackgroundWrapper } from "@/components/ui/background-wrapper"
 
 export default function Home() {
   return (
-    <BackgroundWrapper fullHeight={false}>
+    <BackgroundWrapper fullHeight={true}>
 
             {/* Featured Events Section */}
       <FeaturedEventsSection />

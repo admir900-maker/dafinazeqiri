@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, Users, Play, ArrowRight } from 'lucide-react'
+import { Calendar, MapPin, Users, Play, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -133,104 +133,131 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
   }, [event.tags])
 
   return (
-    <Link href={`/events/${event._id}`} className="block h-full">
-      <Card 
-        className="group relative cursor-pointer h-full overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl bg-white/95 backdrop-blur-md border-0" 
-        role="article" 
+    <Link href={`/events/${event._id}`} className="block h-full group">
+      <Card
+        className="relative cursor-pointer h-full overflow-hidden rounded-2xl transition-all duration-700 hover:-translate-y-3 hover:shadow-[0_25px_80px_-15px_rgba(236,72,153,0.5)] bg-gradient-to-br from-white via-pink-50/30 to-purple-50/30 backdrop-blur-xl border border-pink-200/20 hover:border-pink-300/40"
+        role="article"
         aria-labelledby={`event-title-${event._id}`}
       >
+        {/* Animated gradient border effect */}
+        <div className="absolute -inset-[1px] bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-700 -z-10" />
+
+        {/* Sparkle overlay */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+          <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full animate-pulse" />
+          <div className="absolute top-20 right-16 w-1 h-1 bg-pink-300 rounded-full animate-pulse delay-100" />
+          <div className="absolute bottom-32 left-20 w-1 h-1 bg-purple-300 rounded-full animate-pulse delay-200" />
+        </div>
+
         {/* Event Image */}
-        <div className={`relative overflow-hidden ${variant === 'featured' ? 'h-80' : 'h-64'}`}>
+        <div className={`relative overflow-hidden ${variant === 'featured' ? 'h-80' : 'h-72'}`}>
           <OptimizedImage
             src={imageSrc}
             alt={imageAlt}
             fallbackSrc="https://res.cloudinary.com/demo/image/upload/c_fill,w_800,h_600,q_auto/v1/samples/music/guitar-player"
             placeholder="blur"
             priority={variant === 'featured'}
-            className="object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
+            className="object-cover transition-all duration-1000 group-hover:scale-125 group-hover:rotate-2"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-500 group-hover:from-black/90" />
+          {/* Multi-layer gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-all duration-700" />
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
           {/* Category Badge */}
-          <Badge className="absolute top-4 left-4 bg-pink-500 text-white border-0 font-semibold shadow-lg px-3 py-1 rounded-full">
+          <Badge className="absolute top-5 left-5 bg-gradient-to-r from-pink-500 to-purple-600 text-white border-0 font-bold shadow-2xl px-4 py-2 rounded-full text-xs uppercase tracking-widest backdrop-blur-sm hover:scale-110 transition-transform duration-300">
             {typeof event.category === 'object' ? event.category.name : event.category}
           </Badge>
 
-          {/* Date Badge */}
-          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-2xl p-3 text-center min-w-[70px] shadow-xl">
-            <div className="text-xs font-bold text-pink-500 uppercase tracking-wider">
+          {/* Date Badge - Premium Glass Design */}
+          <div className="absolute top-5 right-5 backdrop-blur-xl bg-white/90 rounded-3xl p-4 text-center min-w-[80px] shadow-2xl border border-white/50 group-hover:scale-110 transition-all duration-500">
+            <div className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 uppercase tracking-wider">
               {formattedDate.split(' ')[0]}
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-3xl font-black bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent">
               {formattedDate.split(' ')[1].replace(',', '')}
             </div>
+            <div className="h-0.5 w-8 mx-auto mt-1 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full" />
           </div>
 
           {/* YouTube Trailer Indicator */}
           {event.youtubeTrailer && (
-            <div className="absolute bottom-4 right-4 bg-red-600 backdrop-blur-sm rounded-full p-2 shadow-lg">
-              <Play className="w-4 h-4 text-white" fill="white" />
+            <div className="absolute bottom-6 right-6 bg-gradient-to-br from-red-500 to-red-600 backdrop-blur-sm rounded-full p-3 shadow-2xl hover:scale-110 transition-transform duration-300 border border-white/30">
+              <Play className="w-5 h-5 text-white" fill="white" />
             </div>
           )}
 
-          {/* Price Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 flex items-end justify-between">
-            <div className="flex-1 min-w-0">
-              <h3
-                id={`event-title-${event._id}`}
-                className={`font-bold text-white mb-1 line-clamp-2 transition-all ${variant === 'featured' ? 'text-3xl' : 'text-2xl'}`}
-              >
-                {event.title}
-              </h3>
-              {event.artists && event.artists.length > 0 && (
-                <p className="text-sm text-white/90 line-clamp-1">
-                  {event.artists.join(', ')}
-                </p>
-              )}
-            </div>
-            <div className="flex-shrink-0 text-right ml-4">
-              <div className="text-3xl font-bold text-white">
-                {formatPrice(minPrice)}
+          {/* Price & Title Overlay - Redesigned */}
+          <div className="absolute bottom-0 left-0 right-0 p-7">
+            <div className="backdrop-blur-md bg-gradient-to-r from-black/60 to-black/40 rounded-2xl p-5 border border-white/20 shadow-2xl group-hover:bg-black/70 transition-all duration-500">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3
+                    id={`event-title-${event._id}`}
+                    className={`font-black text-white mb-2 line-clamp-2 transition-all drop-shadow-2xl ${variant === 'featured' ? 'text-3xl' : 'text-2xl'}`}
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    {event.title}
+                  </h3>
+                  {event.artists && event.artists.length > 0 && (
+                    <p className="text-sm text-pink-200 font-semibold line-clamp-1 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      {event.artists.join(', ')}
+                    </p>
+                  )}
+                </div>
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-pink-300 to-purple-300 drop-shadow-2xl">
+                    {formatPrice(minPrice)}
+                  </div>
+                  {maxPrice > minPrice && (
+                    <div className="text-xs text-pink-200 font-semibold mt-1">Starting from</div>
+                  )}
+                </div>
               </div>
-              {maxPrice > minPrice && (
-                <div className="text-xs text-white/80">Starting from</div>
-              )}
             </div>
           </div>
         </div>
 
-        <CardContent className="p-6 space-y-3">
-          {/* Event Details */}
-          <div className="space-y-2">
-            <div className="flex items-center text-sm text-gray-700">
-              <Calendar className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0" aria-hidden="true" />
+        <CardContent className="p-7 space-y-4 bg-gradient-to-br from-white/80 to-pink-50/50 backdrop-blur-sm">
+          {/* Event Details - Enhanced */}
+          <div className="space-y-3">
+            <div className="flex items-center text-sm text-gray-800 font-medium group-hover:text-pink-600 transition-colors duration-300">
+              <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-2 rounded-xl mr-3 shadow-lg">
+                <Calendar className="w-4 h-4 text-white" aria-hidden="true" />
+              </div>
               <span>
                 <ScreenReaderOnly>Date: </ScreenReaderOnly>
                 {formattedDate} at {formattedTime}
               </span>
             </div>
 
-            <div className="flex items-center text-sm text-gray-700">
-              <MapPin className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0" aria-hidden="true" />
+            <div className="flex items-center text-sm text-gray-800 font-medium group-hover:text-pink-600 transition-colors duration-300">
+              <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-2 rounded-xl mr-3 shadow-lg">
+                <MapPin className="w-4 h-4 text-white" aria-hidden="true" />
+              </div>
               <span className="truncate">
                 <ScreenReaderOnly>Location: </ScreenReaderOnly>
                 {event.venue}, {event.location}
               </span>
             </div>
 
-            <div className="flex items-center text-sm text-gray-700">
-              <Users className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0" aria-hidden="true" />
+            <div className="flex items-center text-sm text-gray-800 font-medium group-hover:text-pink-600 transition-colors duration-300">
+              <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-2 rounded-xl mr-3 shadow-lg">
+                <Users className="w-4 h-4 text-white" aria-hidden="true" />
+              </div>
               <span>
                 <ScreenReaderOnly>Capacity: </ScreenReaderOnly>
-                {event.maxCapacity} capacity
+                {event.maxCapacity ? event.maxCapacity.toLocaleString() : '0'} capacity
               </span>
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-sm text-gray-600 line-clamp-2">
-            {event.description}
-          </p>
+          {/* Description - Enhanced */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-pink-100/50">
+            <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
+              {event.description}
+            </p>
+          </div>
 
           {/* Tags */}
           {tagsDisplay && (
@@ -239,14 +266,20 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
             </div>
           )}
 
-          {/* Action Button */}
-          <Button
-            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 pointer-events-none mt-4"
-            aria-label={`View details for ${event.title}`}
-          >
-            View Details
-            <ArrowRight className="inline-block w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-          </Button>
+          {/* Action Button - Premium Design */}
+          <div className="relative group/button">
+            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-full blur opacity-75 group-hover/button:opacity-100 transition duration-500" />
+            <Button
+              className="relative w-full bg-gradient-to-r from-pink-500 via-purple-600 to-pink-500 hover:from-pink-600 hover:via-purple-700 hover:to-pink-600 text-white font-bold py-4 rounded-full shadow-2xl transition-all duration-500 pointer-events-none border-0 text-base uppercase tracking-wider"
+              aria-label={`View details for ${event.title}`}
+            >
+              <span className="flex items-center justify-center gap-3">
+                <Sparkles className="w-5 h-5" />
+                View Details
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500" />
+              </span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </Link>

@@ -178,7 +178,7 @@ export function FeaturedEventsSection() {
 
   // Memoized events grid to prevent unnecessary re-renders
   const eventsGrid = useMemo(() => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-6 mb-12">
       {events.map((event) => (
         <EventCard
           key={event._id}
@@ -231,10 +231,10 @@ export function FeaturedEventsSection() {
               fontFamily: "'Playfair Display', serif",
               letterSpacing: '1px'
             }}>
-              DafinaZeqiri.tickets
+              SUPERNOVA
             </h2>
             <p className="text-2xl font-light text-white/95 max-w-2xl mx-auto drop-shadow-xl tracking-wide">
-              SUPERNOVA
+              DafinaZeqiri.tickets
             </p>
           </motion.div>
         </div>

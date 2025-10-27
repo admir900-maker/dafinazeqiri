@@ -291,3 +291,16 @@ html {
   position: relative;
   z-index: 1;
 }
+
+/* Delay utilities for animations */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}

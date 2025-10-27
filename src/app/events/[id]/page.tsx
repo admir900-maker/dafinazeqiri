@@ -16,7 +16,9 @@ import {
   Play,
   ExternalLink,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  Sparkles,
+  Star
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -294,65 +296,109 @@ export default function EventDetailPage() {
 
   return (
     <BackgroundWrapper fullHeight={false}>
-      {/* Hero Section */}
-      <div className="relative h-[500px] bg-gray-900">
+      {/* Hero Section - Premium Design */}
+      <div className="relative h-[600px] overflow-hidden">
         {event.bannerImage || event.posterImage ? (
           <Image
             src={event.bannerImage || event.posterImage || ''}
             alt={event.title}
             fill
-            className="object-cover opacity-60"
+            className="object-cover transform scale-110 transition-transform duration-700"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600" />
         )}
 
-        <div className="absolute inset-0 bg-black/40" />
+        {/* Multi-layer gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-transparent to-purple-500/20" />
 
-        {/* Back Button */}
-        <div className="absolute top-4 left-4 z-10">
+        {/* Sparkle effects */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute top-20 left-20 w-2 h-2 bg-white rounded-full animate-pulse" />
+          <div className="absolute top-32 right-40 w-1 h-1 bg-pink-300 rounded-full animate-pulse delay-100" />
+          <div className="absolute bottom-40 left-1/3 w-1 h-1 bg-purple-300 rounded-full animate-pulse delay-200" />
+          <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-pulse delay-300" />
+        </div>
+
+        {/* Back Button - Premium Style */}
+        <div className="absolute top-8 left-8 z-10">
           <Link href="/events">
-            <Button variant="outline" className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 hover:border-white/50 shadow-lg">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Events
+            <Button className="bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50 shadow-2xl transition-all duration-300 rounded-2xl px-6 py-3">
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              <span className="font-semibold">Back to Events</span>
             </Button>
           </Link>
         </div>
 
-        {/* Share Button */}
-        <div className="absolute top-4 right-4 z-10">
+        {/* Share Button - Premium Style */}
+        <div className="absolute top-8 right-8 z-10">
           <Button
-            variant="outline"
             onClick={handleShare}
-            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 hover:border-white/50 shadow-lg"
+            className="bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50 shadow-2xl transition-all duration-300 rounded-2xl p-4"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-5 h-5" />
           </Button>
         </div>
 
-        {/* Hero Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-8">
+        {/* Hero Content - Premium Layout */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
           <div className="container mx-auto">
-            <div className="flex items-end justify-between">
-              <div className="flex-1">
-                <Badge className="bg-purple-600 text-white mb-4">
-                  {typeof event.category === 'object' ? event.category.name : event.category}
-                </Badge>
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-                  {event.title}
-                </h1>
-                <div className="flex flex-wrap items-center gap-4 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    <span>{formatDate(event.date)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
-                    <span>{formatTime(event.time)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5" />
-                    <span>{event.venue}, {event.location}</span>
+            <div className="backdrop-blur-xl bg-gradient-to-r from-black/70 to-black/50 rounded-3xl p-8 border border-white/20 shadow-2xl">
+              <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+                <div className="flex-1">
+                  {/* Category Badge */}
+                  <Badge className="bg-gradient-to-r from-pink-500 to-purple-600 text-white border-0 mb-4 px-4 py-2 text-sm font-bold uppercase tracking-wider shadow-xl">
+                    <Star className="w-4 h-4 mr-2 inline" />
+                    {typeof event.category === 'object' ? event.category.name : event.category}
+                  </Badge>
+
+                  {/* Event Title */}
+                  <h1 className="text-5xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    {event.title}
+                  </h1>
+
+                  {/* Artists */}
+                  {event.artists && event.artists.length > 0 && (
+                    <div className="flex items-center gap-3 mb-6">
+                      <Sparkles className="w-6 h-6 text-pink-300" />
+                      <p className="text-xl font-semibold text-pink-200">
+                        {event.artists.join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Event Info Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+                      <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-3 rounded-xl shadow-lg">
+                        <Calendar className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/70 uppercase font-semibold">Date</p>
+                        <p className="text-white font-bold">{formatDate(event.date)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+                      <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-3 rounded-xl shadow-lg">
+                        <Clock className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/70 uppercase font-semibold">Time</p>
+                        <p className="text-white font-bold">{formatTime(event.time)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+                      <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-3 rounded-xl shadow-lg">
+                        <MapPin className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/70 uppercase font-semibold">Venue</p>
+                        <p className="text-white font-bold truncate">{event.venue}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -362,24 +408,42 @@ export default function EventDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl">
-                <TabsTrigger value="overview" className="text-white data-[state=active]:bg-white/30 data-[state=active]:text-white">Overview</TabsTrigger>
-                <TabsTrigger value="tickets" className="text-white data-[state=active]:bg-white/30 data-[state=active]:text-white">Tickets</TabsTrigger>
-                <TabsTrigger value="details" className="text-white data-[state=active]:bg-white/30 data-[state=active]:text-white">Details</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 rounded-2xl p-2 shadow-2xl">
+                <TabsTrigger
+                  value="overview"
+                  className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl font-semibold transition-all duration-300 data-[state=active]:shadow-xl"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="tickets"
+                  className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl font-semibold transition-all duration-300 data-[state=active]:shadow-xl"
+                >
+                  Tickets
+                </TabsTrigger>
+                <TabsTrigger
+                  value="details"
+                  className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl font-semibold transition-all duration-300 data-[state=active]:shadow-xl"
+                >
+                  Details
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="space-y-6">
-                <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-white drop-shadow-md">About This Event</CardTitle>
+              <TabsContent value="overview" className="space-y-6 mt-6">
+                <Card className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-2xl overflow-hidden hover:border-pink-300/40 transition-all duration-500">
+                  <CardHeader className="border-b border-white/20 bg-white/5">
+                    <CardTitle className="text-white drop-shadow-md text-2xl font-bold flex items-center gap-3">
+                      <Sparkles className="w-6 h-6 text-pink-400" />
+                      About This Event
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-white/90 leading-relaxed drop-shadow-sm">
+                  <CardContent className="p-6">
+                    <p className="text-white/90 leading-relaxed text-lg drop-shadow-sm">
                       {event.description}
                     </p>
                   </CardContent>
@@ -387,15 +451,15 @@ export default function EventDetailPage() {
 
                 {/* YouTube Trailer */}
                 {event.youtubeTrailer && (
-                  <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="text-white drop-shadow-md flex items-center gap-2">
-                        <Play className="w-5 h-5" />
+                  <Card className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-2xl overflow-hidden hover:border-pink-300/40 transition-all duration-500">
+                    <CardHeader className="border-b border-white/20 bg-white/5">
+                      <CardTitle className="text-white drop-shadow-md text-2xl font-bold flex items-center gap-3">
+                        <Play className="w-6 h-6 text-pink-400" />
                         Event Trailer
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="relative aspect-video rounded-lg overflow-hidden">
+                    <CardContent className="p-6">
+                      <div className="relative aspect-video rounded-xl overflow-hidden shadow-2xl ring-2 ring-pink-400/30">
                         <iframe
                           src={event.youtubeTrailer.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
                           title={`${event.title} - Event Trailer`}
@@ -410,15 +474,21 @@ export default function EventDetailPage() {
                 )}
 
                 {event.artists && event.artists.length > 0 && (
-                  <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="text-white drop-shadow-md">Artists</CardTitle>
+                  <Card className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-2xl overflow-hidden hover:border-pink-300/40 transition-all duration-500">
+                    <CardHeader className="border-b border-white/20 bg-white/5">
+                      <CardTitle className="text-white drop-shadow-md text-2xl font-bold flex items-center gap-3">
+                        <Music className="w-6 h-6 text-pink-400" />
+                        Artists
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
+                    <CardContent className="p-6">
+                      <div className="flex flex-wrap gap-3">
                         {event.artists.map((artist, index) => (
-                          <Badge key={index} variant="secondary" className="px-3 py-1 bg-white/30 text-white">
-                            <Music className="w-3 h-3 mr-1" />
+                          <Badge
+                            key={index}
+                            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm font-semibold"
+                          >
+                            <Music className="w-4 h-4 mr-2" />
                             {artist}
                           </Badge>
                         ))}
@@ -448,88 +518,91 @@ export default function EventDetailPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="tickets" className="space-y-6">
-                <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-white drop-shadow-md">Available Tickets</CardTitle>
+              <TabsContent value="tickets" className="space-y-6 mt-6">
+                <Card className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="border-b border-white/20 bg-white/5">
+                    <CardTitle className="text-white drop-shadow-md text-2xl font-bold flex items-center gap-3">
+                      <ShoppingCart className="w-6 h-6 text-pink-400" />
+                      Available Tickets
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-6">
                     <div className="space-y-4">
                       {event.ticketTypes.map((ticket, index) => (
                         <div
                           key={index}
-                          className={`border-2 rounded-lg p-4 transition-all backdrop-blur-md ${(selectedTickets[ticket.name] || 0) > 0
-                            ? 'border-purple-400'
-                            : 'border-white/30'
+                          className={`relative border-2 rounded-2xl p-6 transition-all duration-500 backdrop-blur-xl overflow-hidden group hover:shadow-2xl ${(selectedTickets[ticket.name] || 0) > 0
+                            ? 'border-pink-400 shadow-[0_0_30px_-5px_rgba(236,72,153,0.5)]'
+                            : 'border-white/30 hover:border-pink-300/50'
                             }`}
                           style={{
-                            backgroundColor: `${ticket.color}50`, // Add 50% opacity to the ticket color
+                            background: `linear-gradient(135deg, ${ticket.color}30 0%, ${ticket.color}10 100%)`,
                             borderLeftColor: ticket.color,
-                            borderLeftWidth: '14px'
+                            borderLeftWidth: '6px'
                           }}
                         >
-                          <div className="flex justify-between items-start">
+                          {/* Animated gradient on selection */}
+                          {(selectedTickets[ticket.name] || 0) > 0 && (
+                            <div className="absolute -inset-[1px] bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-2xl opacity-20 blur-sm -z-10" />
+                          )}
+
+                          <div className="flex justify-between items-start mb-4">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-lg text-white">{ticket.name}</h4>
+                              <h4 className="font-bold text-xl text-white mb-2">{ticket.name}</h4>
                               {ticket.description && (
-                                <p className="text-white/70 text-sm mt-1">{ticket.description}</p>
+                                <p className="text-white/80 text-sm mb-3">{ticket.description}</p>
                               )}
-                              <div className="flex items-center gap-4 mt-2 text-sm">
-                                <span className={`flex items-center gap-1 font-medium ${ticket.availableTickets === 0
-                                  ? 'text-red-400'
-                                  : 'text-green-400'
+                              <div className="flex items-center gap-3">
+                                <span className={`flex items-center gap-2 font-semibold text-sm px-3 py-1 rounded-full ${ticket.availableTickets === 0
+                                  ? 'bg-red-500/30 text-red-300 border border-red-400/30'
+                                  : 'bg-green-500/30 text-green-300 border border-green-400/30'
                                   }`}>
                                   <Users className="w-4 h-4" />
-                                  {ticket.availableTickets === 0
-                                    ? 'Not Available'
-                                    : 'Available'
-                                  }
+                                  {ticket.availableTickets === 0 ? 'Not Available' : 'Available'}
                                 </span>
                                 {ticket.availableTickets <= 10 && ticket.availableTickets > 0 && (
-                                  <span className="text-xs bg-yellow-600/30 text-yellow-300 px-2 py-1 rounded">
-                                    Limited Stock
+                                  <span className="text-xs bg-yellow-500/30 text-yellow-200 px-3 py-1 rounded-full font-bold border border-yellow-400/30">
+                                    ⚡ Limited Stock
                                   </span>
                                 )}
                                 {ticket.availableTickets === 0 && (
-                                  <span className="text-xs bg-red-600/30 text-red-300 px-2 py-1 rounded">
-                                    Sold Out
+                                  <span className="text-xs bg-red-500/30 text-red-200 px-3 py-1 rounded-full font-bold border border-red-400/30">
+                                    ❌ Sold Out
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-white">
+                            <div className="text-right ml-4">
+                              <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-pink-300 to-purple-300 drop-shadow-lg">
                                 {formatPrice(ticket.price)}
                               </div>
-                              <div className="text-sm text-white/60">per ticket</div>
+                              <div className="text-sm text-white/70 font-semibold">per ticket</div>
                             </div>
                           </div>
 
-                          {/* Quantity Selector for tickets tab */}
-                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/30">
-                            <span className="text-sm font-medium text-white/90">Quantity:</span>
+                          {/* Quantity Selector for tickets tab - Premium Style */}
+                          <div className="flex items-center justify-between pt-4 border-t border-white/30">
+                            <span className="text-sm font-bold text-white/90 uppercase tracking-wide">Quantity:</span>
                             {ticket.availableTickets === 0 ? (
-                              <div className="px-3 py-1 bg-red-600/30 text-red-300 rounded text-sm">
+                              <div className="px-4 py-2 bg-red-500/30 text-red-200 rounded-xl text-sm font-bold border border-red-400/30">
                                 Sold Out
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-3">
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                                  className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 text-white hover:from-pink-600 hover:to-purple-700 shadow-lg w-10 h-10 rounded-xl font-bold text-lg"
                                   onClick={() => updateTicketQuantity(ticket.name, (selectedTickets[ticket.name] || 0) - 1)}
                                   disabled={(selectedTickets[ticket.name] || 0) <= 0}
                                 >
                                   -
                                 </Button>
-                                <span className="w-8 text-center font-medium text-white">
+                                <span className="w-12 text-center font-black text-2xl text-white">
                                   {selectedTickets[ticket.name] || 0}
                                 </span>
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                                  className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 text-white hover:from-pink-600 hover:to-purple-700 shadow-lg w-10 h-10 rounded-xl font-bold text-lg"
                                   onClick={() => updateTicketQuantity(ticket.name, (selectedTickets[ticket.name] || 0) + 1)}
                                   disabled={(selectedTickets[ticket.name] || 0) >= Math.min(8, ticket.availableTickets)}
                                 >
@@ -539,12 +612,12 @@ export default function EventDetailPage() {
                             )}
                           </div>
 
-                          {/* Subtotal display */}
+                          {/* Subtotal display - Premium */}
                           {(selectedTickets[ticket.name] || 0) > 0 && (
-                            <div className="mt-3 pt-3 border-t border-white/30">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/90">Subtotal:</span>
-                                <span className="font-medium text-white">
+                            <div className="mt-4 pt-4 border-t border-white/30 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                              <div className="flex justify-between items-center">
+                                <span className="text-white/90 font-semibold">Subtotal:</span>
+                                <span className="font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">
                                   {formatPrice((selectedTickets[ticket.name] || 0) * ticket.price)}
                                 </span>
                               </div>
@@ -557,72 +630,94 @@ export default function EventDetailPage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="details" className="space-y-6">
-                <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-white drop-shadow-md">Event Details</CardTitle>
+              <TabsContent value="details" className="space-y-6 mt-6">
+                <Card className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="border-b border-white/20 bg-white/5">
+                    <CardTitle className="text-white drop-shadow-md text-2xl font-bold flex items-center gap-3">
+                      <Star className="w-6 h-6 text-pink-400" />
+                      Event Details
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium text-white">Date & Time</h4>
-                        <p className="text-white/80">{formatDate(event.date)} at {formatTime(event.time)}</p>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                        <h4 className="font-bold text-pink-300 mb-2 flex items-center gap-2">
+                          <Calendar className="w-5 h-5" />
+                          Date & Time
+                        </h4>
+                        <p className="text-white/90 font-semibold">{formatDate(event.date)}</p>
+                        <p className="text-white/90 font-semibold">{formatTime(event.time)}</p>
                         {event.endDate && (
-                          <p className="text-white/80">Ends: {formatDate(event.endDate)}</p>
+                          <p className="text-white/80 text-sm mt-1">Ends: {formatDate(event.endDate)}</p>
                         )}
                       </div>
 
-                      <div>
-                        <h4 className="font-medium text-white">Location</h4>
-                        <p className="text-white/80">{event.venue}</p>
+                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                        <h4 className="font-bold text-pink-300 mb-2 flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          Location
+                        </h4>
+                        <p className="text-white/90 font-semibold">{event.venue}</p>
                         <p className="text-white/80">{event.location}</p>
                       </div>
 
                       {event.ageLimit && (
-                        <div>
-                          <h4 className="font-medium text-white">Age Limit</h4>
-                          <p className="text-white/80">{event.ageLimit}+</p>
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                          <h4 className="font-bold text-pink-300 mb-2">Age Limit</h4>
+                          <p className="text-white/90 font-semibold text-2xl">{event.ageLimit}+</p>
                         </div>
                       )}
 
                       {event.duration && (
-                        <div>
-                          <h4 className="font-medium text-white">Duration</h4>
-                          <p className="text-white/80">{event.duration} minutes</p>
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                          <h4 className="font-bold text-pink-300 mb-2 flex items-center gap-2">
+                            <Clock className="w-5 h-5" />
+                            Duration
+                          </h4>
+                          <p className="text-white/90 font-semibold text-2xl">{event.duration} min</p>
                         </div>
                       )}
 
                       {event.language && (
-                        <div>
-                          <h4 className="font-medium text-white">Language</h4>
-                          <p className="text-white/80">{event.language}</p>
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                          <h4 className="font-bold text-pink-300 mb-2">Language</h4>
+                          <p className="text-white/90 font-semibold">{event.language}</p>
                         </div>
                       )}
 
                       {event.organizer && (
-                        <div>
-                          <h4 className="font-medium text-white">Organizer</h4>
-                          <p className="text-white/80">{event.organizer}</p>
+                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                          <h4 className="font-bold text-pink-300 mb-2">Organizer</h4>
+                          <p className="text-white/90 font-semibold">{event.organizer}</p>
                         </div>
                       )}
 
-                      <div>
-                        <h4 className="font-medium text-white">Capacity</h4>
-                        <p className="text-white/80">{event.maxCapacity} people</p>
+                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                        <h4 className="font-bold text-pink-300 mb-2 flex items-center gap-2">
+                          <Users className="w-5 h-5" />
+                          Capacity
+                        </h4>
+                        <p className="text-white/90 font-semibold text-2xl">{event.maxCapacity || 0}</p>
+                        <p className="text-white/70 text-sm">people</p>
                       </div>
 
-                      <div>
-                        <h4 className="font-medium text-white">Category</h4>
-                        <p className="text-white/80">{typeof event.category === 'object' ? event.category.name : event.category}</p>
+                      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                        <h4 className="font-bold text-pink-300 mb-2">Category</h4>
+                        <Badge className="bg-gradient-to-r from-pink-500 to-purple-600 text-white border-0 text-sm">
+                          {typeof event.category === 'object' ? event.category.name : event.category}
+                        </Badge>
                       </div>
                     </div>
 
                     {event.tags && event.tags.length > 0 && (
-                      <div className="mt-6">
-                        <h4 className="font-medium text-white mb-2">Tags</h4>
+                      <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                        <h4 className="font-bold text-pink-300 mb-3">Tags</h4>
                         <div className="flex flex-wrap gap-2">
                           {event.tags.map((tag, index) => (
-                            <Badge key={index} variant="outline" className="border-white/30 text-white">
+                            <Badge
+                              key={index}
+                              className="bg-white/10 border border-white/30 text-white hover:bg-white/20 transition-all duration-300"
+                            >
                               {tag}
                             </Badge>
                           ))}
@@ -637,92 +732,101 @@ export default function EventDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Event Poster */}
+            {/* Event Poster - Premium */}
             {event.posterImage && (
-              <Card className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-                <CardContent className="p-0">
-                  <Image
-                    src={event.posterImage}
-                    alt={event.title}
-                    width={400}
-                    height={600}
-                    className="w-full h-auto rounded-lg"
-                  />
+              <Card className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-2xl overflow-hidden hover:border-pink-300/40 transition-all duration-500 group">
+                <CardContent className="p-0 relative">
+                  <div className="relative overflow-hidden rounded-2xl">
+                    <Image
+                      src={event.posterImage}
+                      alt={event.title}
+                      width={400}
+                      height={600}
+                      className="w-full h-auto transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Booking Summary */}
-            <Card className="sticky top-4 bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl">
-              <CardHeader>
-                <CardTitle className="text-white drop-shadow-md">Book Tickets</CardTitle>
+            {/* Booking Summary - Ultra Premium */}
+            <Card className="sticky top-24 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-2 border-pink-300/30 shadow-2xl rounded-2xl overflow-hidden">
+              {/* Animated border glow */}
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-2xl opacity-50 blur-sm -z-10" />
+
+              <CardHeader className="border-b border-white/20 bg-gradient-to-r from-pink-500/20 to-purple-500/20">
+                <CardTitle className="text-white drop-shadow-md text-2xl font-black flex items-center gap-3">
+                  <ShoppingCart className="w-6 h-6 text-pink-300" />
+                  Book Tickets
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-6 space-y-4">
                 {event.ticketTypes && event.ticketTypes.length > 0 && (
                   <>
-                    {/* Individual Ticket Cards */}
-                    <div className="space-y-3">
+                    {/* Individual Ticket Cards - Premium */}
+                    <div className="space-y-4">
                       {event.ticketTypes.map((ticket) => (
                         <div
                           key={ticket.name}
-                          className="border border-white/30 rounded-lg p-4 backdrop-blur-md"
+                          className="relative border-2 border-white/30 rounded-xl p-5 backdrop-blur-md hover:border-pink-300/50 transition-all duration-500 group/ticket overflow-hidden"
                           style={{
-                            backgroundColor: `${ticket.color}20`, // Add 20% opacity to the ticket color
+                            background: `linear-gradient(135deg, ${ticket.color}25 0%, ${ticket.color}10 100%)`,
                             borderLeftColor: ticket.color,
-                            borderLeftWidth: '4px'
+                            borderLeftWidth: '5px'
                           }}
                         >
-                          <div className="flex justify-between items-start mb-3">
+                          {/* Hover glow effect */}
+                          <div className="absolute -inset-[1px] bg-gradient-to-r from-pink-400/0 via-pink-400/30 to-purple-400/0 rounded-xl opacity-0 group-hover/ticket:opacity-100 transition-opacity duration-500 -z-10 blur" />
+
+                          <div className="flex justify-between items-start mb-4">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-white">{ticket.name}</h4>
-                              <p className="text-2xl font-bold text-purple-300">{formatPrice(ticket.price)}</p>
+                              <h4 className="font-bold text-white text-lg mb-1">{ticket.name}</h4>
+                              <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300 drop-shadow-lg">
+                                {formatPrice(ticket.price)}
+                              </p>
                               {ticket.description && (
-                                <p className="text-sm text-white/70 mt-1">{ticket.description}</p>
+                                <p className="text-sm text-white/80 mt-2">{ticket.description}</p>
                               )}
-                              <div className="flex items-center gap-2 mt-1">
-                                <p className={`text-xs font-medium ${ticket.availableTickets === 0
-                                  ? 'text-red-400'
-                                  : 'text-green-400'
+                              <div className="flex items-center gap-2 mt-2">
+                                <p className={`text-xs font-bold px-3 py-1 rounded-full ${ticket.availableTickets === 0
+                                  ? 'bg-red-500/30 text-red-300 border border-red-400/30'
+                                  : 'bg-green-500/30 text-green-300 border border-green-400/30'
                                   }`}>
-                                  {ticket.availableTickets === 0
-                                    ? 'Sold Out'
-                                    : 'Available'
-                                  }
+                                  {ticket.availableTickets === 0 ? '❌ Sold Out' : '✓ Available'}
                                 </p>
                                 {ticket.availableTickets <= 10 && ticket.availableTickets > 0 && (
-                                  <span className="text-xs bg-yellow-600/30 text-yellow-300 px-2 py-1 rounded">
-                                    Limited
+                                  <span className="text-xs bg-yellow-500/30 text-yellow-200 px-3 py-1 rounded-full font-bold border border-yellow-400/30">
+                                    ⚡ Limited
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          {/* Quantity Selector */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-white/90">Quantity:</span>
+                          {/* Quantity Selector - Premium */}
+                          <div className="flex items-center justify-between pt-3 border-t border-white/30">
+                            <span className="text-sm font-bold text-white/90 uppercase tracking-wide">Qty:</span>
                             {ticket.availableTickets === 0 ? (
-                              <div className="px-3 py-1 bg-red-600/30 text-red-300 rounded text-sm">
+                              <div className="px-4 py-2 bg-red-500/30 text-red-200 rounded-xl text-sm font-bold border border-red-400/30">
                                 Sold Out
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                                  className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 text-white hover:from-pink-600 hover:to-purple-700 shadow-lg w-9 h-9 rounded-lg font-bold"
                                   onClick={() => updateTicketQuantity(ticket.name, (selectedTickets[ticket.name] || 0) - 1)}
                                   disabled={(selectedTickets[ticket.name] || 0) <= 0}
                                 >
                                   -
                                 </Button>
-                                <span className="w-8 text-center font-medium text-white">
+                                <span className="w-10 text-center font-black text-xl text-white">
                                   {selectedTickets[ticket.name] || 0}
                                 </span>
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                                  className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 text-white hover:from-pink-600 hover:to-purple-700 shadow-lg w-9 h-9 rounded-lg font-bold"
                                   onClick={() => updateTicketQuantity(ticket.name, (selectedTickets[ticket.name] || 0) + 1)}
                                   disabled={(selectedTickets[ticket.name] || 0) >= Math.min(8, ticket.availableTickets)}
                                 >
@@ -734,10 +838,10 @@ export default function EventDetailPage() {
 
                           {/* Subtotal for this ticket type */}
                           {(selectedTickets[ticket.name] || 0) > 0 && (
-                            <div className="mt-3 pt-3 border-t border-white/30">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/90">Subtotal:</span>
-                                <span className="font-medium text-white">
+                            <div className="mt-3 pt-3 border-t border-white/30 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-white/90 font-semibold text-sm">Subtotal:</span>
+                                <span className="font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">
                                   {formatPrice((selectedTickets[ticket.name] || 0) * ticket.price)}
                                 </span>
                               </div>
@@ -747,49 +851,57 @@ export default function EventDetailPage() {
                       ))}
                     </div>
 
-                    {/* Total Summary */}
+                    {/* Total Summary - Ultra Premium */}
                     {getTotalTickets() > 0 && (
-                      <div className="border-t border-white/30 pt-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm text-white/80">
+                      <div className="border-t-2 border-pink-400/30 pt-5 mt-5">
+                        <div className="space-y-3 bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl p-5 border border-pink-300/30">
+                          <div className="flex justify-between text-sm text-white/90 font-semibold">
                             <span>Total Tickets:</span>
-                            <span>{getTotalTickets()}</span>
+                            <span className="text-pink-300 font-bold">{getTotalTickets()}</span>
                           </div>
-                          <div className="flex justify-between text-lg font-bold text-white">
-                            <span>Total:</span>
-                            <span>{formatPrice(getTotalPrice())}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold text-white">Total:</span>
+                            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 drop-shadow-2xl">
+                              {formatPrice(getTotalPrice())}
+                            </span>
                           </div>
                         </div>
                       </div>
                     )}
 
                     <div className="space-y-3">
-                      <Button
-                        onClick={handleBookTickets}
-                        className="w-full relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white font-bold border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 py-6 group"
-                        disabled={getTotalTickets() === 0 || bookingLoading}
-                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)' }}
-                      >
-                        <span className="relative z-10 flex flex-col items-center justify-center gap-1 drop-shadow-lg">
-                          {bookingLoading ? (
-                            <span className="text-base">Proceeding to Checkout...</span>
-                          ) : (
-                            <>
-                              <span className="flex items-center gap-2 text-base">
-                                <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform duration-300 drop-shadow-md" />
-                                Proceed to Checkout
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300 drop-shadow-md" />
+                      {/* Ultimate Premium Button */}
+                      <div className="relative group/button">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-75 group-hover/button:opacity-100 transition duration-500 animate-pulse" />
+                        <Button
+                          onClick={handleBookTickets}
+                          className="relative w-full overflow-hidden bg-gradient-to-r from-pink-500 via-purple-600 to-pink-500 hover:from-pink-600 hover:via-purple-700 hover:to-pink-600 text-white font-black border-0 shadow-2xl transition-all duration-500 py-7 rounded-2xl"
+                          disabled={getTotalTickets() === 0 || bookingLoading}
+                        >
+                          <span className="relative z-10 flex flex-col items-center justify-center gap-2">
+                            {bookingLoading ? (
+                              <span className="text-lg flex items-center gap-2">
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Processing...
                               </span>
-                              {getTotalTickets() > 0 && (
-                                <span className="text-xs opacity-90">
-                                  {getTotalTickets()} Ticket(s) · {formatPrice(getTotalPrice())}
+                            ) : (
+                              <>
+                                <span className="flex items-center gap-3 text-lg uppercase tracking-wider">
+                                  <Sparkles className="w-5 h-5" />
+                                  Proceed to Checkout
+                                  <ArrowRight className="w-5 h-5 group-hover/button:translate-x-2 transition-transform duration-500" />
                                 </span>
-                              )}
-                            </>
-                          )}
-                        </span>
-                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                      </Button>
+                                {getTotalTickets() > 0 && (
+                                  <span className="text-sm opacity-90 font-semibold">
+                                    {getTotalTickets()} Ticket(s) · {formatPrice(getTotalPrice())}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </span>
+                          <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover/button:translate-x-[100%] transition-transform duration-700" />
+                        </Button>
+                      </div>
                     </div>
                   </>
                 )}

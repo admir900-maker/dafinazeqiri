@@ -489,7 +489,7 @@ export default function ValidatorPage() {
     switch (status) {
       case 'validated': return 'text-green-600 bg-green-50';
       case 'rejected': return 'text-red-600 bg-red-50';
-      case 'flagged': return 'text-yellow-600 bg-yellow-50';
+      case 'flagged': return 'text-orange-700 bg-orange-50';
       default: return 'text-gray-600 bg-gray-50';
     }
   };

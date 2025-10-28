@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'text-green-400';
-      case 'pending': return 'text-yellow-400';
+      case 'pending': return 'text-orange-500';
       case 'cancelled': return 'text-red-400';
       default: return 'text-white/70';
     }
@@ -382,9 +382,9 @@ export default function AnalyticsPage() {
 
               <AdminCard>
                 <AdminCardContent className="p-6 text-center">
-                  <Star className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                  <Star className="w-8 h-8 text-orange-500 mx-auto mb-2" />
                   <p className="text-white/70 text-sm">Popular Ticket</p>
-                  <p className="text-lg font-bold text-yellow-400">{getMostPopularTicketType()}</p>
+                  <p className="text-lg font-bold text-orange-500">{getMostPopularTicketType()}</p>
                 </AdminCardContent>
               </AdminCard>
 
@@ -476,7 +476,7 @@ export default function AnalyticsPage() {
                   <div className="space-y-3">
                     {data.categoryStats.length > 0 ? (
                       data.categoryStats.map((category, index) => {
-                        const colors = ['bg-purple-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-pink-400'];
+                        const colors = ['bg-purple-400', 'bg-blue-400', 'bg-green-400', 'bg-orange-500', 'bg-pink-400'];
                         const color = colors[index % colors.length];
                         const percentage = data.summary.totalEvents > 0 ?
                           (category.count / data.summary.totalEvents * 100) : 0;
@@ -543,7 +543,7 @@ export default function AnalyticsPage() {
               <AdminCard>
                 <AdminCardHeader>
                   <AdminCardTitle className="flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-yellow-400" />
+                    <Crown className="w-5 h-5 text-orange-500" />
                     Top Performing Events
                   </AdminCardTitle>
                 </AdminCardHeader>
@@ -553,8 +553,8 @@ export default function AnalyticsPage() {
                       data.popularEvents.slice(0, 5).map((event, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-yellow-600/20 rounded-full">
-                              <span className="text-yellow-400 font-bold text-sm">#{index + 1}</span>
+                            <div className="flex items-center justify-center w-8 h-8 bg-orange-700/20 rounded-full">
+                              <span className="text-orange-500 font-bold text-sm">#{index + 1}</span>
                             </div>
                             <div>
                               <div className="text-white font-medium truncate max-w-48">
@@ -563,7 +563,7 @@ export default function AnalyticsPage() {
                               <div className="text-white/60 text-sm">{event.bookings} bookings</div>
                             </div>
                           </div>
-                          <div className="text-yellow-400 font-semibold">
+                          <div className="text-orange-500 font-semibold">
                             {formatCurrency(event.revenue)}
                           </div>
                         </div>

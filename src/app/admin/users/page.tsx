@@ -825,7 +825,7 @@ export default function UsersManagementPage() {
                             {formatCurrency(booking.totalAmount)}
                           </div>
                           <Badge className={`text-xs ${booking.status === 'confirmed' ? 'bg-green-600' :
-                            booking.status === 'pending' ? 'bg-yellow-600' :
+                            booking.status === 'pending' ? 'bg-orange-700' :
                               'bg-red-600'
                             }`}>
                             {booking.status}

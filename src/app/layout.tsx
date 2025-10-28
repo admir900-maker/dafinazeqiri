@@ -63,7 +63,7 @@ export default function RootLayout({
         <FavoritesProvider>
           <CartProvider>
             <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-              <body className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen flex flex-col`}>
+              <body className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen flex flex-col`} style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a1a 100%)' }}>
                 {/* Skip links for accessibility */}
                 <SkipLink href="#main-content">Skip to main content</SkipLink>
                 <SkipLink href="#navigation">Skip to navigation</SkipLink>

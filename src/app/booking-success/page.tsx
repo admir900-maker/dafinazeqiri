@@ -197,7 +197,7 @@ function BookingSuccessContent() {
     } else if (booking.paymentStatus === 'failed') {
       return <XCircle className="h-12 w-12 mx-auto text-red-500" />;
     } else {
-      return <Clock className="h-12 w-12 mx-auto text-yellow-500" />;
+      return <Clock className="h-12 w-12 mx-auto text-orange-500" />;
     }
   };
 
@@ -221,7 +221,7 @@ function BookingSuccessContent() {
         message: isPolling
           ? 'Checking payment status... You will receive a confirmation email shortly.'
           : 'Your payment is being processed. You will receive a confirmation email shortly.',
-        color: 'text-yellow-600'
+        color: 'text-orange-700'
       };
     }
   };
@@ -402,7 +402,7 @@ function BookingSuccessContent() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 ⚠️ Important Information
               </h3>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <ul className="text-sm text-gray-700 space-y-2">
                   <li>• Arrive at least 90 minutes before the event starts</li>
                   <li>• Bring a valid ID for verification</li>

@@ -230,7 +230,7 @@ export default function AdminDashboard() {
       value: stats.overview?.pendingBookings || stats.pendingBookings || 0,
       icon: Clock,
       description: 'Awaiting confirmation',
-      color: 'text-yellow-400'
+      color: 'text-orange-500'
     }
   ];
 
@@ -339,7 +339,7 @@ export default function AdminDashboard() {
                   <div key={activity.id} className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1">
                       {activity.status === 'success' && <CheckCircle className="w-4 h-4 text-green-400" />}
-                      {activity.status === 'pending' && <Clock className="w-4 h-4 text-yellow-400" />}
+                      {activity.status === 'pending' && <Clock className="w-4 h-4 text-orange-500" />}
                       {activity.status === 'error' && <AlertTriangle className="w-4 h-4 text-red-400" />}
                     </div>
                     <div className="flex-1">
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
                   <div key={booking.id} className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1">
                       {booking.paymentStatus === 'paid' && <CheckCircle className="w-4 h-4 text-green-400" />}
-                      {booking.paymentStatus === 'pending' && <Clock className="w-4 h-4 text-yellow-400" />}
+                      {booking.paymentStatus === 'pending' && <Clock className="w-4 h-4 text-orange-500" />}
                       {booking.paymentStatus === 'failed' && <AlertTriangle className="w-4 h-4 text-red-400" />}
                     </div>
                     <div className="flex-1">

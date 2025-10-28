@@ -8,7 +8,7 @@ export default async function MaintenancePage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 flex items-center justify-center px-4">
       <div className="max-w-lg mx-auto text-center">
         <div className="mb-8">
-          <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               className="w-10 h-10 text-white"
               fill="none"

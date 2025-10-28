@@ -1,48 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 320 100% 10%;
-  --card: 0 0% 100%;
-  --card-foreground: 320 100% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 320 100% 10%;
-  --primary: 330 81% 60%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 280 70% 55%;
+  --background: 0 0% 5%;
+  --foreground: 25 60% 55%;
+  --card: 0 0% 8%;
+  --card-foreground: 25 60% 55%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 25 60% 55%;
+  --primary: 25 60% 45%;
+  --primary-foreground: 0 0% 5%;
+  --secondary: 30 70% 40%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 330 40% 96%;
-  --muted-foreground: 320 20% 50%;
-  --accent: 45 100% 60%;
-  --accent-foreground: 320 100% 10%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 25 40% 50%;
+  --accent: 25 60% 50%;
+  --accent-foreground: 0 0% 5%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 100%;
-  --border: 330 30% 90%;
-  --input: 330 30% 90%;
-  --ring: 330 81% 60%;
+  --border: 25 30% 20%;
+  --input: 25 30% 20%;
+  --ring: 25 60% 45%;
   --radius: 1rem;
 }
 
 .dark {
-  --background: 320 40% 8%;
-  --foreground: 330 100% 98%;
-  --card: 320 35% 12%;
-  --card-foreground: 330 100% 98%;
-  --popover: 320 35% 12%;
-  --popover-foreground: 330 100% 98%;
-  --primary: 330 81% 60%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 280 70% 55%;
+  --background: 0 0% 3%;
+  --foreground: 25 60% 60%;
+  --card: 0 0% 6%;
+  --card-foreground: 25 60% 60%;
+  --popover: 0 0% 6%;
+  --popover-foreground: 25 60% 60%;
+  --primary: 25 60% 45%;
+  --primary-foreground: 0 0% 5%;
+  --secondary: 30 70% 40%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 320 30% 20%;
-  --muted-foreground: 330 40% 70%;
-  --accent: 45 100% 60%;
-  --accent-foreground: 320 100% 10%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 25 40% 55%;
+  --accent: 25 60% 50%;
+  --accent-foreground: 0 0% 5%;
   --destructive: 0 62.8% 50%;
   --destructive-foreground: 0 0% 100%;
-  --border: 330 30% 25%;
-  --input: 330 30% 25%;
-  --ring: 330 81% 60%;
+  --border: 25 30% 18%;
+  --input: 25 30% 18%;
+  --ring: 25 60% 45%;
 }
 
 * {
@@ -178,7 +178,7 @@ html {
 
 /* Gradient backgrounds - Dafina Zeqiri Style */
 .gradient-primary {
-  background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f59e0b 100%);
+  background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #b4530a 100%);
 }
 
 .gradient-secondary {
@@ -186,7 +186,7 @@ html {
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #a855f7 100%);
+  background: linear-gradient(135deg, #b4530a 0%, #ec4899 50%, #a855f7 100%);
 }
 
 .gradient-glamour {
@@ -194,7 +194,7 @@ html {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #ec4899, #a855f7, #f59e0b);
+  background: linear-gradient(135deg, #ec4899, #a855f7, #b4530a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

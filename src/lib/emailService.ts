@@ -245,7 +245,7 @@ class EmailService {
         <div style="max-width: 600px; margin: 40px auto; background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(236, 72, 153, 0.4), 0 0 40px rgba(168, 85, 247, 0.3);">
           
           <!-- Header with Dafina Zeqiri Style -->
-          <div style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f59e0b 100%); color: white; padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #b4530a 100%); color: white; padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
             <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.2) 0%, transparent 60%); pointer-events: none;"></div>
             <h1 style="margin: 0; font-size: 32px; font-weight: 900; font-family: 'Playfair Display', Georgia, serif; position: relative; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);">✨ ${siteConfig.siteName}</h1>
             <p style="margin: 12px 0 0 0; font-size: 18px; font-weight: 300; position: relative; letter-spacing: 1px;">Your tickets are confirmed!</p>
@@ -349,7 +349,7 @@ class EmailService {
             </div>
 
             <!-- Important Info -->
-            <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(236, 72, 153, 0.1)); border: 2px solid rgba(251, 191, 36, 0.6); padding: 24px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);">
+            <div style="background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(236, 72, 153, 0.1)); border: 2px solid rgba(205, 127, 50, 0.6); padding: 24px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(205, 127, 50, 0.2);">
               <h4 style="margin: 0 0 16px 0; color: #7b2c6f; font-size: 20px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">⚠️ Important Information</h4>
               <ul style="margin: 0; padding-left: 24px; color: #2d1b4e; font-size: 14px; line-height: 1.8;">
                 <li>Arrive at least 30 minutes before the event starts</li>

@@ -41,11 +41,11 @@ interface Event {
 
 // Memoized loading skeleton component
 const LoadingSkeleton = () => (
-  <section className="py-20 relative overflow-hidden">
+  <section className="py-20 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a1a 100%)' }}>
     {/* Glamorous background effect */}
     <div className="absolute inset-0 pointer-events-none opacity-20">
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-700 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-900 rounded-full blur-3xl"></div>
     </div>
 
     <div className="container mx-auto px-4 relative z-10">
@@ -56,7 +56,7 @@ const LoadingSkeleton = () => (
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-5xl md:text-6xl font-bold mb-6" style={{
-            background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
+            background: 'linear-gradient(135deg, #cd7f32, #b4530a, #b4530a)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -65,7 +65,7 @@ const LoadingSkeleton = () => (
           }}>
             Featured Events
           </h2>
-          <p className="text-white/90 text-lg max-w-2xl mx-auto drop-shadow-lg font-light">
+          <p className="text-orange-100/90 text-lg max-w-2xl mx-auto drop-shadow-lg font-light">
             Experience the magic of live performances
           </p>
         </motion.div>
@@ -202,11 +202,11 @@ export function FeaturedEventsSection() {
   }
 
   return (
-    <section className="py-20 relative overflow-hidden">
+    <section className="py-20 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a1a 100%)' }}>
       {/* Glamorous background effect */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-700 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-900 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -218,13 +218,13 @@ export function FeaturedEventsSection() {
             transition={{ duration: 0.6 }}
           >
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-2xl" style={{
-              background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+              background: 'linear-gradient(135deg, #cd7f32, #b4530a)',
               animation: 'glow 2s ease-in-out infinite'
             }}>
-              <Sparkles className="w-10 h-10 text-white" />
+              <Sparkles className="w-10 h-10 text-black" />
             </div>
             <h2 className="text-5xl md:text-6xl font-bold mb-4" style={{
-              background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
+              background: 'linear-gradient(135deg, #cd7f32, #b4530a, #b4530a)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -233,7 +233,7 @@ export function FeaturedEventsSection() {
             }}>
               SUPERNOVA
             </h2>
-            <p className="text-2xl font-light text-white/95 max-w-2xl mx-auto drop-shadow-xl tracking-wide">
+            <p className="text-2xl font-light text-orange-100/95 max-w-2xl mx-auto drop-shadow-xl tracking-wide">
               DafinaZeqiri.tickets
             </p>
           </motion.div>

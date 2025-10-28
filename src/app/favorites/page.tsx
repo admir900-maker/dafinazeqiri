@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { SEO } from '@/components/ui/seo';
-import { BackgroundWrapper } from '@/components/ui/background-wrapper';
 
 interface FavoriteEvent {
   favoriteId: string;
@@ -121,7 +120,7 @@ export default function FavoritesPage() {
 
   if (!user) {
     return (
-      <BackgroundWrapper fullHeight={true}>
+      <div className="min-h-screen">
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
             <Heart className="w-16 h-16 text-white/60 mx-auto mb-4" />
@@ -132,7 +131,7 @@ export default function FavoritesPage() {
             </Button>
           </div>
         </div>
-      </BackgroundWrapper>
+      </div>
     );
   }
 
@@ -143,7 +142,7 @@ export default function FavoritesPage() {
         description="Your favorite events collection"
       />
 
-      <BackgroundWrapper fullHeight={false}>
+      <div className="">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
@@ -279,7 +278,7 @@ export default function FavoritesPage() {
             )}
           </div>
         </div>
-      </BackgroundWrapper>
+      </div>
     </>
   );
 }

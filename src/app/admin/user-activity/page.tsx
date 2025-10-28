@@ -174,7 +174,7 @@ export default function UserActivityPage() {
     switch (status) {
       case 'success': return <CheckCircle className="w-4 h-4 text-green-400" />;
       case 'failed': return <XCircle className="w-4 h-4 text-red-400" />;
-      case 'pending': return <Clock className="w-4 h-4 text-yellow-400" />;
+      case 'pending': return <Clock className="w-4 h-4 text-orange-500" />;
       case 'cancelled': return <AlertCircle className="w-4 h-4 text-gray-400" />;
       default: return <Activity className="w-4 h-4 text-blue-400" />;
     }
@@ -191,7 +191,7 @@ export default function UserActivityPage() {
 
   const getBrowserIcon = (browser: string) => {
     switch (browser) {
-      case 'Chrome': return <Chrome className="w-4 h-4 text-yellow-400" />;
+      case 'Chrome': return <Chrome className="w-4 h-4 text-orange-500" />;
       case 'Firefox': return <Globe className="w-4 h-4 text-orange-400" />;
       case 'Safari': return <Globe className="w-4 h-4 text-blue-400" />;
       default: return <Activity className="w-4 h-4 text-gray-400" />;
@@ -209,7 +209,7 @@ export default function UserActivityPage() {
         return 'text-red-400';
       case 'payment_attempted':
       case 'payment_method_selected':
-        return 'text-yellow-400';
+        return 'text-orange-500';
       case 'page_view':
       case 'event_view':
         return 'text-blue-400';

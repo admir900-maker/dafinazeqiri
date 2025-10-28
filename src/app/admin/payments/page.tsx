@@ -215,7 +215,7 @@ export default function PaymentsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'bg-green-600';
-      case 'pending': return 'bg-yellow-600';
+      case 'pending': return 'bg-orange-700';
       case 'failed': return 'bg-red-600';
       case 'refunded': return 'bg-blue-600';
       default: return 'bg-gray-600';
@@ -287,7 +287,7 @@ export default function PaymentsPage() {
             title: 'Pending Amount',
             value: formatCurrency(stats.pendingAmount),
             icon: Clock,
-            color: 'text-yellow-400'
+            color: 'text-orange-500'
           },
           {
             title: 'Completed',
@@ -299,7 +299,7 @@ export default function PaymentsPage() {
             title: 'Pending',
             value: stats.pendingPayments || 0,
             icon: Clock,
-            color: 'text-yellow-400'
+            color: 'text-orange-500'
           },
           {
             title: 'Failed',

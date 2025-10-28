@@ -40,7 +40,7 @@ const defaultPaymentOptions = [
     },
     supportedCurrencies: ['EUR'],
     icon: '🏦',
-    color: '#fbbf24',
+    color: '#cd7f32',
     description: 'Direct bank transfer via Raiffeisen Bank',
     instructions: 'You will be redirected to your online banking to complete the payment',
     priority: 80,

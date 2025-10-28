@@ -82,13 +82,13 @@ export function Header({ }: HeaderProps) {
   ]
 
   return (
-    <header id="navigation" className="fixed top-0 left-0 right-0 z-50 w-full border-b border-pink-500/20 shadow-2xl overflow-hidden backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(45, 27, 78, 0.95) 0%, rgba(123, 44, 111, 0.95) 50%, rgba(201, 75, 139, 0.95) 100%)' }}>
-      {/* Glamorous sparkle overlay */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.4) 0%, transparent 50%)' }}></div>
+    <header id="navigation" className="fixed top-0 left-0 right-0 z-50 w-full border-b border-orange-700/20 shadow-2xl overflow-hidden backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(10, 10, 10, 0.95) 50%, rgba(20, 15, 0, 0.95) 100%)' }}>
+      {/* Elite shimmer overlay */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(205, 127, 50, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(217, 119, 6, 0.4) 0%, transparent 50%)' }}></div>
 
       {/* Shimmer effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" style={{ animation: 'shimmer 3s infinite' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/5 to-transparent" style={{ animation: 'shimmer 3s infinite' }}></div>
       </div>
 
       <div className="container mx-auto px-4 py-0 relative z-10">
@@ -97,15 +97,15 @@ export function Header({ }: HeaderProps) {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Ticket className="h-9 w-9 text-pink-300 group-hover:text-pink-200 transition-all transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 0 8px rgba(236, 72, 153, 0.6))' }} />
+                <Ticket className="h-9 w-9 text-orange-500 group-hover:text-orange-300 transition-all transform group-hover:scale-110" style={{ filter: 'drop-shadow(0 0 8px rgba(205, 127, 50, 0.6))' }} />
               </div>
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-32 bg-white/30 animate-pulse rounded"></div>
+                  <div className="h-7 w-32 bg-orange-500/30 animate-pulse rounded"></div>
                 </div>
               ) : (
                 <span className="text-3xl font-bold tracking-tight" style={{
-                  background: 'linear-gradient(135deg, #fbbf24, #ec4899, #a855f7)',
+                  background: 'linear-gradient(135deg, #cd7f32, #b4530a, #b4530a)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -122,11 +122,11 @@ export function Header({ }: HeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-base font-semibold text-white/95 hover:text-pink-200 px-3 py-2 rounded-lg transition-all relative group"
+                className="text-base font-semibold text-orange-100 hover:text-orange-300 px-3 py-2 rounded-lg transition-all relative group"
                 style={{ letterSpacing: '0.5px' }}
               >
                 {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-400 to-purple-400 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-amber-900 group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
           </nav>
@@ -135,13 +135,13 @@ export function Header({ }: HeaderProps) {
           <div className="hidden md:flex flex-1 max-w-xs mx-6">
             <form onSubmit={handleSearch} className="w-full">
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-pink-200/80 group-hover:text-pink-300 transition-colors" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-300/80 group-hover:text-orange-500 transition-colors" />
                 <Input
                   type="search"
                   placeholder="Search events..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 rounded-full border-2 border-pink-300/40 focus:border-pink-400/80 bg-white/20 backdrop-blur-md text-white placeholder-pink-200/60 h-11 transition-all shadow-lg group-hover:shadow-pink-500/30"
+                  className="pl-12 pr-4 rounded-full border-2 border-orange-700/40 focus:border-orange-500/80 bg-black/40 backdrop-blur-md text-orange-100 placeholder-orange-500/60 h-11 transition-all shadow-lg group-hover:shadow-orange-500/30"
                   style={{ fontWeight: '500' }}
                 />
               </div>
@@ -152,19 +152,19 @@ export function Header({ }: HeaderProps) {
           <div className="flex items-center gap-2">
             {/* User Menu */}
             {isSignedIn ? (
-              <div className="ring-2 ring-pink-300/50 rounded-full p-0.5 bg-gradient-to-br from-pink-400 to-purple-500">
+              <div className="ring-2 ring-orange-500/50 rounded-full p-0.5 bg-gradient-to-br from-orange-500 to-amber-900">
                 <UserButton afterSignOutUrl="/" />
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-3">
-                <Button variant="outline" asChild className="border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:shadow-pink-500/40 text-white font-semibold px-6">
+                <Button variant="outline" asChild className="border-2 border-orange-500/60 hover:border-orange-500 transition-all rounded-full bg-black/30 backdrop-blur-md shadow-lg hover:shadow-orange-500/40 text-orange-100 font-semibold px-6">
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
                 <Button asChild className="rounded-full font-bold px-7 shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style={{
-                  background: 'linear-gradient(135deg, #ec4899, #a855f7)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)'
+                  background: 'linear-gradient(135deg, #cd7f32, #b4530a)',
+                  border: '2px solid rgba(205, 127, 50, 0.3)'
                 }}>
-                  <Link href="/auth/signup" className="text-white">Sign Up</Link>
+                  <Link href="/auth/signup" className="text-black">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -173,10 +173,10 @@ export function Header({ }: HeaderProps) {
             <Button
               variant="outline"
               size="icon"
-              className="md:hidden border-2 border-pink-300/60 hover:border-pink-400 transition-all rounded-full bg-white/20 backdrop-blur-md shadow-lg"
+              className="md:hidden border-2 border-orange-500/60 hover:border-orange-500 transition-all rounded-full bg-black/30 backdrop-blur-md shadow-lg"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-6 w-6 text-pink-200" /> : <Menu className="h-6 w-6 text-pink-200" />}
+              {isMenuOpen ? <X className="h-6 w-6 text-orange-300" /> : <Menu className="h-6 w-6 text-orange-300" />}
             </Button>
           </div>
         </div>

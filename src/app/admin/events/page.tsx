@@ -519,7 +519,7 @@ export default function EventsManagementPage() {
                   </Button>
                   <Button
                     onClick={() => toggleEventStatus(event._id, event.isActive)}
-                    className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs"
+                    className="flex-1 bg-orange-700 hover:bg-orange-800 text-white text-xs"
                   >
                     {event.isActive ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
                     {event.isActive ? 'Hide' : 'Show'}

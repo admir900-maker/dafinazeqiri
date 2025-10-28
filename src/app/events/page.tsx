@@ -7,7 +7,6 @@ import { EventCard } from '@/components/ui/event-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { BackgroundWrapper } from '@/components/ui/background-wrapper'
 import { PageLoading, LoadingState } from '@/components/ui/loading'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { useLoading } from '@/hooks/useLoading'
@@ -211,19 +210,19 @@ function EventsPageContent() {
 
   if (loading) {
     return (
-      <BackgroundWrapper fullHeight={true}>
+      <div className="min-h-screen">
         <PageLoading
           title="Loading Events"
           description="Discovering amazing events for you..."
           icon="music"
         />
-      </BackgroundWrapper>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <BackgroundWrapper fullHeight={true} className="flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="bg-white/20 backdrop-blur-lg rounded-xl p-8 border border-white/30 shadow-xl">
             <Music className="w-16 h-16 text-white/90 mx-auto mb-4" />
@@ -237,13 +236,13 @@ function EventsPageContent() {
             </Button>
           </div>
         </div>
-      </BackgroundWrapper>
+      </div>
     )
   }
 
   return (
     <ErrorBoundary>
-      <BackgroundWrapper fullHeight={false}>
+      <div className="">
         {/* Header */}
         <div className="bg-white/20 backdrop-blur-md shadow-lg border-b border-white/30">
           <div className="container mx-auto px-4 py-8">
@@ -431,7 +430,7 @@ function EventsPageContent() {
             </div>
           )}
         </div>
-      </BackgroundWrapper>
+      </div>
     </ErrorBoundary>
   )
 }

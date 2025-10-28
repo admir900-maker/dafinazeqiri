@@ -84,7 +84,7 @@ export default function BookingsPage() {
       case 'confirmed':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'pending':
-        return <Clock className="w-5 h-5 text-yellow-500" />;
+        return <Clock className="w-5 h-5 text-orange-500" />;
       case 'cancelled':
         return <XCircle className="w-5 h-5 text-red-500" />;
       case 'refunded':
@@ -114,7 +114,7 @@ export default function BookingsPage() {
       case 'confirmed':
         return 'bg-green-100 text-green-800';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-orange-100 text-orange-900';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'refunded':

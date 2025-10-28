@@ -12,19 +12,19 @@ const heroSlides = [
   {
     title: "Experience Music Like Never Before",
     subtitle: "Discover amazing concerts and live performances from world-class artists",
-    gradient: "from-purple-600 via-pink-600 to-red-600",
+    gradient: "from-orange-700 via-amber-900 to-orange-800",
     image: "/hero-1.jpg"
   },
   {
     title: "Your Front Row Seat Awaits",
     subtitle: "Get tickets to the hottest shows and festivals in your city",
-    gradient: "from-blue-600 via-purple-600 to-pink-600",
+    gradient: "from-amber-900 via-orange-700 to-stone-800",
     image: "/hero-2.jpg"
   },
   {
     title: "Connect Through Music",
     subtitle: "Join thousands of music lovers at unforgettable live experiences",
-    gradient: "from-green-600 via-blue-600 to-purple-600",
+    gradient: "from-orange-800 via-amber-900 to-orange-700",
     image: "/hero-3.jpg"
   }
 ]

@@ -311,8 +311,8 @@ export default function TicketsManagementPage() {
                     <div
                       key={event._id}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${selectedEvent?._id === event._id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       onClick={() => setSelectedEvent(event)}
                     >
@@ -520,8 +520,8 @@ export default function TicketsManagementPage() {
                           key={color.value}
                           type="button"
                           className={`w-full h-10 rounded-lg border-2 transition-all ${formData.color === color.value
-                              ? 'border-gray-900 scale-95'
-                              : 'border-gray-300 hover:border-gray-400'
+                            ? 'border-gray-900 scale-95'
+                            : 'border-gray-300 hover:border-gray-400'
                             }`}
                           style={{ backgroundColor: color.value }}
                           onClick={() => setFormData({ ...formData, color: color.value })}

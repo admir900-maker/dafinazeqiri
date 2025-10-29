@@ -256,20 +256,20 @@ class EmailService {
             
             <!-- Success Message -->
             <div style="background: linear-gradient(135deg, #ec4899, #a855f7); color: white; padding: 25px; border-radius: 16px; text-align: center; margin-bottom: 30px; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);">
-              <h2 style="margin: 0 0 10px 0; font-size: 24px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">✅ Booking Confirmed!</h2>
+              <h2 style="margin: 0 0 10px 0; font-size: 24px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">✅ Booking Confirmed! | Rezervimi i Konfirmuar!</h2>
               <p style="margin: 0; font-size: 16px; font-weight: 500; letter-spacing: 0.5px;">Booking Reference: <strong style="font-size: 18px;">${booking.bookingReference}</strong></p>
             </div>
 
-            <!-- Event Details -->
+            <!-- Event Details | DETAJET E NGJARJES -->
             <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08)); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 2px solid rgba(236, 72, 153, 0.2);">
               <h3 style="margin: 0 0 20px 0; color: #7b2c6f; font-size: 22px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">🎭 Event Details</h3>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; width: 100px; font-size: 15px;">Event:</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; width: 100px; font-size: 15px;">Event | Ngjarja:</td>
                   <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px; font-weight: 600;">${event.title}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Date:</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Date | Data:</td>
                   <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px;">${new Date(event.date).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -280,31 +280,31 @@ class EmailService {
     })}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Venue:</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Venue | Vendi:</td>
                   <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px;">${event.venue || event.location}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Address:</td>
+                  <td style="padding: 10px 0; font-weight: 700; color: #a855f7; font-size: 15px;">Address | Adresa:</td>
                   <td style="padding: 10px 0; color: #2d1b4e; font-size: 15px;">${event.address || event.location}${event.city ? `, ${event.city}` : ''}${event.country ? `, ${event.country}` : ''}</td>
                 </tr>
               </table>
             </div>
 
-            <!-- Ticket Summary -->
+            <!-- Ticket Summary | PËRMBLEDHJA E BILETAVE -->
             <div style="margin-bottom: 30px;">
               <h3 style="margin: 0 0 20px 0; color: #7b2c6f; font-size: 22px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">🎟️ Ticket Summary</h3>
               <table style="width: 100%; border-collapse: collapse; border: 2px solid rgba(236, 72, 153, 0.3); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);">
                 <thead>
                   <tr style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15));">
-                    <th style="padding: 15px; text-align: left; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Ticket Type</th>
-                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Quantity</th>
-                    <th style="padding: 15px; text-align: right; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Price</th>
+                    <th style="padding: 15px; text-align: left; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Ticket Type | Lloji i Biletës</th>
+                    <th style="padding: 15px; text-align: center; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Quantity | Sasia</th>
+                    <th style="padding: 15px; text-align: right; font-weight: 700; color: #7b2c6f; border-bottom: 2px solid rgba(236, 72, 153, 0.3); font-size: 15px;">Price | Çmimi</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${ticketRows}
                   <tr style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2));">
-                    <td style="padding: 15px; font-weight: 700; color: #2d1b4e; font-size: 16px;">Total</td>
+                    <td style="padding: 15px; font-weight: 700; color: #2d1b4e; font-size: 16px;">Total | Totali</td>
                     <td style="padding: 15px; text-align: center; font-weight: 700; color: #2d1b4e; font-size: 16px;">${tickets.length}</td>
                     <td style="padding: 15px; text-align: right; font-weight: 700; color: #ec4899; font-size: 20px;">${booking.totalAmount.toFixed(2)} ${booking.currency}</td>
                   </tr>
@@ -312,31 +312,31 @@ class EmailService {
               </table>
             </div>
 
-            <!-- PDF Tickets Notice -->
+            <!-- PDF Tickets Notice | Njoftimi i Biletave PDF -->
             ${pdfAttachments.length > 0 ? `
             <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(168, 85, 247, 0.1)); border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);">
               <p style="color: #7b2c6f; margin: 0; font-size: 16px; font-weight: 700; font-family: 'Playfair Display', Georgia, serif;">
-                📎 Your tickets are attached as PDF files
+                📎 Your tickets are attached as PDF files | Biletat tuaja janë të bashkangjitura si skedarë PDF
               </p>
               <p style="color: #2d1b4e; margin: 10px 0 0 0; font-size: 14px; font-weight: 500;">
-                ${tickets.length} ticket PDF${tickets.length > 1 ? 's' : ''} ${tickets.length > 1 ? 'are' : 'is'} attached to this email. You can download, print, or save them to your device.
+                ${tickets.length} ticket PDF${tickets.length > 1 ? 's' : ''} ${tickets.length > 1 ? 'are' : 'is'} attached to this email. You can download, print, or save them to your device.  Each ticket contains a unique QR code for entry. | Çdo biletë përmban një kod QR unik për hyrje.
               </p>
             </div>
             ` : ''}
 
-            <!-- Ticket List -->
+            <!-- Ticket List | Lista e Biletave -->
             <div style="margin-bottom: 30px;">
               <h3 style="margin: 0 0 20px 0; color: #7b2c6f; font-size: 22px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">🎟️ Your Tickets</h3>
               <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.08)); border-left: 5px solid #a855f7; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15);">
                 <p style="color: #7b2c6f; margin: 0; font-size: 16px; font-weight: 600;">
-                  <strong style="font-family: 'Playfair Display', Georgia, serif;">Important:</strong> Your tickets are attached as PDF files to this email.
+                  <strong style="font-family: 'Playfair Display', Georgia, serif;">Important:</strong> Your tickets are attached as PDF files to this email. | E rëndësishme: Biletat tuaja janë të bashkangjitura si skedarë PDF në këtë email.
                 </p>
                 <ul style="color: #2d1b4e; margin: 12px 0 0 0; padding-left: 24px; font-size: 14px; line-height: 1.8;">
-                  <li>Download the PDF tickets from the attachments</li>
-                  <li>Each ticket contains a unique QR code for entry</li>
-                  <li>You can print the tickets or show them on your mobile device</li>
-                  <li>Keep your tickets secure and don't share QR codes</li>
-                  <li>Each QR code can only be used once</li>
+                  <li>Download the PDF tickets from the attachments | Shkarkoni biletat PDF nga bashkëngjitjet</li>
+                  <li>Each ticket contains a unique QR code for entry | Çdo biletë përmban një kod QR unik për hyrje</li>
+                  <li>You can print the tickets or show them on your mobile device | Mund të printoni biletat ose t'i tregoni ato në pajisjen tuaj mobile</li>
+                  <li>Keep your tickets secure and don't share QR codes | Mbani biletat tuaja të sigurta dhe mos i ndani kodet QR</li>
+                  <li>Each QR code can only be used once | Çdo kod QR mund të përdoret vetëm një herë</li>
                 </ul>
               </div>
               ${tickets.map((ticket, index) => `
@@ -348,15 +348,15 @@ class EmailService {
               `).join('')}
             </div>
 
-            <!-- Important Info -->
+            <!-- Important Info | Informacion i Rëndësishëm -->
             <div style="background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(236, 72, 153, 0.1)); border: 2px solid rgba(205, 127, 50, 0.6); padding: 24px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(205, 127, 50, 0.2);">
-              <h4 style="margin: 0 0 16px 0; color: #7b2c6f; font-size: 20px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">⚠️ Important Information</h4>
+              <h4 style="margin: 0 0 16px 0; color: #7b2c6f; font-size: 20px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">⚠️ Important Information | ⚠️ Informacion i Rëndësishëm</h4>
               <ul style="margin: 0; padding-left: 24px; color: #2d1b4e; font-size: 14px; line-height: 1.8;">
-                <li>Arrive at least 30 minutes before the event starts</li>
-                <li>Bring a valid ID for verification</li>
-                <li>Keep your tickets secure and don't share QR codes</li>
-                <li>Screenshots of QR codes are accepted</li>
-                <li>Each ticket allows one entry only</li>
+                <li>Arrive at least 30 minutes before the event starts | Arrini të paktën 30 minuta para fillimit të ngjarjes</li>
+                <li>Bring a valid ID for verification | Sjellni një ID të vlefshme për verifikim </li>
+                <li>Keep your tickets secure and don't share QR codes | Mbani biletat tuaja të sigurta dhe mos i ndani kodet QR</li>
+                <li>Screenshots of QR codes are accepted | Screenshotet e kodit QR pranohen</li>
+                <li>Each ticket allows one entry only | Çdo biletë lejon vetëm një hyrje</li>
                 ${event.ageLimit ? `<li><strong>Minimum age requirement: ${event.ageLimit} years old</strong></li>` : ''}
               </ul>
             </div>
@@ -365,7 +365,7 @@ class EmailService {
             <div style="text-align: center; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
               <p style="margin: 0 0 12px 0; color: #64748b;">Need help? Contact our support team</p>
               <p style="margin: 0; color: #64748b;">
-                📧 <a href="mailto:support@${siteConfig.siteUrl || 'example.com'}" style="color: #2563eb; text-decoration: none;">support@${siteConfig.siteUrl || 'example.com'}</a> | 
+                📧 <a href="mailto:info@${siteConfig.siteUrl || 'example.com'}" style="color: #2563eb; text-decoration: none;">info@${siteConfig.siteUrl || 'example.com'}</a> | 
                 🌐 <a href="https://${siteConfig.siteUrl || 'example.com'}" style="color: #2563eb; text-decoration: none;">${siteConfig.siteUrl || 'example.com'}</a>
               </p>
             </div>

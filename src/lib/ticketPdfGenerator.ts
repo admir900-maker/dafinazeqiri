@@ -235,7 +235,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   let currentY = height - headerHeight - 60;
 
-  page.drawText('EVENT DETAILS', {
+  page.drawText('EVENT DETAILS  |  DETAJET E NGJARJES', {
     x: margin,
     y: currentY,
     size: 14,
@@ -255,7 +255,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   // Event Date
   const eventDate = event.eventDate || event.date || new Date();
-  page.drawText('Date', {
+  page.drawText('Date | Data', {
     x: leftColumnX,
     y: currentY,
     size: labelSize,
@@ -273,7 +273,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   currentY -= lineHeight;
 
   // Event Time
-  page.drawText('Time', {
+  page.drawText('Time | Koha', {
     x: leftColumnX,
     y: currentY,
     size: labelSize,
@@ -292,7 +292,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   // Venue
   const eventVenue = event.eventVenue || event.venue || event.location || 'TBA';
-  page.drawText('Venue', {
+  page.drawText('Venue | Vendi', {
     x: leftColumnX,
     y: currentY,
     size: labelSize,
@@ -312,7 +312,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   // Location
   const eventLocation = event.eventLocation || event.city || '';
   if (eventLocation) {
-    page.drawText('Location', {
+    page.drawText('Location | Lokacioni', {
       x: leftColumnX,
       y: currentY,
       size: labelSize,
@@ -330,7 +330,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   currentY = height - headerHeight - 90;
 
-  page.drawText('Ticket ID', {
+  page.drawText('Ticket ID | ID i Biletës', {
     x: rightColumnX,
     y: currentY,
     size: labelSize,
@@ -348,7 +348,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   currentY -= lineHeight;
 
   // Price
-  page.drawText('Price', {
+  page.drawText('Price | Çmimi', {
     x: rightColumnX,
     y: currentY,
     size: labelSize,
@@ -367,7 +367,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
 
   currentY -= lineHeight;
 
-  page.drawText('Booking Reference', {
+  page.drawText('Booking Reference | Referenca e Rezervimit', {
     x: rightColumnX,
     y: currentY,
     size: labelSize,
@@ -385,7 +385,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   currentY -= lineHeight;
 
   // Customer Name
-  page.drawText('Customer', {
+  page.drawText('Customer Name | Emri i Klientit', {
     x: rightColumnX,
     y: currentY,
     size: labelSize,
@@ -406,7 +406,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   currentY -= lineHeight;
 
   // Customer Email
-  page.drawText('Email', {
+  page.drawText('Email | Emaili', {
     x: rightColumnX,
     y: currentY,
     size: labelSize,
@@ -427,14 +427,14 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   // Add age limit if available (left column continuation)
   if (event.ageLimit) {
     currentY = height - headerHeight - 90 - (lineHeight * 4);
-    page.drawText('Age Limit', {
+    page.drawText('Age Limit | Mosha e Lejuar', {
       x: leftColumnX,
       y: currentY,
       size: labelSize,
       font: helveticaBold,
       color: labelColor,
     });
-    page.drawText(`${event.ageLimit}+ years`, {
+    page.drawText(`${event.ageLimit}+ years vjet`, {
       x: leftColumnX,
       y: currentY - 15,
       size: valueSize,
@@ -446,7 +446,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   // Important Information Section - moved lower to avoid QR section overlap
   currentY = 340;
 
-  page.drawText('IMPORTANT INFORMATION', {
+  page.drawText('IMPORTANT INFORMATION | INFORMACION E RËNDËSISHME', {
     x: margin,
     y: currentY,
     size: 12,
@@ -455,10 +455,10 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   });
 
   const instructions = [
-    '• This ticket is valid for one person only',
-    '• Please arrive 30 minutes before the event starts',
-    '• Keep this ticket with you at all times during the event',
-    '• No refunds or exchanges unless event is cancelled',
+    '• This ticket is valid for one person only | • Ky biletë është e vlefshme vetëm për një person',
+    '• Please arrive 30 minutes before the event starts | • Ju lutemi, vini re 30 minuta para fillimit të ngjarjes',
+    '• Keep this ticket with you at all times during the event | • Mbani këtë biletë me vete gjatë gjithë ngjarjes',
+    '• No refunds or exchanges unless event is cancelled | • Nuk ka kthime ose shkëmbime përveçse nëse ngjarja anulohet',
   ];
 
   currentY -= 22;
@@ -477,7 +477,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   currentY = 260;
 
   // Draw "SCAN TO VALIDATE" title above the box
-  const scanTitle = 'SCAN TO VALIDATE';
+  const scanTitle = 'SCAN TO VALIDATE | SKANO PËR TË VËNZUAR';
   page.drawText(scanTitle, {
     x: width / 2 - helveticaBold.widthOfTextAtSize(scanTitle, 14) / 2,
     y: currentY,
@@ -529,7 +529,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   });
 
   // Instruction text below QR code
-  const instructionText = 'Present this QR code at the entrance for validation';
+  const instructionText = 'Present this QR code at the entrance for validation | Paraqitni këtë kod QR në hyrje për verifikim';
   page.drawText(instructionText, {
     x: width / 2 - helvetica.widthOfTextAtSize(instructionText, 8) / 2,
     y: qrY - 15,
@@ -559,7 +559,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(0.8, 0.8, 0.8),
   });
 
-  const disclaimer = 'This ticket is non-transferable and valid for single entry only';
+  const disclaimer = 'This ticket is non-transferable and valid for single entry only | Kjo biletë është jotransferueshme dhe e vlefshme vetëm për një hyrje';
   page.drawText(disclaimer, {
     x: width / 2 - helvetica.widthOfTextAtSize(disclaimer, 7) / 2,
     y: footerY,
@@ -568,7 +568,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  const contactInfo = 'For support: support@biletara.com | www.biletara.com';
+  const contactInfo = 'For support: info@dafinazeqiri.tickets | dafinazeqiri.tickets';
   page.drawText(contactInfo, {
     x: width / 2 - helvetica.widthOfTextAtSize(contactInfo, 7) / 2,
     y: footerY - 10,
@@ -577,7 +577,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: rgb(0.6, 0.6, 0.6),
   });
 
-  const branding = 'Powered by Biletara Ticketing Platform';
+  const branding = 'Powered by ADJ | Dizajnimi & Zhvillimi ADJ';
   page.drawText(branding, {
     x: width / 2 - helveticaBold.widthOfTextAtSize(branding, 7) / 2,
     y: footerY - 20,

@@ -132,7 +132,7 @@ export function Header({ }: HeaderProps) {
           </nav>
 
           {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-xs mx-6">
+          {/* <div className="hidden md:flex flex-1 max-w-xs mx-6">
             <form onSubmit={handleSearch} className="w-full">
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-300/80 group-hover:text-orange-500 transition-colors" />
@@ -146,7 +146,7 @@ export function Header({ }: HeaderProps) {
                 />
               </div>
             </form>
-          </div>
+          </div> */}
 
           {/* User Actions */}
           <div className="flex items-center gap-2">

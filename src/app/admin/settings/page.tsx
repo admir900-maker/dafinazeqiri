@@ -394,7 +394,7 @@ export default function AdminSettingsPage() {
                   <Input
                     value={settings.general?.siteUrl || ''}
                     onChange={(e) => updateNestedSetting('general', 'siteUrl', e.target.value)}
-                    placeholder="https://biletara.com"
+                    placeholder="https://dafinazeqiri.tickets"
                   />
                 </div>
                 <div className="space-y-2">
@@ -663,7 +663,7 @@ export default function AdminSettingsPage() {
                     type="email"
                     value={settings.email?.fromAddress || ''}
                     onChange={(e) => updateNestedSetting('email', 'fromAddress', e.target.value)}
-                    placeholder="noreply@biletara.com"
+                    placeholder="noreply@dafinazeqiri.tickets"
                   />
                 </div>
                 <div className="space-y-2">

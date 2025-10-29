@@ -216,7 +216,7 @@ const SettingsSchema = new mongoose.Schema<ISettings>({
   general: {
     siteName: { type: String, default: 'BiletAra' },
     siteDescription: { type: String, default: 'Event booking platform' },
-    siteUrl: { type: String, default: 'https://biletara.com' },
+    siteUrl: { type: String, default: 'https://dafinazeqiri.tickets' },
     logoUrl: { type: String },
     faviconUrl: { type: String },
     timezone: { type: String, default: 'UTC' },
@@ -228,9 +228,9 @@ const SettingsSchema = new mongoose.Schema<ISettings>({
 
   email: {
     fromName: { type: String, default: 'BiletAra' },
-    fromAddress: { type: String, default: 'noreply@biletara.com' },
-    replyToAddress: { type: String, default: 'support@biletara.com' },
-    supportEmail: { type: String, default: 'support@biletara.com' },
+    fromAddress: { type: String, default: 'noreply@dafinazeqiri.tickets' },
+    replyToAddress: { type: String, default: 'info@dafinazeqiri.tickets' },
+    supportEmail: { type: String, default: 'info@dafinazeqiri.tickets' },
     smtp: {
       host: { type: String, default: '' },
       port: { type: Number, default: 587 },
@@ -399,7 +399,7 @@ const SettingsSchema = new mongoose.Schema<ISettings>({
     cookiePolicyUrl: { type: String },
     gdprCompliance: { type: Boolean, default: true },
     dataRetentionDays: { type: Number, default: 365 },
-    contactEmail: { type: String, default: 'contact@biletara.com' },
+    contactEmail: { type: String, default: 'contact@dafinazeqiri.tickets' },
     companyName: { type: String, default: 'BiletAra Ltd.' },
     companyAddress: { type: String, default: '' }
   },

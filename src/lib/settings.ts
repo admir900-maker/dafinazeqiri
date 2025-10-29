@@ -45,13 +45,13 @@ export function getFallbackSettings() {
   return {
     general: {
       siteName: process.env.SITE_NAME || 'BiletAra',
-      siteUrl: process.env.NEXT_PUBLIC_DOMAIN || 'https://biletara.com',
+      siteUrl: process.env.NEXT_PUBLIC_DOMAIN || 'https://dafinazeqiri.tickets',
       currency: 'EUR',
       timezone: 'UTC'
     },
     email: {
       fromName: process.env.EMAIL_FROM_NAME || 'BiletAra',
-      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@biletara.com',
+      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@dafinazeqiri.tickets',
       smtp: {
         host: process.env.SMTP_HOST || '',
         port: parseInt(process.env.SMTP_PORT || '587'),
@@ -124,9 +124,9 @@ export async function getEmailConfig() {
   const settings = await getSettings();
 
   return {
-    fromName: settings.email?.fromName || process.env.EMAIL_FROM_NAME || 'BiletAra',
-    fromAddress: settings.email?.fromAddress || process.env.EMAIL_FROM_ADDRESS || 'noreply@biletara.com',
-    replyToAddress: settings.email?.replyToAddress || process.env.EMAIL_REPLY_TO || 'support@biletara.com',
+    fromName: settings.email?.fromName || process.env.EMAIL_FROM_NAME || 'dafinazeqiri.tickets',
+    fromAddress: settings.email?.fromAddress || process.env.EMAIL_FROM_ADDRESS || 'info@dafinazeqiri.tickets',
+    replyToAddress: settings.email?.replyToAddress || process.env.EMAIL_REPLY_TO || 'info@dafinazeqiri.tickets',
     smtp: {
       host: settings.email?.smtp?.host || process.env.SMTP_HOST || '',
       port: settings.email?.smtp?.port || parseInt(process.env.SMTP_PORT || '587'),
@@ -157,7 +157,7 @@ export async function getSiteConfig() {
   return {
     siteName: settings.general?.siteName || 'BiletAra',
     siteDescription: settings.general?.siteDescription || 'Event booking platform',
-    siteUrl: settings.general?.siteUrl || process.env.NEXT_PUBLIC_DOMAIN || 'https://biletara.com',
+    siteUrl: settings.general?.siteUrl || process.env.NEXT_PUBLIC_DOMAIN || 'https://dafinazeqiri.tickets',
     currency: settings.general?.currency || 'EUR',
     timezone: settings.general?.timezone || 'UTC',
     logoUrl: settings.general?.logoUrl || '',

@@ -417,17 +417,17 @@ function BookingSuccessContent() {
             {/* Footer */}
             <div className="border-t border-gray-200 pt-6 mt-8 text-center">
               <p className="text-sm text-gray-500">
-                Need help? Contact our support team
+                Need help? Contact our info team
               </p>
               <p className="text-sm text-gray-600 mt-2">
                 📧{' '}
-                <a href="mailto:support@biletara.com" className="text-indigo-600 hover:text-indigo-500">
-                  support@biletara.com
+                <a href="mailto:info@dafinazeqiri.tickets" className="text-indigo-600 hover:text-indigo-500">
+                  info@dafinazeqiri.tickets
                 </a>
                 {' | '}
                 🌐{' '}
-                <a href="https://biletara.com" className="text-indigo-600 hover:text-indigo-500">
-                  biletara.com
+                <a href="https://dafinazeqiri.tickets" className="text-indigo-600 hover:text-indigo-500">
+                  dafinazeqiri.tickets
                 </a>
               </p>
               <Link

@@ -99,13 +99,13 @@ export default function ContactPage() {
                 <CardHeader>
                   <CardTitle className="text-white drop-shadow-md flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    Customer Support
+                    Customer info
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-white/90 space-y-3">
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-white/70" />
-                    <span>support@{siteConfig.siteUrl || 'example.com'}</span>
+                    <span>info@{siteConfig.siteUrl || 'example.com'}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-white/70" />

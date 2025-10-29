@@ -74,7 +74,7 @@ export function Header({ }: HeaderProps) {
     { href: '/', label: 'Home' },
     // { href: '/events', label: 'Events' },
     // { href: '/categories', label: 'Categories' },
-    ...(isSignedIn ? [{ href: '/bookings', label: 'My Bookings' }] : []),
+    // ...(isSignedIn ? [{ href: '/bookings', label: 'My Bookings' }] : []),
     // { href: '/about', label: 'About' },
     // { href: '/contact', label: 'Contact' },
     ...(isValidator || isAdmin ? [{ href: '/validator', label: 'Validator' }] : []),

@@ -200,10 +200,10 @@ src/
 ## 🆘 Production Support
 
 For production support and enterprise inquiries:
-- **Email**: support@biletara.com
+- **Email**: support@dafinazeqiri.tickets
 - **Technical Issues**: Create an issue on GitHub
-- **Security Reports**: security@biletara.com
-- **Business Inquiries**: business@biletara.com
+- **Security Reports**: security@dafinazeqiri.tickets
+- **Business Inquiries**: business@dafinazeqiri.tickets
 
 ## 📄 License
 

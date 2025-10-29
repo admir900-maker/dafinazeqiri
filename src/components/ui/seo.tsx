@@ -74,7 +74,7 @@ export const SEO: React.FC<SEOProps> = ({
     fetchSiteConfig()
   }, [])
 
-  const siteUrl = siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com';
+  const siteUrl = siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets';
   const fullTitle = title ? (title.includes(siteConfig.siteName) ? title : `${title} | ${siteConfig.siteName}`) : `${siteConfig.siteName} - Your Premier Destination for Live Events`;
   const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
   const fullCanonicalUrl = canonicalUrl || siteUrl;
@@ -183,7 +183,7 @@ export const generateOrganizationStructuredData = async () => {
     const siteConfig = response.ok ? await response.json() : {
       siteName: 'BiletAra',
       siteDescription: 'Premier destination for live event tickets and entertainment experiences',
-      siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets'
     }
 
     return {
@@ -191,13 +191,13 @@ export const generateOrganizationStructuredData = async () => {
       '@type': 'Organization',
       name: siteConfig.siteName,
       description: siteConfig.siteDescription || 'Premier destination for live event tickets and entertainment experiences',
-      url: siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com',
-      logo: `${siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'}/logo.png`,
+      url: siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets',
+      logo: `${siteConfig.siteUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets'}/logo.png`,
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+1-555-123-4567',
         contactType: 'customer service',
-        email: 'support@biletara.com',
+        email: 'info@dafinazeqiri.tickets',
       },
       sameAs: [
         'https://twitter.com/biletara',
@@ -212,13 +212,13 @@ export const generateOrganizationStructuredData = async () => {
       '@type': 'Organization',
       name: 'BiletAra',
       description: 'Premier destination for live event tickets and entertainment experiences',
-      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com',
-      logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://biletara.com'}/logo.png`,
+      url: process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets',
+      logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets'}/logo.png`,
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+1-555-123-4567',
         contactType: 'customer service',
-        email: 'support@biletara.com',
+        email: 'info@dafinazeqiri.tickets',
       },
       sameAs: [
         'https://twitter.com/biletara',

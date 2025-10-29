@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   const siteConfig = await getSiteConfig();
   return NextResponse.json({
-    supportEmail: `support@${siteConfig.siteUrl || 'example.com'}`,
-    businessEmail: `business@${siteConfig.siteUrl || 'example.com'}`,
+    supportEmail: `info@${siteConfig.siteUrl || 'example.com'}`,
+    businessEmail: `info@${siteConfig.siteUrl || 'example.com'}`,
     maxMessageLength: 2000,
     supportedLanguages: ['en', 'tr'],
     responseTime: '24-48 hours'

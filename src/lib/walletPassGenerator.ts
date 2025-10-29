@@ -155,7 +155,7 @@ export class WalletPassGenerator {
           {
             key: 'contact',
             label: 'Contact Information',
-            value: `For support, visit ${siteConfig.siteUrl || 'our website'} or email support@${siteConfig.siteUrl || 'example.com'}`
+            value: `For support, visit ${siteConfig.siteUrl || 'our website'} or email info@${siteConfig.siteUrl || 'example.com'}`
           },
           {
             key: 'instructions',

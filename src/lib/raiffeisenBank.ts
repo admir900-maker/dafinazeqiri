@@ -1,11 +1,15 @@
 // Raiffeisen Bank Kosovo API Integration
 // This module handles payment processing with Raiffeisen Bank Kosovo
+// Merchant: MONEYZ SH.P.K.
+// Merchant ID: 8600592
+// Terminal ID: E0810114
 
 interface RaiffeisenConfig {
   merchantId: string;
-  apiKey: string;
-  secretKey: string;
-  environment: 'sandbox' | 'production';
+  terminalId: string;
+  secretKey: string; // Need to obtain from bank
+  apiUrl: string; // Need to obtain from bank
+  environment: 'test' | 'production';
   callbackUrl: string;
   returnUrl: string;
 }
@@ -34,9 +38,13 @@ export class RaiffeisenBankAPI {
 
   constructor(config: RaiffeisenConfig) {
     this.config = config;
-    this.baseUrl = config.environment === 'production'
-      ? 'https://api.raiffeisen.com'
-      : 'https://sandbox-api.raiffeisen.com';
+    // Use the API URL provided by the bank
+    // TODO: Update with actual URL from Raiffeisen Bank Kosovo
+    this.baseUrl = config.apiUrl || (
+      config.environment === 'production'
+        ? 'https://pgw.raiffeisenbank.co.rs/payment' // Placeholder - need actual URL
+        : 'https://test.raiffeisenbank.co.rs/payment' // Placeholder - need actual test URL
+    );
   }
 
   /**
@@ -46,6 +54,7 @@ export class RaiffeisenBankAPI {
     try {
       const payload = {
         merchant_id: this.config.merchantId,
+        terminal_id: this.config.terminalId,
         amount: request.amount,
         currency: request.currency,
         order_id: request.orderId,
@@ -63,7 +72,8 @@ export class RaiffeisenBankAPI {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          'X-Merchant-ID': this.config.merchantId,
+          'X-Terminal-ID': this.config.terminalId,
           'X-Signature': signature,
         },
         body: JSON.stringify(payload),
@@ -106,7 +116,8 @@ export class RaiffeisenBankAPI {
       const response = await fetch(`${this.baseUrl}/v1/payments/${paymentId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          'X-Merchant-ID': this.config.merchantId,
+          'X-Terminal-ID': this.config.terminalId,
         },
       });
 
@@ -184,16 +195,17 @@ export async function getRaiffeisenConfig(): Promise<RaiffeisenConfig | null> {
 
     if (!settings ||
       !settings.raiffeisenMerchantId ||
-      !settings.raiffeisenApiKey ||
+      !settings.raiffeisenTerminalId ||
       !settings.raiffeisenSecretKey) {
       return null;
     }
 
     return {
       merchantId: settings.raiffeisenMerchantId,
-      apiKey: settings.raiffeisenApiKey,
+      terminalId: settings.raiffeisenTerminalId,
       secretKey: settings.raiffeisenSecretKey,
-      environment: settings.raiffeisenEnvironment || 'sandbox',
+      apiUrl: settings.raiffeisenApiUrl || '',
+      environment: settings.raiffeisenEnvironment || 'test',
       callbackUrl: settings.raiffeisenCallbackUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/api/raiffeisen/webhook`,
       returnUrl: settings.raiffeisenReturnUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
     };

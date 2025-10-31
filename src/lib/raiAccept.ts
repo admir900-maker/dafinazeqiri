@@ -67,23 +67,19 @@ export class RaiAcceptAPI {
    */
   private async authenticate(): Promise<string> {
     try {
-      console.log('🔐 Authenticating with RaiAccept (Cognito)...');
+      console.log('🔐 Authenticating with RaiAccept...');
       console.log('Auth URL:', this.authUrl);
       console.log('Client ID:', this.config.clientId);
 
+      // Try simple JSON POST with credentials
       const response = await fetch(this.authUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-amz-json-1.1',
-          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          AuthFlow: 'USER_PASSWORD_AUTH',
-          ClientId: this.config.clientId,
-          AuthParameters: {
-            USERNAME: this.config.clientId,
-            PASSWORD: this.config.clientSecret,
-          },
+          clientId: this.config.clientId,
+          clientSecret: this.config.clientSecret,
         }),
       });
 
@@ -97,14 +93,18 @@ export class RaiAcceptAPI {
 
       const data: any = await response.json();
       console.log('✅ Auth response received');
+      console.log('Response keys:', Object.keys(data));
 
-      // Cognito returns AuthenticationResult with IdToken or AccessToken
+      // Try various possible token fields
       const token = data.AuthenticationResult?.IdToken || 
                    data.AuthenticationResult?.AccessToken ||
                    data.IdToken || 
-                   data.idToken || 
-                   data.token || 
-                   data.access_token;
+                   data.idToken ||
+                   data.AccessToken ||
+                   data.accessToken ||
+                   data.token ||
+                   data.access_token ||
+                   data.bearer_token;
 
       if (!token) {
         console.error('No token in response:', JSON.stringify(data, null, 2));

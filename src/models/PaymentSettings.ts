@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 
 const PaymentSettingsSchema = new mongoose.Schema({
   // Payment Provider Selection
-  paymentProvider: { type: String, default: 'stripe', enum: ['stripe', 'raiffeisen', 'both'] },
+  paymentProvider: { type: String, default: 'raiffeisen', enum: ['stripe', 'raiffeisen', 'both'] },
 
-  // Stripe Settings
+  // Stripe Settings (DISABLED - Not in use)
   stripePublishableKey: { type: String, required: false },
   stripeSecretKey: { type: String, required: false },
   stripeWebhookSecret: { type: String, required: false },

@@ -22,6 +22,11 @@ export async function POST(
 
     console.log('👤 User ID:', userId);
 
+    // STRIPE PAYMENT DISABLED - Use RaiAccept instead
+    return NextResponse.json({ 
+      error: 'Stripe payment is disabled. Please use RaiAccept (Raiffeisen Bank) payment method.' 
+    }, { status: 503 });
+
     // Check if Stripe is enabled
     const stripeEnabled = await isStripeEnabled();
     if (!stripeEnabled) {

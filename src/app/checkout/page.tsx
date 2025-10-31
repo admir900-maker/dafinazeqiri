@@ -4,12 +4,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { ArrowLeft, CreditCard, Building2, Clock } from 'lucide-react';
+import { ArrowLeft, Building2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackgroundWrapper } from '@/components/ui/background-wrapper';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { StripePayment } from '@/components/StripePayment';
 import { activityLogger } from '@/lib/activityLogger';
 
 interface TicketSelection {
@@ -42,16 +41,11 @@ function CheckoutContent() {
 
   const [event, setEvent] = useState<Event | null>(null);
   const [ticketSelections, setTicketSelections] = useState<TicketSelection[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe' | 'raiffeisen' | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'raiffeisen'>('raiffeisen'); // Always RaiAccept
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [paymentIntentData, setPaymentIntentData] = useState<{
-    clientSecret: string;
-    orderSummary: any;
-  } | null>(null);
-  const [showStripePayment, setShowStripePayment] = useState(false);
 
   useEffect(() => {
     // Wait for user data to load before proceeding
@@ -121,40 +115,14 @@ function CheckoutContent() {
         const settings = await settingsResponse.json();
         setPaymentSettings(settings);
 
-        // Use payment method configured in admin settings for all users
-        console.log('💳 Payment provider from settings:', settings.paymentProvider);
-        console.log('💳 Full settings:', settings);
-
-        // Auto-select payment method based on admin settings
-        if (settings.paymentProvider === 'stripe') {
-          console.log('💳 Setting Stripe as payment method');
-          setSelectedPaymentMethod('stripe');
-          // Log payment method selection
-          activityLogger.logPaymentMethodSelected('stripe', getTotalAmount());
-        } else if (settings.paymentProvider === 'raiffeisen') {
-          console.log('💳 Setting Raiffeisen as payment method');
-          setSelectedPaymentMethod('raiffeisen');
-          // Log payment method selection
-          activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
-        } else if (settings.paymentProvider === 'both') {
-          // If both are enabled, we can show selection or default to one
-          // For now, defaulting to Raiffeisen for general users
-          console.log('💳 Both providers enabled, defaulting to Raiffeisen');
-          setSelectedPaymentMethod('raiffeisen');
-          // Log payment method selection
-          activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
-        } else {
-          // Fallback: if no valid provider is set, default to Raiffeisen
-          console.log('💳 No valid provider found, defaulting to Raiffeisen');
-          setSelectedPaymentMethod('raiffeisen');
-          // Log payment method selection
-          activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
-        }
+        // Always use RaiAccept payment method
+        console.log('💳 Payment provider: RaiAccept (Raiffeisen Bank)');
+        setSelectedPaymentMethod('raiffeisen');
+        activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
       } else {
         // If settings API fails, default to Raiffeisen
-        console.log('💳 Settings API failed, defaulting to Raiffeisen');
+        console.log('💳 Settings API failed, defaulting to RaiAccept');
         setSelectedPaymentMethod('raiffeisen');
-        // Log payment method selection
         activityLogger.logPaymentMethodSelected('raiffeisen', getTotalAmount());
       }
     } catch (err) {
@@ -177,76 +145,6 @@ function CheckoutContent() {
 
   const getTotalTickets = () => {
     return ticketSelections.reduce((sum, ticket) => sum + ticket.quantity, 0);
-  };
-
-  const handleStripeCheckout = async () => {
-    if (!event) return;
-
-    setBookingLoading(true);
-
-    // Log payment attempt
-    activityLogger.logPaymentAttempted('stripe', getTotalAmount(), 'EUR');
-
-    try {
-      const ticketSelectionsMap = ticketSelections.reduce((acc, ticket) => {
-        acc[ticket.ticketName] = ticket.quantity;
-        return acc;
-      }, {} as { [key: string]: number });
-
-      const response = await fetch(`/api/events/${event._id}/book`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ticketSelections: ticketSelectionsMap
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.paymentIntent) {
-        setPaymentIntentData({
-          clientSecret: data.paymentIntent.client_secret,
-          orderSummary: data.orderSummary
-        });
-        setShowStripePayment(true);
-
-        // Log successful payment setup
-        activityLogger.log({
-          action: 'payment_setup_successful',
-          description: 'Stripe payment intent created successfully',
-          eventId: event._id,
-          eventTitle: event.title,
-          amount: getTotalAmount(),
-          currency: 'EUR',
-          paymentMethod: 'stripe',
-          status: 'success',
-          metadata: {
-            bookingReference: data.orderSummary?.bookingReference,
-            paymentIntentId: data.paymentIntent.id
-          }
-        });
-      } else {
-        // Log payment failure
-        activityLogger.logPaymentFailed('stripe', getTotalAmount(), data.error, 'EUR');
-        alert(`❌ Booking Failed: ${data.error}`);
-      }
-    } catch (error) {
-      console.error('Error creating Stripe booking:', error);
-
-      // Log error
-      activityLogger.logPaymentFailed(
-        'stripe',
-        getTotalAmount(),
-        error instanceof Error ? error.message : 'Network error',
-        'EUR'
-      );
-
-      alert('❌ Network error. Please try again.');
-    } finally {
-      setBookingLoading(false);
-    }
   };
 
   const handleRaiffeisenCheckout = async () => {
@@ -314,64 +212,7 @@ function CheckoutContent() {
     }
   };
 
-  const handlePaymentSuccess = async () => {
-    // Payment successful, redirect to success page
-    const bookingReference = paymentIntentData?.orderSummary?.bookingReference;
-
-    // Log successful payment
-    if (event) {
-      activityLogger.logPaymentSuccessful(
-        'stripe',
-        getTotalAmount(),
-        'EUR',
-        bookingReference
-      );
-
-      activityLogger.logBookingCreated(
-        bookingReference || 'unknown',
-        event._id,
-        event.title,
-        getTotalAmount()
-      );
-    }
-
-    // Optionally update booking status immediately (fallback before webhook)
-    if (bookingReference) {
-      try {
-        await fetch(`/api/bookings/${bookingReference}/confirm-payment`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-      } catch (error) {
-        console.warn('Failed to immediately update booking status:', error);
-        // Don't fail the flow if this fails - webhook will handle it
-      }
-    }
-
-    setShowStripePayment(false);
-    setPaymentIntentData(null);
-
-    if (bookingReference) {
-      router.push(`/booking-success?bookingId=${bookingReference}`);
-    } else {
-      // Fallback if no booking reference found
-      router.push('/booking-success');
-    }
-  };
-
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error);
-
-    // Log payment error
-    if (event) {
-      activityLogger.logPaymentFailed('stripe', getTotalAmount(), error, 'EUR');
-    }
-
-    alert(`❌ Payment failed: ${error}`);
-    setShowStripePayment(false);
-    setPaymentIntentData(null);
-  };
-
+  // User authentication check
   if (!isLoaded) {
     return (
       <BackgroundWrapper>
@@ -459,37 +300,7 @@ function CheckoutContent() {
     );
   }
 
-  // At this point, TypeScript knows event is not null
-  if (showStripePayment && paymentIntentData) {
-    return (
-      <BackgroundWrapper>
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="mb-6">
-              <Button
-                onClick={() => {
-                  setShowStripePayment(false);
-                  setPaymentIntentData(null);
-                }}
-                variant="outline"
-                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Payment Selection
-              </Button>
-            </div>
-            <StripePayment
-              clientSecret={paymentIntentData.clientSecret}
-              orderSummary={paymentIntentData.orderSummary}
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-            />
-          </div>
-        </div>
-      </BackgroundWrapper>
-    );
-  }
-
+  // Render checkout page - RaiAccept payment only
   return (
     <BackgroundWrapper>
       <div className="container mx-auto px-4 py-8">
@@ -567,117 +378,32 @@ function CheckoutContent() {
                 <CardTitle className="text-white">Payment Method</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Settings-based payment method display */}
-                {paymentSettings?.paymentProvider === 'both' && (
-                  <div className="space-y-4">
-                    <h4 className="text-white font-medium">Choose your payment method:</h4>
-                    <div className="space-y-3">
-                      <button
-                        onClick={() => setSelectedPaymentMethod('stripe')}
-                        className={`w-full p-4 rounded-lg border text-left transition-colors ${selectedPaymentMethod === 'stripe'
-                          ? 'border-purple-500 bg-purple-500/20 text-white'
-                          : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/20'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <CreditCard className="h-6 w-6" />
-                            <div>
-                              <div className="font-medium">Stripe</div>
-                              <div className="text-sm opacity-80">Credit/Debit Card</div>
-                            </div>
-                          </div>
-                          <div className="text-2xl">💳</div>
+                {/* RaiAccept (Raiffeisen Bank) - Default Payment Method */}
+                <div className="space-y-4">
+                  <h4 className="text-white font-medium">Available Payment Method:</h4>
+                  <div className="p-4 rounded-lg border border-purple-500 bg-purple-500/20 text-white">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Building2 className="h-6 w-6" />
+                        <div>
+                          <div className="font-medium">Raiffeisen Bank Kosovo</div>
+                          <div className="text-sm opacity-80">Secure Online Payment</div>
                         </div>
-                      </button>
-                      <button
-                        onClick={() => setSelectedPaymentMethod('raiffeisen')}
-                        className={`w-full p-4 rounded-lg border text-left transition-colors ${selectedPaymentMethod === 'raiffeisen'
-                          ? 'border-purple-500 bg-purple-500/20 text-white'
-                          : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/20'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Building2 className="h-6 w-6" />
-                            <div>
-                              <div className="font-medium">Raiffeisen Bank Kosovo</div>
-                              <div className="text-sm opacity-80">Bank Transfer</div>
-                            </div>
-                          </div>
-                          <div className="text-2xl">🏦</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Single payment method display */}
-                {paymentSettings?.paymentProvider !== 'both' && selectedPaymentMethod && (
-                  <div className="space-y-4">
-                    <h4 className="text-white font-medium">Available Payment Method:</h4>
-                    <div className="p-4 rounded-lg border border-purple-500 bg-purple-500/20 text-white">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {selectedPaymentMethod === 'stripe' ? (
-                            <>
-                              <CreditCard className="h-6 w-6" />
-                              <div>
-                                <div className="font-medium">Stripe</div>
-                                <div className="text-sm opacity-80">Credit/Debit Card</div>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <Building2 className="h-6 w-6" />
-                              <div>
-                                <div className="font-medium">Raiffeisen Bank Kosovo</div>
-                                <div className="text-sm opacity-80">Bank Transfer</div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <div className="text-2xl">{selectedPaymentMethod === 'stripe' ? '💳' : '🏦'}</div>
                       </div>
+                      <div className="text-2xl">🏦</div>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Continue Button */}
                 <div className="pt-4">
-                  {selectedPaymentMethod === 'stripe' && (
-                    <Button
-                      onClick={handleStripeCheckout}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3"
-                      disabled={bookingLoading}
-                    >
-                      {bookingLoading ? 'Processing...' : `Continue with Stripe - ${formatPrice(getTotalAmount())}`}
-                    </Button>
-                  )}
-
-                  {selectedPaymentMethod === 'raiffeisen' && (
-                    <Button
-                      onClick={handleRaiffeisenCheckout}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3"
-                      disabled={bookingLoading}
-                    >
-                      {bookingLoading ? 'Processing...' : `Continue with Raiffeisen Bank - ${formatPrice(getTotalAmount())}`}
-                    </Button>
-                  )}
-
-                  {paymentSettings?.paymentProvider === 'both' && !selectedPaymentMethod && (
-                    <div className="text-center text-white/70 text-sm">
-                      Please select a payment method above
-                    </div>
-                  )}
-
-                  {!selectedPaymentMethod && paymentSettings?.paymentProvider !== 'both' && (
-                    <div className="text-center text-white/70 text-sm">
-                      Loading payment options...
-                      <br />
-                      <small>Payment provider: {paymentSettings?.paymentProvider || 'not loaded'}</small>
-                    </div>
-                  )}
+                  <Button
+                    onClick={handleRaiffeisenCheckout}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-3"
+                    disabled={bookingLoading}
+                  >
+                    {bookingLoading ? 'Processing...' : `Continue to Payment - ${formatPrice(getTotalAmount())}`}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

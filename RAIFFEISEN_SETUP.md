@@ -1,4 +1,8 @@
-# Raiffeisen Bank Kosovo Payment Integration Setup
+# RaiAccept (Raiffeisen Bank Kosovo) Payment Integration Setup
+
+## ✅ Documentation Received!
+
+**Official Documentation:** https://docs.raiaccept.com/code-integration.html
 
 ## Current Credentials (Provided by Bank)
 
@@ -8,173 +12,277 @@ Merchant ID: 8600592
 Terminal ID: E0810114
 ```
 
-## Required Information Still Needed
+## How RaiAccept Works
 
-### Critical (Required to Go Live):
+### Integration Flow:
+1. **Authenticate** - Get access token using Amazon Cognito
+2. **Create Order Entry** - Store order in RaiAccept database
+3. **Create Payment Session** - Get payment form URL
+4. **Redirect Customer** - Customer completes payment on RaiAccept form
+5. **Webhook Notification** - RaiAccept sends payment result to your server
 
-1. **API Endpoint URL**
-   - Test/Sandbox URL: `?`
-   - Production URL: `?`
-   - Example: `https://pgw.raiffeisenbank.co.rs/payment`
+### Payment Form Options:
+- **Iframe** - Embed payment form on your site (recommended)
+- **Redirect** - Full page redirect to payment form
+- **New Tab** - Open payment form in new tab
 
-2. **Secret Key / Signature Key**
-   - Used for: Transaction signing and verification
-   - Format: Usually a long alphanumeric string
-   - Status: ⚠️ **REQUIRED - Contact bank**
+## Required Information From Bank
 
-3. **Hashing Algorithm**
-   - Options: HMAC-SHA256, SHA1, MD5, etc.
-   - Status: ⚠️ **REQUIRED - Contact bank**
+### ✅ What We Have:
+- ✅ Merchant ID: 8600592
+- ✅ Terminal ID: E0810114
+- ✅ Documentation: https://docs.raiaccept.com/
 
-4. **Technical Documentation**
-   - API Reference Guide
-   - Integration Manual
-   - Status: ⚠️ **REQUIRED - Request from bank**
+### ⚠️ Still Need to Generate in Merchant Portal:
 
-### Optional (But Recommended):
+1. **API Client ID** (from Merchant Portal)
+   - Location: Merchant Portal → Settings → API Credentials
+   - Click: "Generate API Credentials"
 
-5. **Test Card Numbers**
-   - For testing successful payments
-   - For testing failed payments
-   - For testing 3D Secure flow
+2. **API Client Secret** (from Merchant Portal)
+   - Generated together with Client ID
+   - **IMPORTANT:** Save this immediately, you can't retrieve it later!
 
-6. **Webhook Configuration**
-   - Webhook URL format requirements
-   - Webhook signature verification method
-   - IP whitelist for webhook calls
+3. **Merchant Portal Access**
+   - URL: (Ask bank for portal URL)
+   - Username: (Your email or provided username)
+   - Password: (Set during registration or ask bank to reset)
 
-7. **Transaction Limits**
-   - Minimum transaction amount
-   - Maximum transaction amount
-   - Daily/monthly limits
+## Steps to Get Started
 
-## Questions to Ask Raiffeisen Bank Kosovo
+### Step 1: Access Merchant Portal
 
-Send this email to your contact at Raiffeisen Bank:
+### Step 1: Access Merchant Portal
 
-```
-Subject: Payment Gateway Integration - Technical Details Required
+Contact Raiffeisen Bank and ask for:
+- **Merchant Portal URL** (likely https://portal.raiaccept.com or similar)
+- **Your login credentials** (username/email and password)
 
-Dear Raiffeisen Bank Team,
+### Step 2: Generate API Credentials
 
-We are integrating your payment gateway for our event ticketing platform (dafinazeqiri.tickets) 
-using the following credentials you provided:
+Once you have portal access:
+1. Log in to Merchant Portal
+2. Go to **Settings** → **API Credentials** (or similar section)
+3. Click **"Generate API Credentials"** or **"Create New Credentials"**
+4. **Save Both Immediately:**
+   - API Client ID (looks like: `abc123def456...`)
+   - API Client Secret (looks like: `XyZ789AbC123...`)
+   - ⚠️ **The secret can only be viewed once!**
 
-Merchant Name: MONEYZ SH.P.K.
-Merchant ID: 8600592
-Terminal ID: E0810114
+### Step 3: Configure Redirect URLs
 
-To complete the integration, we need the following technical information:
+In the Merchant Portal, you may need to register your URLs:
+- Success URL: `https://dafinazeqiri.tickets/payment/success`
+- Failure URL: `https://dafinazeqiri.tickets/payment/failure`
+- Cancel URL: `https://dafinazeqiri.tickets/payment/cancel`
+- Notification URL (Webhook): `https://dafinazeqiri.tickets/api/webhooks/raiaccept`
 
-1. API Endpoint URLs:
-   - Test/Sandbox API URL
-   - Production API URL
+## Environment Variables
 
-2. Secret Key / Signature Key for transaction signing
-
-3. API Documentation:
-   - Complete API reference guide
-   - Integration manual (PDF or online)
-   - Sample code (if available)
-
-4. Security Information:
-   - Hashing algorithm used (HMAC-SHA256, SHA1, etc.)
-   - Request/response signature format
-   - Webhook verification method
-
-5. Test Environment:
-   - Test card numbers for successful payments
-   - Test card numbers for failed payments
-   - 3D Secure test credentials
-
-6. Technical Support:
-   - Technical contact person
-   - Support email/phone for integration issues
-
-Our technical details:
-- Website: https://dafinazeqiri.tickets
-- Callback URL: https://dafinazeqiri.tickets/api/webhooks/raiffeisen
-- Return URL: https://dafinazeqiri.tickets/payment/success
-
-Please send the documentation and credentials at your earliest convenience.
-
-Best regards,
-[Your Name]
-[Your Contact Information]
-```
-
-## Environment Variables to Add
-
-Once you receive the information from the bank, add these to your `.env.local`:
+Add these to your `.env.local` file:
 
 ```env
-# Raiffeisen Bank Kosovo
-RAIFFEISEN_MERCHANT_ID=8600592
-RAIFFEISEN_TERMINAL_ID=E0810114
-RAIFFEISEN_SECRET_KEY=your_secret_key_here
-RAIFFEISEN_API_URL=https://api.raiffeisen.example/payment
-RAIFFEISEN_TEST_API_URL=https://test-api.raiffeisen.example/payment
-RAIFFEISEN_ENVIRONMENT=test
+# RaiAccept (Raiffeisen Bank Kosovo) - MONEYZ SH.P.K.
+RAIACCEPT_CLIENT_ID=your_client_id_from_portal
+RAIACCEPT_CLIENT_SECRET=your_client_secret_from_portal
+RAIACCEPT_ENVIRONMENT=sandbox
+# Change to 'production' when going live
+
+# Your application URLs
+NEXT_PUBLIC_BASE_URL=https://dafinazeqiri.tickets
 ```
 
-## Admin Panel Configuration
+## Integration Code
 
-After receiving credentials, configure in Admin Panel:
-1. Go to `/admin/settings`
-2. Click on "Payments" tab
-3. Enable Raiffeisen Bank
-4. Enter:
-   - Merchant ID: `8600592`
-   - Terminal ID: `E0810114`
-   - Secret Key: (from bank)
-   - API URL: (from bank)
-   - Environment: `test` (for testing) or `production` (for live)
+The integration has been implemented in `/src/lib/raiAccept.ts` with the following features:
 
-## Testing Checklist
+### ✅ Implemented:
+- Authentication with Amazon Cognito
+- Create order entry
+- Create payment session
+- Get order details
+- Get transaction status
+- Issue refunds
+- Webhook signature verification (placeholder)
 
-- [ ] Received all credentials from bank
+### Usage Example:
+
+```typescript
+import { RaiAcceptAPI } from '@/lib/raiAccept';
+
+// Create instance
+const raiAccept = new RaiAcceptAPI({
+  clientId: process.env.RAIACCEPT_CLIENT_ID!,
+  clientSecret: process.env.RAIACCEPT_CLIENT_SECRET!,
+  environment: 'sandbox' // or 'production'
+});
+
+// Create payment
+const result = await raiAccept.createPayment({
+  amount: 5000, // 50.00 EUR in cents
+  currency: 'EUR',
+  orderId: 'ORDER-123456',
+  description: 'Event Tickets - Dafina Zeqiri Concert',
+  customerEmail: 'customer@example.com',
+  customerName: 'John Doe',
+  successUrl: 'https://dafinazeqiri.tickets/payment/success',
+  failureUrl: 'https://dafinazeqiri.tickets/payment/failure',
+  cancelUrl: 'https://dafinazeqiri.tickets/payment/cancel',
+  notificationUrl: 'https://dafinazeqiri.tickets/api/webhooks/raiaccept',
+  language: 'sq' // Albanian language for payment form
+});
+
+if (result.success) {
+  // Redirect customer to payment form
+  window.location.href = result.paymentUrl;
+}
+```
+
+## Payment Form Integration Options
+
+### Option 1: Iframe (Recommended)
+
+Embed the payment form directly on your site:
+
+```html
+<iframe 
+  src="{paymentUrl}&mode=frameless"
+  width="640"
+  height="750"
+  frameborder="0">
+</iframe>
+```
+
+Listen for payment result:
+```javascript
+window.addEventListener("message", (event) => {
+  if (event.data.name === "orderResult") {
+    const { status, orderIdentification } = event.data.payload;
+    
+    if (status === "success") {
+      // Payment successful
+      window.location.href = "/booking-success?orderId=" + orderIdentification;
+    } else if (status === "failure") {
+      // Payment failed
+      alert("Payment failed. Please try again.");
+    }
+  }
+});
+```
+
+### Option 2: Full Page Redirect
+
+Simply redirect the customer:
+```javascript
+window.location.href = result.paymentUrl;
+```
+
+### Option 3: New Tab
+
+Open payment in new tab:
+```javascript
+window.open(result.paymentUrl, '_blank');
+```
+
+## Webhook Integration
+
+Create API route at `/api/webhooks/raiaccept/route.ts`:
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { RaiAcceptAPI } from '@/lib/raiAccept';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    // Verify webhook signature
+    const signature = request.headers.get('x-signature');
+    // TODO: Implement signature verification
+    
+    // Process payment result
+    const { orderIdentification, status, transactionId } = body;
+    
+    if (status === 'success') {
+      // Update booking status to 'paid'
+      // Send confirmation email
+      // Generate tickets
+    }
+    
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+  }
+}
+```
+
+## Testing
+
+### Test Card Numbers
+
+Ask the bank for test card numbers, or check the documentation. Typically:
+- **Successful payment:** 4111 1111 1111 1111
+- **Failed payment:** 4000 0000 0000 0002
+- **Expired:** 3-D Secure test cards
+
+### Test Checklist
+
+- [ ] Generated API credentials in Merchant Portal
 - [ ] Configured environment variables
-- [ ] Tested successful payment
+- [ ] Created payment successfully
+- [ ] Tested successful payment with test card
 - [ ] Tested failed payment
-- [ ] Tested webhook notifications
-- [ ] Verified signature validation
-- [ ] Tested refund process (if applicable)
-- [ ] Reviewed transaction in merchant portal
-- [ ] Got approval from bank for production
+- [ ] Verified webhook receives notifications
+- [ ] Tested iframe integration
+- [ ] Tested redirect integration
+- [ ] Reviewed transaction in Merchant Portal
+- [ ] Tested refund process
+- [ ] Got bank approval for production
 - [ ] Switched to production credentials
-- [ ] Tested live transaction with small amount
 
-## Support Contacts
+## Going Live
 
-**Raiffeisen Bank Kosovo:**
-- Business Banking: [Add contact when you get it]
-- Technical Support: [Add contact when you get it]
-- Email: [Add email when you get it]
+1. **Complete all testing** in sandbox environment
+2. **Request production approval** from Raiffeisen Bank
+3. **Generate production API credentials** in Merchant Portal
+4. **Update environment variables:**
+   ```env
+   RAIACCEPT_ENVIRONMENT=production
+   RAIACCEPT_CLIENT_ID=your_production_client_id
+   RAIACCEPT_CLIENT_SECRET=your_production_client_secret
+   ```
+5. **Test with small amount** (e.g., 1 EUR)
+6. **Monitor transactions** in Merchant Portal
 
-**Your Team:**
-- Technical Lead: [Your contact]
-- Project Manager: [PM contact]
+## Support
 
-## Next Steps
+**RaiAccept Documentation:**
+- Main: https://docs.raiaccept.com/
+- Code Integration: https://docs.raiaccept.com/code-integration.html
+- Merchant Portal: https://docs.raiaccept.com/merchant-portal.html
+- FAQ: https://docs.raiaccept.com/troubleshooting.html
 
-1. ✅ Received Merchant ID and Terminal ID
-2. ⏳ Contact bank for remaining credentials (see email template above)
-3. ⏳ Receive and review technical documentation
-4. ⏳ Configure test environment
-5. ⏳ Implement payment flow
-6. ⏳ Test integration thoroughly
-7. ⏳ Submit for production approval
-8. ⏳ Go live
+**Contact Raiffeisen Bank Kosovo:**
+- Business Banking: [Your contact]
+- Technical Support: [Support email]
+- Merchant Portal: [Portal URL]
 
-## Notes
+## Important Notes
 
-- Keep all credentials secure and never commit them to git
-- Use test environment until bank approves production
-- Always verify webhook signatures before processing
-- Log all transactions for reconciliation
-- Have backup payment method (Stripe) available
+- ✅ Uses Amazon Cognito for authentication
+- ✅ 3-step process: Auth → Order → Session
+- ✅ Supports iframe, redirect, and new tab integration
+- ✅ Webhook notifications for payment results
+- ✅ Supports refunds via API
+- ✅ Payment form available in multiple languages (en, sq, sr)
+- ⚠️ Client Secret can only be viewed once - save it immediately!
+- ⚠️ Always test in sandbox before going to production
+- ⚠️ Monitor webhook notifications for reliable payment confirmation
 
 ---
 
 Last Updated: October 31, 2025
-Status: Awaiting additional credentials from bank
+Status: Documentation received, awaiting Merchant Portal access
+Next Step: Contact bank for Merchant Portal credentials
+

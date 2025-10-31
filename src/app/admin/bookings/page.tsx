@@ -15,7 +15,8 @@ import {
   Download,
   DollarSign,
   Users,
-  Calendar
+  Calendar,
+  Undo2
 } from 'lucide-react';
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardContent } from '@/components/ui/admin-card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,12 @@ interface Booking {
   status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod: 'stripe' | 'raiffeisen' | 'direct';
+  raiffeisenPaymentId?: string;
+  raiffeisenTransactionId?: string;
   createdAt: string;
+  refundAmount?: number;
+  refundedAt?: string;
+  refundReason?: string;
   event?: {
     title: string;
     date: string;
@@ -71,6 +77,9 @@ export default function BookingManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<BookingsResponse['pagination'] | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
 
   const fetchBookings = async () => {
     try {
@@ -159,6 +168,64 @@ export default function BookingManagementPage() {
     } catch (error) {
       console.error('❌ Error cancelling booking:', error);
       setMessage('Failed to cancel booking');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const initiateRefund = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setRefundAmount(booking.totalAmount.toString());
+    setRefundReason('');
+    setShowRefundModal(true);
+  };
+
+  const processRefund = async () => {
+    if (!selectedBooking) return;
+
+    const amount = parseFloat(refundAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setMessage('Invalid refund amount');
+      return;
+    }
+
+    if (amount > selectedBooking.totalAmount) {
+      setMessage(`Refund amount cannot exceed ${selectedBooking.totalAmount} ${selectedBooking.currency || 'EUR'}`);
+      return;
+    }
+
+    try {
+      setUpdating(selectedBooking._id);
+      console.log('🔄 Processing refund for booking:', selectedBooking.bookingReference);
+
+      const response = await fetch(`/api/admin/bookings/${selectedBooking._id}/refund`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount,
+          reason: refundReason || 'Refund requested by admin',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Failed to process refund');
+      }
+
+      const result = await response.json();
+      console.log('✅ Refund processed successfully:', result);
+      
+      setMessage(`Refund of €${amount} processed successfully`);
+      setShowRefundModal(false);
+      setSelectedBooking(null);
+      setRefundAmount('');
+      setRefundReason('');
+      await fetchBookings();
+    } catch (error) {
+      console.error('❌ Error processing refund:', error);
+      setMessage(error instanceof Error ? error.message : 'Failed to process refund');
     } finally {
       setUpdating(null);
     }
@@ -454,6 +521,7 @@ export default function BookingManagementPage() {
                                 size="sm"
                                 variant="outline"
                                 className="text-green-600 border-green-600 hover:bg-green-50"
+                                title="Confirm booking"
                               >
                                 {updating === booking._id ? (
                                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -463,12 +531,28 @@ export default function BookingManagementPage() {
                               </Button>
                             )}
 
+                            {booking.paymentStatus === 'paid' && 
+                             booking.status !== 'refunded' && 
+                             booking.paymentMethod === 'raiffeisen' && (
+                              <Button
+                                onClick={() => initiateRefund(booking)}
+                                disabled={updating === booking._id}
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                title="Issue refund"
+                              >
+                                <Undo2 className="h-4 w-4" />
+                              </Button>
+                            )}
+
                             <Button
                               onClick={() => deleteBooking(booking._id)}
                               disabled={updating === booking._id}
                               size="sm"
                               variant="outline"
                               className="text-red-600 border-red-600 hover:bg-red-50"
+                              title="Cancel booking"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -512,6 +596,85 @@ export default function BookingManagementPage() {
             )}
           </AdminCardContent>
         </AdminCard>
+
+        {/* Refund Modal */}
+        {showRefundModal && selectedBooking && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Issue Refund</h3>
+              
+              <div className="mb-4 p-4 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-600">Booking: <span className="font-medium text-gray-900">{selectedBooking.bookingReference}</span></p>
+                <p className="text-sm text-gray-600">Customer: <span className="font-medium text-gray-900">{selectedBooking.customerName || selectedBooking.customerEmail}</span></p>
+                <p className="text-sm text-gray-600">Original Amount: <span className="font-medium text-gray-900">€{selectedBooking.totalAmount.toFixed(2)}</span></p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Refund Amount (EUR)
+                </label>
+                <Input
+                  type="number"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  min="0"
+                  max={selectedBooking.totalAmount}
+                  step="0.01"
+                  placeholder="Enter refund amount"
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Maximum: €{selectedBooking.totalAmount.toFixed(2)}
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Refund
+                </label>
+                <textarea
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  placeholder="Enter reason for refund (optional)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setShowRefundModal(false);
+                    setSelectedBooking(null);
+                    setRefundAmount('');
+                    setRefundReason('');
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={processRefund}
+                  disabled={!refundAmount || parseFloat(refundAmount) <= 0 || updating === selectedBooking._id}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {updating === selectedBooking._id ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Undo2 className="h-4 w-4 mr-2" />
+                      Issue Refund
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

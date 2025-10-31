@@ -23,8 +23,14 @@ export interface IBooking extends mongoose.Document {
   paymentIntentId?: string;
   stripePaymentIntentId?: string;
   raiffeisenPaymentId?: string;
+  raiffeisenTransactionId?: string;
   paymentMethod: 'stripe' | 'raiffeisen' | 'direct';
   paymentDate?: Date;
+  paymentDetails?: {
+    cardMasked?: string;
+    cardType?: string;
+    cardHolderName?: string;
+  };
   bookingReference: string;
   customerEmail?: string;
   customerName?: string;
@@ -32,6 +38,10 @@ export interface IBooking extends mongoose.Document {
   confirmedAt?: Date;
   emailSent: boolean;
   notes?: string;
+  refundAmount?: number;
+  refundedAt?: Date;
+  refundReason?: string;
+  refundedBy?: string;
 }
 
 const BookingTicketSchema = new mongoose.Schema({
@@ -66,8 +76,14 @@ const BookingSchema = new mongoose.Schema({
   paymentIntentId: { type: String, unique: true, sparse: true },
   stripePaymentIntentId: { type: String, unique: true, sparse: true },
   raiffeisenPaymentId: { type: String, unique: true, sparse: true },
+  raiffeisenTransactionId: { type: String },
   paymentMethod: { type: String, required: true, enum: ['stripe', 'raiffeisen', 'direct'] },
   paymentDate: { type: Date },
+  paymentDetails: {
+    cardMasked: { type: String },
+    cardType: { type: String },
+    cardHolderName: { type: String },
+  },
   bookingReference: { type: String, required: true, unique: true },
   customerEmail: { type: String },
   customerName: { type: String },
@@ -75,6 +91,10 @@ const BookingSchema = new mongoose.Schema({
   confirmedAt: { type: Date },
   emailSent: { type: Boolean, default: false },
   notes: { type: String },
+  refundAmount: { type: Number },
+  refundedAt: { type: Date },
+  refundReason: { type: String },
+  refundedBy: { type: String },
 });
 
 // Create compound indexes for better query performance

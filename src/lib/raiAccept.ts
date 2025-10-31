@@ -389,6 +389,7 @@ export class RaiAcceptAPI {
 
   /**
    * Issue a refund
+   * POST https://trapi.raiaccept.com/orders/{OrderID}/transactions/{TransactionId}/refund
    */
   async issueRefund(
     orderIdentification: string,
@@ -400,29 +401,69 @@ export class RaiAcceptAPI {
       const token = await this.authenticate();
 
       const payload = {
-        orderIdentification,
-        transactionId,
         amount,
         currency,
       };
 
-      const response = await fetch(`${this.apiBaseUrl}/refunds`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      console.log(`🔄 Issuing refund for order ${orderIdentification}, transaction ${transactionId}`);
+      console.log(`Refund amount: ${amount} ${currency}`);
+
+      const response = await fetch(
+        `${this.apiBaseUrl}/orders/${orderIdentification}/transactions/${transactionId}/refund`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ Refund failed:', errorText);
         throw new Error(`Refund failed: ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Refund issued successfully:', result);
+      return result;
+    } catch (error) {
+      logError('RaiAccept refund failed', error, { source: 'raiaccept' });
+      throw error;
+    }
+  }
+
+  /**
+   * Get refund status
+   * GET https://trapi.raiaccept.com/orders/{OrderID}/transactions/{TransactionId}
+   */
+  async getRefundStatus(
+    orderIdentification: string,
+    transactionId: string
+  ): Promise<any> {
+    try {
+      const token = await this.authenticate();
+
+      const response = await fetch(
+        `${this.apiBaseUrl}/orders/${orderIdentification}/transactions/${transactionId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Get refund status failed: ${response.statusText} - ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
-      logError('RaiAccept refund failed', error, { source: 'raiaccept' });
+      logError('RaiAccept get refund status failed', error, { source: 'raiaccept' });
       throw error;
     }
   }

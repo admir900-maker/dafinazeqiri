@@ -7,8 +7,11 @@
 import { logError } from './errorLogger';
 
 interface RaiAcceptConfig {
-  clientId: string; // API Client ID from Merchant Portal
-  clientSecret: string; // API Client Secret from Merchant Portal
+  // RaiAccept Merchant Portal API credentials (username/password)
+  username: string;
+  password: string;
+  // Cognito App Client Id provided by RaiAccept (no dashes). Required for auth.
+  cognitoClientId?: string;
   environment: 'production' | 'sandbox';
 }
 
@@ -67,19 +70,32 @@ export class RaiAcceptAPI {
    */
   private async authenticate(): Promise<string> {
     try {
-      console.log('🔐 Authenticating with RaiAccept...');
+      console.log('🔐 Authenticating with RaiAccept (Amazon Cognito)...');
       console.log('Auth URL:', this.authUrl);
-      console.log('Client ID:', this.config.clientId);
+      console.log('Username present:', Boolean(this.config.username));
 
-      // Try simple JSON POST with credentials
+      if (!this.config.cognitoClientId) {
+        throw new Error('Missing RAIACCEPT_COGNITO_CLIENT_ID. Ask RaiAccept support for the Cognito App Client Id and set it in .env.local');
+      }
+
+      if (!this.config.username || !this.config.password) {
+        throw new Error('Missing RAIACCEPT_USERNAME or RAIACCEPT_PASSWORD. Generate API credentials (username/password) in the Merchant Portal and set them in .env.local');
+      }
+
+      // Use AWS Cognito InitiateAuth with USER_PASSWORD_AUTH
       const response = await fetch(this.authUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
         },
         body: JSON.stringify({
-          clientId: this.config.clientId,
-          clientSecret: this.config.clientSecret,
+          AuthFlow: 'USER_PASSWORD_AUTH',
+          ClientId: this.config.cognitoClientId,
+          AuthParameters: {
+            USERNAME: this.config.username,
+            PASSWORD: this.config.password,
+          },
         }),
       });
 
@@ -92,19 +108,10 @@ export class RaiAcceptAPI {
       }
 
       const data: any = await response.json();
-      console.log('✅ Auth response received');
-      console.log('Response keys:', Object.keys(data));
+  console.log('✅ Auth response received');
 
-      // Try various possible token fields
-      const token = data.AuthenticationResult?.IdToken || 
-                   data.AuthenticationResult?.AccessToken ||
-                   data.IdToken || 
-                   data.idToken ||
-                   data.AccessToken ||
-                   data.accessToken ||
-                   data.token ||
-                   data.access_token ||
-                   data.bearer_token;
+  // Cognito returns AuthenticationResult with IdToken/AccessToken
+  const token = data.AuthenticationResult?.IdToken || data.AuthenticationResult?.AccessToken;
 
       if (!token) {
         console.error('No token in response:', JSON.stringify(data, null, 2));
@@ -357,18 +364,24 @@ export class RaiAcceptAPI {
 
 // Helper function to create RaiAccept instance from environment variables
 export function createRaiAcceptClient(): RaiAcceptAPI | null {
-  const clientId = process.env.RAIACCEPT_CLIENT_ID;
-  const clientSecret = process.env.RAIACCEPT_CLIENT_SECRET;
+  const username = process.env.RAIACCEPT_USERNAME;
+  const password = process.env.RAIACCEPT_PASSWORD;
+  const cognitoClientId = process.env.RAIACCEPT_COGNITO_CLIENT_ID;
   const environment = (process.env.RAIACCEPT_ENVIRONMENT || 'sandbox') as 'production' | 'sandbox';
 
-  if (!clientId || !clientSecret) {
-    console.warn('⚠️ RaiAccept credentials not configured');
+  if (!username || !password) {
+    console.warn('⚠️ RaiAccept credentials not configured. Please set RAIACCEPT_USERNAME and RAIACCEPT_PASSWORD in .env.local');
     return null;
   }
 
+  if (!cognitoClientId) {
+    console.warn('⚠️ RAIACCEPT_COGNITO_CLIENT_ID is not set. Authentication will fail until this is provided by RaiAccept support.');
+  }
+
   return new RaiAcceptAPI({
-    clientId,
-    clientSecret,
+    username,
+    password,
+    cognitoClientId,
     environment,
   });
 }

@@ -54,41 +54,38 @@ export class RaiAcceptAPI {
 
     if (config.environment === 'production') {
       // Production URLs
-      this.authUrl = 'https://cognito-idp.eu-central-1.amazonaws.com/';
+      this.authUrl = 'https://api.raiaccept.com/oauth/token';
       this.apiBaseUrl = 'https://api.raiaccept.com';
       this.paymentFormUrl = 'https://payment.raiaccept.com/checkout';
     } else {
       // Sandbox/Test URLs
-      this.authUrl = 'https://cognito-idp.eu-central-1.amazonaws.com/'; // Same for both
-      this.apiBaseUrl = 'https://api-sandbox.raiaccept.com'; // Assumed sandbox URL
-      this.paymentFormUrl = 'https://payment-sandbox.raiaccept.com/checkout'; // Assumed sandbox URL
+      this.authUrl = 'https://api-sandbox.raiaccept.com/oauth/token';
+      this.apiBaseUrl = 'https://api-sandbox.raiaccept.com';
+      this.paymentFormUrl = 'https://payment-sandbox.raiaccept.com/checkout';
     }
   }
 
   /**
    * Step 1: Authenticate and get access token
-   * Uses Amazon Cognito for authentication
+   * Uses OAuth 2.0 Client Credentials flow
    */
   private async authenticate(): Promise<string> {
     try {
-      console.log('🔐 Authenticating with Cognito...');
+      console.log('🔐 Authenticating with RaiAccept OAuth 2.0...');
       console.log('Auth URL:', this.authUrl);
       console.log('Client ID:', this.config.clientId);
       
+      // Try OAuth 2.0 Client Credentials flow
       const response = await fetch(this.authUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-amz-json-1.1',
-          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-          AuthFlow: 'USER_PASSWORD_AUTH',
-          ClientId: this.config.clientId,
-          AuthParameters: {
-            USERNAME: this.config.clientId,
-            PASSWORD: this.config.clientSecret,
-          },
-        }),
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: this.config.clientId,
+          client_secret: this.config.clientSecret,
+        }).toString(),
       });
 
       console.log('Response status:', response.status, response.statusText);
@@ -102,13 +99,11 @@ export class RaiAcceptAPI {
       const data: any = await response.json();
       console.log('✅ Auth response received:', JSON.stringify(data, null, 2));
       
-      // Cognito returns AuthenticationResult with IdToken or AccessToken
-      const token = data.AuthenticationResult?.IdToken || 
-                   data.AuthenticationResult?.AccessToken || 
-                   data.access_token;
+      // Standard OAuth 2.0 returns access_token
+      const token = data.access_token;
       
       if (!token) {
-        throw new Error('No access token in authentication response');
+        throw new Error('No access_token in authentication response');
       }
       
       return token;

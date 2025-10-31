@@ -135,8 +135,8 @@ export async function POST(
     const siteConfig = await getSiteConfig();
 
     // Get base URL from environment or request headers
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                    `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+      `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
 
     console.log('💳 Creating RaiAccept payment with amount:', totalAmount);
     console.log('🌐 Base URL:', baseUrl);

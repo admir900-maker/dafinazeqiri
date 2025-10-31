@@ -49,6 +49,30 @@ function BookingSuccessContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pollingCount, setPollingCount] = useState(0);
+  const [confirmationCalled, setConfirmationCalled] = useState(false);
+
+  // Confirm payment when page loads (for RaiAccept)
+  useEffect(() => {
+    if (!bookingId || confirmationCalled) {
+      return;
+    }
+
+    const confirmPayment = async () => {
+      try {
+        const sessionId = searchParams.get('paymentSession');
+        await fetch('/api/raiffeisen/confirm-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId, sessionId }),
+        });
+        setConfirmationCalled(true);
+      } catch (error) {
+        console.error('Failed to confirm payment:', error);
+      }
+    };
+
+    confirmPayment();
+  }, [bookingId, confirmationCalled, searchParams]);
 
   useEffect(() => {
     if (!bookingId) {
@@ -286,12 +310,14 @@ function BookingSuccessContent() {
                       </tr>
                       <tr>
                         <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Venue:</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{event.venue || event.location || 'undefined'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{event.venue || event.location || 'TBA'}</td>
                       </tr>
-                      <tr>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Address:</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{event.address || 'undefined'}</td>
-                      </tr>
+                      {event.address && (
+                        <tr>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50">Address:</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{event.address}</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

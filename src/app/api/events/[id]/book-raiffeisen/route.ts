@@ -45,9 +45,28 @@ export async function POST(
     const bookingTickets = [];
 
     for (const ticket of tickets) {
-      const ticketType = event.ticketTypes.find((t: any) => t._id.toString() === ticket.ticketId);
+      // Normalize the ticket identifier: replace dashes/underscores with spaces, convert to lowercase
+      const normalizeTicketName = (name: string) =>
+        name.toLowerCase().replace(/[-_]/g, ' ').trim();
+
+      // Try to find by _id first
+      let ticketType = event.ticketTypes.find((t: any) => t._id.toString() === ticket.ticketId);
+
       if (!ticketType) {
-        return NextResponse.json({ error: `Ticket type not found: ${ticket.ticketId}` }, { status: 400 });
+        // Try finding by normalized name (handles "fan-pit" vs "FAN PIT")
+        const searchName = normalizeTicketName(ticket.ticketId);
+        ticketType = event.ticketTypes.find((t: any) =>
+          normalizeTicketName(t.name) === searchName
+        );
+      }
+
+      if (!ticketType) {
+        console.error('❌ Ticket type not found. Searching for:', ticket.ticketId);
+        console.error('Available ticket types:', event.ticketTypes.map((t: any) => ({ id: t._id, name: t.name })));
+        return NextResponse.json({
+          error: `Ticket type not found: ${ticket.ticketId}`,
+          availableTypes: event.ticketTypes.map((t: any) => t.name)
+        }, { status: 400 });
       }
 
       if (ticketType.availableTickets < ticket.quantity) {

@@ -43,7 +43,8 @@ interface OrderResponse {
 }
 
 interface PaymentSessionResponse {
-  paymentSessionUrl: string; // URL to redirect customer to
+  sessionId: string;
+  paymentRedirectURL: string; // URL to redirect customer to
 }
 
 export class RaiAcceptAPI {
@@ -51,6 +52,7 @@ export class RaiAcceptAPI {
   private authUrl: string;
   private apiBaseUrl: string;
   private paymentFormUrl: string;
+  private static readonly COGNITO_CLIENT_ID_REGEX = /^[A-Za-z0-9_+]+$/;
 
   constructor(config: RaiAcceptConfig) {
     this.config = config;
@@ -78,9 +80,23 @@ export class RaiAcceptAPI {
         throw new Error('Missing RAIACCEPT_COGNITO_CLIENT_ID. Ask RaiAccept support for the Cognito App Client Id and set it in .env.local');
       }
 
+      // Validate format: Cognito ClientId must be alphanumeric/underscore/plus only (no dashes)
+      if (!RaiAcceptAPI.COGNITO_CLIENT_ID_REGEX.test(this.config.cognitoClientId)) {
+        throw new Error('RAIACCEPT_COGNITO_CLIENT_ID appears invalid (contains disallowed characters like "-"). It must be the Cognito App Client Id provided by RaiAccept (alphanumeric, no dashes). Example: kr2gs4117arvbnaperqff5dml');
+      }
+
       if (!this.config.username || !this.config.password) {
         throw new Error('Missing RAIACCEPT_USERNAME or RAIACCEPT_PASSWORD. Generate API credentials (username/password) in the Merchant Portal and set them in .env.local');
       }
+
+      // Debug: Log what we're about to send (mask password)
+      console.log('🔍 Auth attempt:', {
+        username: this.config.username,
+        passwordLength: this.config.password.length,
+        passwordFirstChar: this.config.password[0],
+        passwordLastChar: this.config.password[this.config.password.length - 1],
+        clientId: this.config.cognitoClientId,
+      });
 
       // Use AWS Cognito InitiateAuth with USER_PASSWORD_AUTH
       const response = await fetch(this.authUrl, {
@@ -108,17 +124,18 @@ export class RaiAcceptAPI {
       }
 
       const data: any = await response.json();
-  console.log('✅ Auth response received');
+      console.log('✅ Auth response received');
 
-  // Cognito returns AuthenticationResult with IdToken/AccessToken
-  const token = data.AuthenticationResult?.IdToken || data.AuthenticationResult?.AccessToken;
+      // Cognito returns AuthenticationResult with IdToken/AccessToken
+      // RaiAccept docs say to use IdToken for API calls (not AccessToken)
+      const token = data.AuthenticationResult?.IdToken || data.AuthenticationResult?.AccessToken;
 
       if (!token) {
         console.error('No token in response:', JSON.stringify(data, null, 2));
         throw new Error('No authentication token in response');
       }
 
-      console.log('✅ Token received, length:', token.length);
+      console.log('✅ Token received (IdToken), length:', token.length);
       return token;
     } catch (error) {
       logError('RaiAccept authentication failed', error, { source: 'raiaccept' });
@@ -134,36 +151,69 @@ export class RaiAcceptAPI {
     orderData: CreateOrderRequest
   ): Promise<OrderResponse> {
     try {
+      // RaiAccept API structure per official docs
       const payload = {
-        amount: orderData.amount,
-        currency: orderData.currency,
-        orderId: orderData.orderId,
-        description: orderData.description,
-        successUrl: orderData.successUrl,
-        failureUrl: orderData.failureUrl,
-        cancelUrl: orderData.cancelUrl,
-        notificationUrl: orderData.notificationUrl,
-        customer: {
+        consumer: {
           email: orderData.customerEmail,
-          name: orderData.customerName,
+          firstName: orderData.customerName?.split(' ')[0] || '',
+          lastName: orderData.customerName?.split(' ').slice(1).join(' ') || '',
+        },
+        invoice: {
+          amount: orderData.amount,
+          currency: orderData.currency,
+          description: orderData.description,
+          merchantOrderReference: orderData.orderId,
+          items: [
+            {
+              description: orderData.description || 'Ticket',
+              numberOfItems: 1,
+              price: orderData.amount,
+            },
+          ],
+        },
+        paymentMethodPreference: 'CARD',
+        urls: {
+          successUrl: orderData.successUrl,
+          failUrl: orderData.failureUrl,
+          cancelUrl: orderData.cancelUrl,
+          notificationUrl: orderData.notificationUrl,
         },
       };
+
+      // Debug: log payload being sent to RaiAccept (without sensitive fields)
+      try {
+        console.log('📨 RaiAccept create order payload:', JSON.stringify(payload));
+        console.log('📨 Request headers:', {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token.substring(0, 20)}...`,
+        });
+        console.log('📨 Endpoint:', `${this.apiBaseUrl}/orders`);
+      } catch { }
 
       const response = await fetch(`${this.apiBaseUrl}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ RaiAccept API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: errorText,
+        });
         throw new Error(`Create order failed: ${response.statusText} - ${errorText}`);
       }
 
+      console.log('✅ Create order response status:', response.status);
       const data: OrderResponse = await response.json();
+      console.log('✅ Order created successfully. OrderID:', data.orderIdentification);
       return data;
     } catch (error) {
       logError('RaiAccept create order failed', error, { source: 'raiaccept' });
@@ -180,16 +230,33 @@ export class RaiAcceptAPI {
     orderIdentification: string
   ): Promise<string> {
     try {
+      // Use the same payload structure as create order (per docs)
       const payload = {
-        amount: orderData.amount,
-        currency: orderData.currency,
-        orderId: orderData.orderId,
-        orderIdentification: orderIdentification,
-        description: orderData.description,
-        successUrl: orderData.successUrl,
-        failureUrl: orderData.failureUrl,
-        cancelUrl: orderData.cancelUrl,
-        language: orderData.language || 'en',
+        consumer: {
+          email: orderData.customerEmail,
+          firstName: orderData.customerName?.split(' ')[0] || '',
+          lastName: orderData.customerName?.split(' ').slice(1).join(' ') || '',
+        },
+        invoice: {
+          amount: orderData.amount,
+          currency: orderData.currency,
+          description: orderData.description,
+          merchantOrderReference: orderData.orderId,
+          items: [
+            {
+              description: orderData.description || 'Ticket',
+              numberOfItems: 1,
+              price: orderData.amount,
+            },
+          ],
+        },
+        paymentMethodPreference: 'CARD',
+        urls: {
+          successUrl: orderData.successUrl,
+          failUrl: orderData.failureUrl,
+          cancelUrl: orderData.cancelUrl,
+          notificationUrl: orderData.notificationUrl,
+        },
       };
 
       const response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}/checkout`, {
@@ -206,8 +273,16 @@ export class RaiAcceptAPI {
         throw new Error(`Create payment session failed: ${response.statusText} - ${errorText}`);
       }
 
-      const data: PaymentSessionResponse = await response.json();
-      return data.paymentSessionUrl;
+      const data = await response.json();
+      console.log('✅ Payment session response:', JSON.stringify(data, null, 2));
+
+      // RaiAccept returns paymentRedirectURL (capital letters)
+      if (!data.paymentRedirectURL) {
+        console.error('❌ Missing paymentRedirectURL in response:', data);
+        throw new Error('Payment redirect URL not found in response');
+      }
+
+      return data.paymentRedirectURL;
     } catch (error) {
       logError('RaiAccept create payment session failed', error, { source: 'raiaccept' });
       throw error;

@@ -53,15 +53,16 @@ export class RaiAcceptAPI {
     this.config = config;
 
     if (config.environment === 'production') {
-      // Production URLs
+      // Production URLs - TODO: Get actual URLs from RaiAccept documentation
       this.authUrl = 'https://api.raiaccept.com/oauth/token';
       this.apiBaseUrl = 'https://api.raiaccept.com';
       this.paymentFormUrl = 'https://payment.raiaccept.com/checkout';
     } else {
-      // Sandbox/Test URLs
-      this.authUrl = 'https://api-sandbox.raiaccept.com/oauth/token';
-      this.apiBaseUrl = 'https://api-sandbox.raiaccept.com';
-      this.paymentFormUrl = 'https://payment-sandbox.raiaccept.com/checkout';
+      // Sandbox/Test URLs - TODO: Get actual URLs from RaiAccept support
+      // Trying common patterns until we get the correct URL from documentation
+      this.authUrl = 'https://sandbox.raiaccept.com/api/oauth/token'; // Updated pattern
+      this.apiBaseUrl = 'https://sandbox.raiaccept.com/api';
+      this.paymentFormUrl = 'https://sandbox.raiaccept.com/checkout';
     }
   }
 

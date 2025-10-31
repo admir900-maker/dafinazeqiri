@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import Event from '@/models/Event';
-import { sendTicketEmail } from '@/lib/emailService';
+import { sendBookingConfirmationEmail } from '@/lib/emailService';
 
 /**
  * Confirm RaiAccept payment when user returns from payment page
@@ -56,25 +56,18 @@ export async function POST(request: NextRequest) {
         try {
           console.log('📧 Sending confirmation email to:', booking.customerEmail);
 
-          const event = await Event.findById(booking.eventId);
+          // Populate event details for email
+          await booking.populate('eventId');
 
-          if (event) {
-            await sendTicketEmail({
-              to: booking.customerEmail,
-              customerName: booking.customerName || 'Customer',
-              eventName: event.name,
-              eventDate: event.date,
-              eventVenue: event.venue || event.location,
-              tickets: booking.tickets,
-              bookingReference: booking.bookingReference,
-              totalAmount: booking.totalAmount,
-              currency: booking.currency,
-            });
+          // Send email with populated booking
+          const emailSent = await sendBookingConfirmationEmail(booking);
 
+          if (emailSent) {
             booking.emailSent = true;
             await booking.save();
-
             console.log('✅ Email sent successfully');
+          } else {
+            console.error('❌ Email sending returned false');
           }
         } catch (emailError) {
           console.error('❌ Failed to send email:', emailError);

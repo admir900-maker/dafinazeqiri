@@ -134,7 +134,12 @@ export async function POST(
     // Get site configuration for description
     const siteConfig = await getSiteConfig();
 
+    // Get base URL from environment or request headers
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                    `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+
     console.log('💳 Creating RaiAccept payment with amount:', totalAmount);
+    console.log('🌐 Base URL:', baseUrl);
 
     // Create RaiAccept payment
     const paymentResult = await raiAcceptClient.createPayment({
@@ -145,10 +150,10 @@ export async function POST(
       customerEmail,
       customerName,
       language: 'en', // or 'sq' for Albanian, 'sr' for Serbian
-      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/booking-success?bookingId=${booking._id}`,
-      failureUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?error=payment_failed`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?error=payment_cancelled`,
-      notificationUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/raiaccept`
+      successUrl: `${baseUrl}/booking-success?bookingId=${booking._id}`,
+      failureUrl: `${baseUrl}/checkout?error=payment_failed`,
+      cancelUrl: `${baseUrl}/checkout?error=payment_cancelled`,
+      notificationUrl: `${baseUrl}/api/webhooks/raiaccept`
     });
 
     console.log('Payment result:', paymentResult);

@@ -17,17 +17,38 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Webhook payload:', JSON.stringify(body, null, 2));
 
-    // RaiAccept webhook payload structure (adjust based on actual documentation)
+    // RaiAccept webhook structure per official documentation
     const {
-      orderIdentification,
-      transactionId,
-      status,
-      amount,
-      currency,
-      merchantOrderReference, // This is our booking._id
-      paymentMethod,
-      timestamp,
+      transaction,
+      order,
+      merchant,
+      consumer,
+      card,
+      callbackUrls,
     } = body;
+
+    // Extract key fields from nested structure
+    const transactionId = transaction?.transactionId;
+    const transactionStatus = transaction?.status;
+    const statusCode = transaction?.statusCode;
+    const transactionAmount = transaction?.transactionAmount;
+    const transactionCurrency = transaction?.transactionCurrency;
+    const isProduction = transaction?.isProduction;
+    
+    const orderIdentification = order?.orderIdentification;
+    const merchantOrderReference = order?.invoice?.merchantOrderReference; // This is our booking._id
+    const invoiceDescription = order?.invoice?.description;
+
+    console.log('📋 Webhook details:', {
+      transactionId,
+      status: transactionStatus,
+      statusCode,
+      orderIdentification,
+      merchantOrderReference,
+      amount: transactionAmount,
+      currency: transactionCurrency,
+      isProduction,
+    });
 
     if (!merchantOrderReference) {
       console.error('❌ Missing merchantOrderReference in webhook');
@@ -47,13 +68,23 @@ export async function POST(request: NextRequest) {
     console.log('📋 Found booking:', booking.bookingReference);
 
     // Update booking based on payment status
-    if (status === 'COMPLETED' || status === 'SUCCESS' || status === 'PAID') {
+    // Status code 0000 = successful transaction
+    if (statusCode === '0000' || transactionStatus === 'COMPLETED' || transactionStatus === 'SUCCESS') {
       console.log('✅ Payment successful - updating booking');
 
       booking.status = 'confirmed';
       booking.paymentStatus = 'paid';
       booking.raiffeisenPaymentId = orderIdentification;
       booking.raiffeisenTransactionId = transactionId;
+
+      // Store additional payment details
+      if (card?.maskedCardNumber) {
+        booking.paymentDetails = {
+          cardMasked: card.maskedCardNumber,
+          cardType: card.type,
+          cardHolderName: card.cardHolderName,
+        };
+      }
 
       await booking.save();
 
@@ -68,7 +99,7 @@ export async function POST(request: NextRequest) {
           if (event) {
             await sendTicketEmail({
               to: booking.customerEmail,
-              customerName: booking.customerName || 'Customer',
+              customerName: booking.customerName || consumer?.firstName || 'Customer',
               eventName: event.name,
               eventDate: event.date,
               eventVenue: event.venue || event.location,
@@ -98,8 +129,9 @@ export async function POST(request: NextRequest) {
         message: 'Payment confirmed',
         bookingReference: booking.bookingReference,
       });
-    } else if (status === 'FAILED' || status === 'DECLINED' || status === 'ERROR') {
+    } else if (statusCode !== '0000' || transactionStatus === 'FAILED' || transactionStatus === 'DECLINED' || transactionStatus === 'ERROR') {
       console.log('❌ Payment failed - updating booking');
+      console.log('Status code:', statusCode, 'Status:', transactionStatus);
 
       booking.status = 'cancelled';
       booking.paymentStatus = 'failed';
@@ -126,7 +158,7 @@ export async function POST(request: NextRequest) {
         message: 'Payment failed',
         bookingReference: booking.bookingReference,
       });
-    } else if (status === 'PENDING' || status === 'PROCESSING') {
+    } else if (transactionStatus === 'PENDING' || transactionStatus === 'PROCESSING') {
       console.log('⏳ Payment pending');
 
       booking.paymentStatus = 'pending';
@@ -140,12 +172,13 @@ export async function POST(request: NextRequest) {
         bookingReference: booking.bookingReference,
       });
     } else {
-      console.warn('⚠️ Unknown payment status:', status);
+      console.warn('⚠️ Unknown payment status:', transactionStatus, 'Status code:', statusCode);
 
       return NextResponse.json({
         success: true,
         message: 'Status received',
-        status,
+        status: transactionStatus,
+        statusCode,
       });
     }
   } catch (error) {

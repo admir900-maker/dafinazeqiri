@@ -45,12 +45,12 @@ export async function POST(
     const bookingTickets = [];
 
     for (const ticket of tickets) {
-      const ticketType = event.tickets.find((t: any) => t._id.toString() === ticket.ticketId);
+      const ticketType = event.ticketTypes.find((t: any) => t._id.toString() === ticket.ticketId);
       if (!ticketType) {
         return NextResponse.json({ error: `Ticket type not found: ${ticket.ticketId}` }, { status: 400 });
       }
 
-      if (ticketType.sold + ticket.quantity > ticketType.quantity) {
+      if (ticketType.availableTickets < ticket.quantity) {
         return NextResponse.json({
           error: `Not enough tickets available for ${ticketType.name}`
         }, { status: 400 });
@@ -100,15 +100,15 @@ export async function POST(
     // Initialize RaiAccept API client
     console.log('🔧 Initializing RaiAccept client...');
     const raiAcceptClient = createRaiAcceptClient();
-    
+
     if (!raiAcceptClient) {
       console.error('❌ RaiAccept client is null - check environment variables');
       console.error('RAIACCEPT_CLIENT_ID:', process.env.RAIACCEPT_CLIENT_ID ? 'Set' : 'Missing');
       console.error('RAIACCEPT_CLIENT_SECRET:', process.env.RAIACCEPT_CLIENT_SECRET ? 'Set' : 'Missing');
       console.error('RAIACCEPT_ENVIRONMENT:', process.env.RAIACCEPT_ENVIRONMENT);
-      
-      return NextResponse.json({ 
-        error: 'Payment service not configured. Please check RaiAccept credentials.' 
+
+      return NextResponse.json({
+        error: 'Payment service not configured. Please check RaiAccept credentials.'
       }, { status: 500 });
     }
 
@@ -116,7 +116,7 @@ export async function POST(
     const siteConfig = await getSiteConfig();
 
     console.log('💳 Creating RaiAccept payment with amount:', totalAmount);
-    
+
     // Create RaiAccept payment
     const paymentResult = await raiAcceptClient.createPayment({
       amount: totalAmount,
@@ -138,7 +138,7 @@ export async function POST(
       console.error('❌ Payment creation failed:', paymentResult.error);
       // Delete booking if payment creation failed
       await Booking.findByIdAndDelete(booking._id);
-      
+
       return NextResponse.json({
         error: 'Failed to create payment session',
         details: paymentResult.error || 'Unknown error'
@@ -153,9 +153,9 @@ export async function POST(
 
     // Update ticket quantities
     for (const ticket of tickets) {
-      const ticketType = event.tickets.find((t: any) => t._id.toString() === ticket.ticketId);
+      const ticketType = event.ticketTypes.find((t: any) => t._id.toString() === ticket.ticketId);
       if (ticketType) {
-        ticketType.sold += ticket.quantity;
+        ticketType.availableTickets -= ticket.quantity;
       }
     }
     await event.save();

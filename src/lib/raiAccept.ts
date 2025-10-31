@@ -52,40 +52,34 @@ export class RaiAcceptAPI {
   constructor(config: RaiAcceptConfig) {
     this.config = config;
 
-    if (config.environment === 'production') {
-      // Production URLs (from RaiAccept documentation)
-      this.authUrl = 'https://api.raiaccept.com/v1/auth/token';
-      this.apiBaseUrl = 'https://api.raiaccept.com/v1';
-      this.paymentFormUrl = 'https://payment.raiaccept.com/checkout';
-    } else {
-      // Sandbox/Test URLs
-      this.authUrl = 'https://api-test.raiaccept.com/v1/auth/token';
-      this.apiBaseUrl = 'https://api-test.raiaccept.com/v1';
-      this.paymentFormUrl = 'https://payment-test.raiaccept.com/checkout';
-    }
+    // RaiAccept uses a single API base URL for both Sandbox and Production
+    // The environment is determined by the API credentials used
+    // Source: RaiAccept team response
+    this.authUrl = 'https://api.raiaccept.com/authenticate';
+    this.apiBaseUrl = 'https://api.raiaccept.com';
+    this.paymentFormUrl = 'https://payment.raiaccept.com/checkout';
   }
 
   /**
    * Step 1: Authenticate and get access token
-   * Uses OAuth 2.0 Client Credentials flow
+   * Uses RaiAccept's authentication endpoint (wraps Amazon Cognito)
+   * Returns Bearer IdToken for API requests
    */
   private async authenticate(): Promise<string> {
     try {
-      console.log('🔐 Authenticating with RaiAccept OAuth 2.0...');
+      console.log('🔐 Authenticating with RaiAccept...');
       console.log('Auth URL:', this.authUrl);
       console.log('Client ID:', this.config.clientId);
       
-      // Try OAuth 2.0 Client Credentials flow
       const response = await fetch(this.authUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: this.config.clientId,
-          client_secret: this.config.clientSecret,
-        }).toString(),
+        body: JSON.stringify({
+          username: this.config.clientId,
+          password: this.config.clientSecret,
+        }),
       });
 
       console.log('Response status:', response.status, response.statusText);
@@ -97,15 +91,17 @@ export class RaiAcceptAPI {
       }
 
       const data: any = await response.json();
-      console.log('✅ Auth response received:', JSON.stringify(data, null, 2));
+      console.log('✅ Auth response received');
       
-      // Standard OAuth 2.0 returns access_token
-      const token = data.access_token;
+      // Extract the IdToken from response
+      const token = data.IdToken || data.idToken || data.token || data.access_token;
       
       if (!token) {
-        throw new Error('No access_token in authentication response');
+        console.error('No token in response:', JSON.stringify(data, null, 2));
+        throw new Error('No authentication token in response');
       }
       
+      console.log('✅ Token received, length:', token.length);
       return token;
     } catch (error) {
       logError('RaiAccept authentication failed', error, { source: 'raiaccept' });

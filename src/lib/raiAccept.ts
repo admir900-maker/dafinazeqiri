@@ -54,9 +54,9 @@ export class RaiAcceptAPI {
 
     // RaiAccept uses a single API base URL for both Sandbox and Production
     // The environment is determined by the API credentials used
-    // Source: RaiAccept team response
-    this.authUrl = 'https://api.raiaccept.com/authenticate';
-    this.apiBaseUrl = 'https://api.raiaccept.com';
+    // Actual endpoints from RaiAccept:
+    this.authUrl = 'https://authenticate.raiaccept.com';
+    this.apiBaseUrl = 'https://trapi.raiaccept.com';
     this.paymentFormUrl = 'https://payment.raiaccept.com/checkout';
   }
 
@@ -70,7 +70,7 @@ export class RaiAcceptAPI {
       console.log('🔐 Authenticating with RaiAccept...');
       console.log('Auth URL:', this.authUrl);
       console.log('Client ID:', this.config.clientId);
-      
+
       const response = await fetch(this.authUrl, {
         method: 'POST',
         headers: {
@@ -92,15 +92,15 @@ export class RaiAcceptAPI {
 
       const data: any = await response.json();
       console.log('✅ Auth response received');
-      
+
       // Extract the IdToken from response
       const token = data.IdToken || data.idToken || data.token || data.access_token;
-      
+
       if (!token) {
         console.error('No token in response:', JSON.stringify(data, null, 2));
         throw new Error('No authentication token in response');
       }
-      
+
       console.log('✅ Token received, length:', token.length);
       return token;
     } catch (error) {
@@ -132,7 +132,7 @@ export class RaiAcceptAPI {
         },
       };
 
-      const response = await fetch(`${this.apiBaseUrl}/v1/orders`, {
+      const response = await fetch(`${this.apiBaseUrl}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ export class RaiAcceptAPI {
         language: orderData.language || 'en',
       };
 
-      const response = await fetch(`${this.apiBaseUrl}/v1/payment-sessions`, {
+      const response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -314,7 +314,7 @@ export class RaiAcceptAPI {
         currency,
       };
 
-      const response = await fetch(`${this.apiBaseUrl}/v1/refunds`, {
+      const response = await fetch(`${this.apiBaseUrl}/refunds`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

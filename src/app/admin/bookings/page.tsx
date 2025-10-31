@@ -304,7 +304,7 @@ export default function BookingManagementPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Revenue</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ${bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0).toFixed(2)}
+                    €{bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -430,9 +430,9 @@ export default function BookingManagementPage() {
                         </td>
                         <td className="py-3 px-4">
                           <p className="font-medium text-gray-900">
-                            ${booking.totalAmount.toFixed(2)}
+                            €{booking.totalAmount.toFixed(2)}
                           </p>
-                          <p className="text-sm text-gray-500">{booking.currency || 'USD'}</p>
+                          <p className="text-sm text-gray-500">{booking.currency || 'EUR'}</p>
                         </td>
                         <td className="py-3 px-4">
                           {getStatusBadge(booking.status)}

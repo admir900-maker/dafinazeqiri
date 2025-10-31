@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       eventId,
       tickets: ticketsWithQR,
       totalAmount,
-      currency: 'USD',
+      currency: 'EUR',
       status: 'confirmed', // Admin created bookings are automatically confirmed
       paymentStatus: paymentMethod === 'direct' ? 'paid' : 'pending',
       paymentMethod,

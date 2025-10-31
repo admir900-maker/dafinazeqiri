@@ -71,6 +71,10 @@ export class RaiAcceptAPI {
    */
   private async authenticate(): Promise<string> {
     try {
+      console.log('🔐 Authenticating with Cognito...');
+      console.log('Auth URL:', this.authUrl);
+      console.log('Client ID:', this.config.clientId);
+      
       const response = await fetch(this.authUrl, {
         method: 'POST',
         headers: {
@@ -87,12 +91,27 @@ export class RaiAcceptAPI {
         }),
       });
 
+      console.log('Response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error(`Authentication failed: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Auth error response:', errorText);
+        throw new Error(`Authentication failed: ${response.statusText} - ${errorText}`);
       }
 
-      const data: AuthResponse = await response.json();
-      return data.access_token;
+      const data: any = await response.json();
+      console.log('✅ Auth response received:', JSON.stringify(data, null, 2));
+      
+      // Cognito returns AuthenticationResult with IdToken or AccessToken
+      const token = data.AuthenticationResult?.IdToken || 
+                   data.AuthenticationResult?.AccessToken || 
+                   data.access_token;
+      
+      if (!token) {
+        throw new Error('No access token in authentication response');
+      }
+      
+      return token;
     } catch (error) {
       logError('RaiAccept authentication failed', error, { source: 'raiaccept' });
       throw error;

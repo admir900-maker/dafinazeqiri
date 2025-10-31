@@ -94,7 +94,7 @@ export class RaiAcceptAPI {
       const data: AuthResponse = await response.json();
       return data.access_token;
     } catch (error) {
-      logError('RaiAccept authentication failed', error, { service: 'raiaccept' });
+      logError('RaiAccept authentication failed', error, { source: 'raiaccept' });
       throw error;
     }
   }
@@ -139,7 +139,7 @@ export class RaiAcceptAPI {
       const data: OrderResponse = await response.json();
       return data;
     } catch (error) {
-      logError('RaiAccept create order failed', error, { service: 'raiaccept' });
+      logError('RaiAccept create order failed', error, { source: 'raiaccept' });
       throw error;
     }
   }
@@ -182,7 +182,7 @@ export class RaiAcceptAPI {
       const data: PaymentSessionResponse = await response.json();
       return data.paymentSessionUrl;
     } catch (error) {
-      logError('RaiAccept create payment session failed', error, { service: 'raiaccept' });
+      logError('RaiAccept create payment session failed', error, { source: 'raiaccept' });
       throw error;
     }
   }
@@ -220,7 +220,7 @@ export class RaiAcceptAPI {
       };
     } catch (error: any) {
       console.error('❌ RaiAccept payment creation failed:', error);
-      logError('RaiAccept createPayment failed', error, { service: 'raiaccept' });
+      logError('RaiAccept createPayment failed', error, { source: 'raiaccept' });
 
       return {
         success: false,
@@ -252,7 +252,7 @@ export class RaiAcceptAPI {
 
       return await response.json();
     } catch (error) {
-      logError('RaiAccept get order details failed', error, { service: 'raiaccept' });
+      logError('RaiAccept get order details failed', error, { source: 'raiaccept' });
       throw error;
     }
   }
@@ -280,7 +280,7 @@ export class RaiAcceptAPI {
 
       return await response.json();
     } catch (error) {
-      logError('RaiAccept get transaction status failed', error, { service: 'raiaccept' });
+      logError('RaiAccept get transaction status failed', error, { source: 'raiaccept' });
       throw error;
     }
   }
@@ -320,7 +320,7 @@ export class RaiAcceptAPI {
 
       return await response.json();
     } catch (error) {
-      logError('RaiAccept refund failed', error, { service: 'raiaccept' });
+      logError('RaiAccept refund failed', error, { source: 'raiaccept' });
       throw error;
     }
   }

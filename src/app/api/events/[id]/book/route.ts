@@ -23,8 +23,8 @@ export async function POST(
     console.log('👤 User ID:', userId);
 
     // STRIPE PAYMENT DISABLED - Use RaiAccept instead
-    return NextResponse.json({ 
-      error: 'Stripe payment is disabled. Please use RaiAccept (Raiffeisen Bank) payment method.' 
+    return NextResponse.json({
+      error: 'Stripe payment is disabled. Please use RaiAccept (Raiffeisen Bank) payment method.'
     }, { status: 503 });
 
     // Check if Stripe is enabled
@@ -91,7 +91,9 @@ export async function POST(
     }> = [];
 
     for (const [ticketName, quantity] of Object.entries(ticketSelections)) {
-      if (typeof quantity !== 'number' || quantity <= 0) continue;
+      // Cast to number and validate
+      const qty = quantity as number;
+      if (typeof qty !== 'number' || qty <= 0) continue;
 
       const ticketType = event.ticketTypes.find((t: { name: string; price: number; availableTickets: number }) => t.name === ticketName);
 
@@ -99,18 +101,18 @@ export async function POST(
         return NextResponse.json({ error: `Ticket type "${ticketName}" not found` }, { status: 400 });
       }
 
-      if (ticketType.availableTickets < quantity) {
+      if (ticketType.availableTickets < qty) {
         return NextResponse.json({
           error: `Not enough tickets available for ${ticketName}. Only ${ticketType.availableTickets} left.`
         }, { status: 400 });
       }
 
-      const lineTotal = ticketType.price * quantity;
+      const lineTotal = ticketType.price * qty;
       totalPrice += lineTotal;
 
       ticketBreakdown.push({
         name: ticketName,
-        quantity,
+        quantity: qty,
         price: ticketType.price,
         total: lineTotal
       });
@@ -131,14 +133,16 @@ export async function POST(
     const bookingTickets = [];
 
     for (const [ticketName, quantity] of Object.entries(ticketSelections)) {
-      if (typeof quantity !== 'number' || quantity <= 0) continue;
+      // Cast to number and validate
+      const qty = quantity as number;
+      if (typeof qty !== 'number' || qty <= 0) continue;
 
       const ticketType = event.ticketTypes.find((t: any) => t.name === ticketName);
       if (!ticketType) continue;
 
       console.log('🎨 Ticket type color:', ticketType.color, 'for ticket:', ticketName);
 
-      for (let i = 0; i < quantity; i++) {
+      for (let i = 0; i < qty; i++) {
         try {
           const ticketId = uuidv4();
           const qrData = {
@@ -164,7 +168,8 @@ export async function POST(
           });
         } catch (qrError) {
           console.error('❌ Error generating QR code:', qrError);
-          const errorMessage = qrError instanceof Error ? qrError.message : 'Unknown error';
+          const err = qrError as Error;
+          const errorMessage = err.message || 'Unknown error';
           throw new Error(`Failed to generate QR code for ticket: ${errorMessage}`);
         }
       }
@@ -200,7 +205,8 @@ export async function POST(
       console.log('✅ Booking created with ID:', booking._id);
     } catch (bookingError) {
       console.error('❌ Error creating booking:', bookingError);
-      const errorMessage = bookingError instanceof Error ? bookingError.message : 'Unknown error';
+      const err = bookingError as Error;
+      const errorMessage = err.message || 'Unknown error';
       throw new Error(`Failed to create booking: ${errorMessage}`);
     }
 

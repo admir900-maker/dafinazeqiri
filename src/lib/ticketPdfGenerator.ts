@@ -144,14 +144,23 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
       logoImageBytes = await logoResponse.arrayBuffer();
     }
 
-    // Detect format and embed
-    if (finalLogoUrl.includes('png') || finalLogoUrl.startsWith('data:image/png')) {
-      logoImage = await pdfDoc.embedPng(logoImageBytes);
-    } else if (finalLogoUrl.includes('jpg') || finalLogoUrl.includes('jpeg')) {
-      logoImage = await pdfDoc.embedJpg(logoImageBytes);
-    } else {
-      // Default to PNG
-      logoImage = await pdfDoc.embedPng(logoImageBytes);
+    // Detect format and embed - try PNG first, then JPG as fallback
+    try {
+      if (finalLogoUrl.toLowerCase().includes('.png') || finalLogoUrl.startsWith('data:image/png')) {
+        logoImage = await pdfDoc.embedPng(logoImageBytes);
+      } else if (finalLogoUrl.toLowerCase().includes('.jpg') || finalLogoUrl.toLowerCase().includes('.jpeg') || finalLogoUrl.startsWith('data:image/jpeg')) {
+        logoImage = await pdfDoc.embedJpg(logoImageBytes);
+      } else {
+        // Try PNG first, fallback to JPG
+        try {
+          logoImage = await pdfDoc.embedPng(logoImageBytes);
+        } catch {
+          logoImage = await pdfDoc.embedJpg(logoImageBytes);
+        }
+      }
+    } catch (embedError) {
+      // If embedding fails, throw to use text fallback
+      throw new Error('Failed to embed logo image');
     }
 
     // Draw logo inside the white circle

@@ -3,7 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Event from '@/models/Event';
 import Booking from '@/models/Booking';
-import { RaiffeisenBankAPI, getRaiffeisenConfig } from '@/lib/raiffeisenBank';
+import { createRaiAcceptClient } from '@/lib/raiAccept';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
 import { getSiteConfig } from '@/lib/settings';
@@ -97,32 +97,58 @@ export async function POST(
 
     await booking.save();
 
-    // Get Raiffeisen configuration
-    const config = await getRaiffeisenConfig();
-    if (!config) {
-      return NextResponse.json({ error: 'Raiffeisen Bank configuration not found' }, { status: 500 });
+    // Initialize RaiAccept API client
+    console.log('🔧 Initializing RaiAccept client...');
+    const raiAcceptClient = createRaiAcceptClient();
+    
+    if (!raiAcceptClient) {
+      console.error('❌ RaiAccept client is null - check environment variables');
+      console.error('RAIACCEPT_CLIENT_ID:', process.env.RAIACCEPT_CLIENT_ID ? 'Set' : 'Missing');
+      console.error('RAIACCEPT_CLIENT_SECRET:', process.env.RAIACCEPT_CLIENT_SECRET ? 'Set' : 'Missing');
+      console.error('RAIACCEPT_ENVIRONMENT:', process.env.RAIACCEPT_ENVIRONMENT);
+      
+      return NextResponse.json({ 
+        error: 'Payment service not configured. Please check RaiAccept credentials.' 
+      }, { status: 500 });
     }
-
-    // Initialize Raiffeisen API
-    const raiffeisenAPI = new RaiffeisenBankAPI(config);
 
     // Get site configuration for description
     const siteConfig = await getSiteConfig();
 
-    // Create payment intent
-    const paymentIntent = await raiffeisenAPI.createPaymentIntent({
+    console.log('💳 Creating RaiAccept payment with amount:', totalAmount);
+    
+    // Create RaiAccept payment
+    const paymentResult = await raiAcceptClient.createPayment({
       amount: totalAmount,
       currency: 'EUR',
       orderId: booking._id.toString(),
       description: `${siteConfig.siteName} - ${event.name} - ${bookingTickets.length} ticket(s)`,
       customerEmail,
       customerName,
-      returnUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/booking-success?bookingId=${booking._id}`,
-      callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/raiffeisen/webhook`
+      language: 'en', // or 'sq' for Albanian, 'sr' for Serbian
+      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/booking-success?bookingId=${booking._id}`,
+      failureUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?error=payment_failed`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?error=payment_cancelled`,
+      notificationUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/raiaccept`
     });
 
-    // Update booking with payment intent ID
-    booking.raiffeisenPaymentId = paymentIntent.paymentId;
+    console.log('Payment result:', paymentResult);
+
+    if (!paymentResult.success || !paymentResult.paymentUrl) {
+      console.error('❌ Payment creation failed:', paymentResult.error);
+      // Delete booking if payment creation failed
+      await Booking.findByIdAndDelete(booking._id);
+      
+      return NextResponse.json({
+        error: 'Failed to create payment session',
+        details: paymentResult.error || 'Unknown error'
+      }, { status: 500 });
+    }
+
+    console.log('✅ Payment URL created:', paymentResult.paymentUrl);
+
+    // Update booking with RaiAccept order ID
+    booking.raiffeisenPaymentId = paymentResult.orderIdentification;
     await booking.save();
 
     // Update ticket quantities
@@ -135,13 +161,14 @@ export async function POST(
     await event.save();
 
     return NextResponse.json({
-      paymentUrl: paymentIntent.redirectUrl,
+      paymentUrl: paymentResult.paymentUrl,
       bookingId: booking._id,
-      bookingReference: booking.bookingReference
+      bookingReference: booking.bookingReference,
+      orderIdentification: paymentResult.orderIdentification
     });
 
   } catch (error) {
-    console.error('❌ Raiffeisen payment creation error:', error);
+    console.error('❌ RaiAccept payment creation error:', error);
     return NextResponse.json({
       error: 'Failed to create payment',
       details: error instanceof Error ? error.message : 'Unknown error'

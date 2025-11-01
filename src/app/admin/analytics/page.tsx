@@ -255,7 +255,7 @@ export default function AnalyticsPage() {
             {showAdvanced ? 'Simple' : 'Advanced'}
           </Button>
           <Button onClick={exportData} className="bg-green-600 hover:bg-green-700">
-            <Download className="w-4 w-4 mr-2" />
+            <Download className="w-4 mr-2" />
             Export
           </Button>
           <Button onClick={() => fetchAnalytics()} className="bg-blue-600 hover:bg-blue-700">
@@ -414,8 +414,8 @@ export default function AnalyticsPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
                     }`}
                 >
                   <tab.icon className="w-4 h-4" />

@@ -232,6 +232,23 @@ export async function POST(
       // Update booking with payment intent ID
       booking.paymentIntentId = paymentIntent.id;
       await booking.save();
+      
+      // Update QR codes with bookingId now that booking is saved
+      for (let i = 0; i < booking.tickets.length; i++) {
+        const ticket = booking.tickets[i];
+        const qrData = {
+          eventId,
+          ticketId: ticket.ticketId,
+          userId,
+          bookingId: booking._id.toString(),
+          ticketType: ticket.ticketName,
+          price: ticket.price,
+          eventTitle: event.title,
+          timestamp: Date.now()
+        };
+        booking.tickets[i].qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
+      }
+      await booking.save();
 
       return NextResponse.json({
         success: true,

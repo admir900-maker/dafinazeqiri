@@ -470,12 +470,6 @@ export default function EventDetailPage() {
                     Overview
                   </TabsTrigger>
                   <TabsTrigger
-                    value="tickets"
-                    className="flex-1 text-orange-100/70 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-900 data-[state=active]:text-black rounded-2xl font-bold transition-all duration-500 data-[state=active]:shadow-2xl py-4 uppercase tracking-wider text-sm"
-                  >
-                    Tickets
-                  </TabsTrigger>
-                  <TabsTrigger
                     value="details"
                     className="flex-1 text-orange-100/70 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-900 data-[state=active]:text-black rounded-2xl font-bold transition-all duration-500 data-[state=active]:shadow-2xl py-4 uppercase tracking-wider text-sm"
                   >

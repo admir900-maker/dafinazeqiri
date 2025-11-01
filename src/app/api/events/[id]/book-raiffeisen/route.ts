@@ -80,7 +80,7 @@ export async function POST(
       // Create individual ticket entries
       for (let i = 0; i < ticket.quantity; i++) {
         const ticketId = uuidv4();
-        
+
         // Create QR code data with all necessary information for validation
         const qrCodeData = JSON.stringify({
           eventId: event._id.toString(),
@@ -90,7 +90,7 @@ export async function POST(
           ticketName: ticketType.name,
           price: ticketType.price
         });
-        
+
         const qrCode = await QRCode.toDataURL(qrCodeData);
 
         bookingTickets.push({
@@ -126,7 +126,7 @@ export async function POST(
     });
 
     await booking.save();
-    
+
     // Update QR codes with bookingId
     for (let i = 0; i < booking.tickets.length; i++) {
       const ticket = booking.tickets[i];
@@ -140,7 +140,7 @@ export async function POST(
       });
       booking.tickets[i].qrCode = await QRCode.toDataURL(qrCodeData);
     }
-    
+
     await booking.save();
 
     // Initialize RaiAccept API client

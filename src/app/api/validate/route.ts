@@ -365,15 +365,15 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('❌ Error validating ticket:', error);
-    
+
     // Log detailed error information
     if (error instanceof Error) {
       console.error('Error name:', error.name);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       success: false,
       error: 'Internal server error',
       message: 'An unexpected error occurred while validating the ticket. Please try again.',

@@ -232,7 +232,7 @@ export async function POST(
       // Update booking with payment intent ID
       booking.paymentIntentId = paymentIntent.id;
       await booking.save();
-      
+
       // Update QR codes with bookingId now that booking is saved
       for (let i = 0; i < booking.tickets.length; i++) {
         const ticket = booking.tickets[i];

@@ -49,7 +49,7 @@ export default function ValidationLogsPage() {
   });
   const [selectedLog, setSelectedLog] = useState<ValidationLog | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  
+
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('today');

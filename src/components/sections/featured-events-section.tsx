@@ -217,17 +217,22 @@ export function FeaturedEventsSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="mb-6">
-              <img 
-                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017396/supernova-logo_cwt79o.jpg" 
-                alt="Supernova" 
-                className="h-32 md:h-40 w-auto mx-auto object-contain drop-shadow-2xl"
-                style={{
-                  filter: 'drop-shadow(0 0 20px rgba(205, 127, 50, 0.5))',
-                  animation: 'glow 2s ease-in-out infinite'
-                }}
-              />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-2xl" style={{
+              background: 'linear-gradient(135deg, #cd7f32, #b4530a)',
+              animation: 'glow 2s ease-in-out infinite'
+            }}>
+              <Sparkles className="w-10 h-10 text-black" />
             </div>
+            <h2 className="text-5xl md:text-6xl font-bold mb-4" style={{
+              background: 'linear-gradient(135deg, #cd7f32, #b4530a, #b4530a)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: '1px'
+            }}>
+              SUPERNOVA
+            </h2>
             <p className="text-2xl font-light text-orange-100/95 max-w-2xl mx-auto drop-shadow-xl tracking-wide">
               DafinaZeqiri.tickets
             </p>

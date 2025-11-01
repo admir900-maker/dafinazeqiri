@@ -18,7 +18,8 @@ import {
   ShoppingCart,
   CreditCard,
   Sparkles,
-  Star
+  Star,
+  Navigation
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +47,9 @@ interface Event {
   time: string
   location: string
   venue: string
+  address?: string
+  city?: string
+  country?: string
   ticketTypes: TicketType[]
   posterImage?: string
   bannerImage?: string
@@ -358,9 +362,9 @@ export default function EventDetailPage() {
 
             {/* Massive Title */}
             <div className="mb-8">
-              <img 
-                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png" 
-                alt="Supernova" 
+              <img
+                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
+                alt="Supernova"
                 className="h-32 md:h-48 lg:h-56 w-auto object-contain"
                 style={{
                   filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.8)) drop-shadow(0 0 60px rgba(251,191,36,0.2))',
@@ -411,10 +415,30 @@ export default function EventDetailPage() {
                   <div className="bg-gradient-to-br from-orange-500 to-amber-900 p-3 rounded-xl shadow-xl">
                     <MapPin className="w-6 h-6 text-black" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs text-orange-500/80 uppercase font-black tracking-[0.15em] mb-1">Venue</p>
                     <p className="text-orange-100 font-bold text-lg">{event.venue}</p>
+                    {(event.address || event.city || event.country) && (
+                      <p className="text-orange-100/70 text-sm mt-1">
+                        {[event.address, event.city, event.country].filter(Boolean).join(', ')}
+                      </p>
+                    )}
                   </div>
+                  {(event.address || event.venue) && (
+                    <Button
+                      onClick={() => {
+                        const address = [event.address, event.venue, event.city, event.country]
+                          .filter(Boolean)
+                          .join(', ');
+                        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+                        window.open(mapsUrl, '_blank');
+                      }}
+                      className="bg-gradient-to-br from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold rounded-xl px-4 py-2 shadow-xl hover:shadow-2xl transition-all duration-300"
+                    >
+                      <Navigation className="w-4 h-4 mr-2" />
+                      Navigate
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

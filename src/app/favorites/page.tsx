@@ -218,9 +218,9 @@ export default function FavoritesPage() {
                     {/* Event Details */}
                     <div className="p-6">
                       <div className="mb-4">
-                        <img 
-                          src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png" 
-                          alt="Supernova" 
+                        <img
+                          src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
+                          alt="Supernova"
                           className="h-10 w-auto object-contain mb-2 drop-shadow-md"
                         />
                         <p className="text-white/80 text-sm line-clamp-2 drop-shadow-sm">

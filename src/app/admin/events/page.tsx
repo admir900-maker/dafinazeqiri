@@ -31,6 +31,9 @@ interface Event {
   date: string;
   time: string;
   venue: string;
+  address?: string;
+  city?: string;
+  country?: string;
   category: {
     _id: string;
     name: string;
@@ -52,6 +55,9 @@ interface EventFormData {
   date: string;
   time: string;
   venue: string;
+  address: string;
+  city: string;
+  country: string;
   category: string;
   image: string;
   posterImage: string;
@@ -73,6 +79,9 @@ export default function EventsManagementPage() {
     date: '',
     time: '',
     venue: '',
+    address: '',
+    city: '',
+    country: '',
     category: '',
     image: '',
     posterImage: '',
@@ -129,7 +138,10 @@ export default function EventsManagementPage() {
       const submitData = {
         ...formData,
         location: formData.venue, // Map venue to location for validation
-        venue: formData.venue     // Keep venue for the model
+        venue: formData.venue,     // Keep venue for the model
+        address: formData.address,
+        city: formData.city,
+        country: formData.country
       };
 
       const response = await fetch(url, {
@@ -209,6 +221,9 @@ export default function EventsManagementPage() {
       date: '',
       time: '',
       venue: '',
+      address: '',
+      city: '',
+      country: '',
       category: '',
       image: '',
       posterImage: '',
@@ -226,6 +241,9 @@ export default function EventsManagementPage() {
       date: event.date.split('T')[0],
       time: event.time,
       venue: event.venue,
+      address: event.address || '',
+      city: event.city || '',
+      country: event.country || '',
       category: typeof event.category === 'string' ? event.category : (event.category as any)?._id || event.category,
       image: event.image,
       posterImage: event.posterImage || '',
@@ -367,7 +385,38 @@ export default function EventsManagementPage() {
                     value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                     className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    placeholder="e.g., National Arena"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="text-white text-sm font-medium">Address</label>
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    placeholder="e.g., 123 Main Street"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-white text-sm font-medium">City</label>
+                  <Input
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    placeholder="e.g., Pristina"
+                  />
+                </div>
+                <div>
+                  <label className="text-white text-sm font-medium">Country</label>
+                  <Input
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    placeholder="e.g., Kosovo"
                   />
                 </div>
               </div>

@@ -273,9 +273,9 @@ export default function BookingsPage() {
                             />
                           </div>
                           <div>
-                            <img 
-                              src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png" 
-                              alt="Supernova" 
+                            <img
+                              src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
+                              alt="Supernova"
                               className="h-8 w-auto object-contain mb-1"
                             />
                             <p className="text-gray-600">Booking #{booking.bookingReference}</p>

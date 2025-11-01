@@ -316,9 +316,9 @@ export default function UsersManagementPage() {
   const getRoleColor = (role?: string) => {
     switch (role) {
       case 'admin': return 'bg-red-600';
-      case 'manager': return 'bg-blue-600';
+      case 'manager': return 'bg-[#cd7f32]';
       case 'staff': return 'bg-green-600';
-      case 'validator': return 'bg-purple-600';
+      case 'validator': return 'bg-[#b4530a]';
       default: return 'bg-gray-600';
     }
   };
@@ -517,7 +517,7 @@ export default function UsersManagementPage() {
                 <div
                   key={userData.id}
                   className={`p-4 rounded-lg border transition-all ${isSelected
-                    ? 'bg-blue-600/20 border-blue-400/50'
+                    ? 'bg-[#cd7f32]/20 border-[#cd7f32]/50'
                     : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                 >

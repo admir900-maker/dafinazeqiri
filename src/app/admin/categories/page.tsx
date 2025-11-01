@@ -232,7 +232,7 @@ export default function AdminCategoriesPage() {
         </AdminCard>
         <AdminCard>
           <AdminCardContent className="p-6">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-[#cd7f32]">
               {categories.reduce((sum, c) => sum + c.eventCount, 0)}
             </div>
             <div className="text-sm text-gray-600">Total Events</div>

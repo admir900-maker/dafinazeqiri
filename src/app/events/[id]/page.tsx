@@ -795,22 +795,6 @@ export default function EventDetailPage() {
                               <p className="text-orange-100 font-bold text-lg">{event.organizer}</p>
                             </div>
                           )}
-
-                          <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/30 hover:border-orange-500/50 transition-all duration-300">
-                            <h4 className="font-black text-orange-500 mb-3 flex items-center gap-2">
-                              <Users className="w-5 h-5" />
-                              Capacity
-                            </h4>
-                            <p className="text-orange-100 font-black text-3xl">{event.maxCapacity || 0}</p>
-                            <p className="text-orange-100/70 text-sm">people</p>
-                          </div>
-
-                          <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/30 hover:border-orange-500/50 transition-all duration-300">
-                            <h4 className="font-black text-orange-500 mb-3">Category</h4>
-                            <Badge className="bg-gradient-to-r from-orange-500 to-amber-900 text-black border-0 text-sm font-bold px-4 py-2">
-                              {typeof event.category === 'object' ? event.category.name : event.category}
-                            </Badge>
-                          </div>
                         </div>
 
                         {event.tags && event.tags.length > 0 && (

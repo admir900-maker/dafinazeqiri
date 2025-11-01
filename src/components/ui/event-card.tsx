@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, Users, Play, ArrowRight, Sparkles } from 'lucide-react'
+import { Calendar, MapPin, Play, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -242,12 +242,6 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
                     <MapPin className="w-3.5 h-3.5 text-orange-500" />
                     <span className="text-xs text-orange-100 font-bold truncate max-w-[200px]">
                       {event.venue}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 backdrop-blur-xl bg-black/60 border border-orange-500/30 rounded-full px-4 py-2 shadow-lg">
-                    <Users className="w-3.5 h-3.5 text-orange-500" />
-                    <span className="text-xs text-orange-100 font-bold">
-                      {event.maxCapacity ? event.maxCapacity.toLocaleString() : '0'}
                     </span>
                   </div>
                 </div>

@@ -345,6 +345,18 @@ export default function EventDetailPage() {
         {/* Hero Content - Bottom Anchored */}
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
           <div className="container mx-auto max-w-7xl">
+            {/* Supernova Logo */}
+            <div className="mb-8">
+              <img 
+                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017396/supernova-logo_cwt79o.jpg" 
+                alt="Supernova" 
+                className="h-20 md:h-28 w-auto object-contain"
+                style={{
+                  filter: 'drop-shadow(0 0 30px rgba(205, 127, 50, 0.6))',
+                }}
+              />
+            </div>
+
             {/* Category Pill */}
             <div className="mb-6 inline-block">
               <div className="relative group">

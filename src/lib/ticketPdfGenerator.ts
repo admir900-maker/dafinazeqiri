@@ -81,29 +81,32 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const margin = 40;
   const contentWidth = width - (margin * 2);
 
-  const ticketColor = ticket.color || '#ec4899'; // Dafina Zeqiri pink
-  const colorRgb = hexToRgb(ticketColor);
+  // Supernova colors - bronze/orange theme
+  const supernovaBronze = rgb(0.80, 0.50, 0.20); // #cd7f32
+  const supernovaOrange = rgb(0.71, 0.33, 0.04); // #b4530a
+  const supernovaBlack = rgb(0, 0, 0); // #000000
+  const supernovaGray = rgb(0.1, 0.1, 0.1); // #1a1a1a
 
   // Glamorous gradient effect - Draw multiple layers for gradient look
   const headerHeight = 200;
 
-  // Base gradient layer (purple to pink)
+  // Base black background
   page.drawRectangle({
     x: 0,
     y: height - headerHeight,
     width: width,
     height: headerHeight,
-    color: rgb(0.69, 0.17, 0.44), // #b12c70 deep pink-purple
+    color: supernovaBlack,
   });
 
-  // Top gradient overlay (lighter pink)
+  // Bronze/orange gradient overlay
   page.drawRectangle({
     x: 0,
     y: height - headerHeight / 2,
     width: width,
     height: headerHeight / 2,
-    color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
-    opacity: 0.7,
+    color: supernovaBronze,
+    opacity: 0.3,
   });
 
   // Draw logo - embed provided logo or use default
@@ -112,20 +115,20 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
 
-    // Draw glamorous white circle background with pink border
+    // Draw glamorous black circle background with bronze border
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2,
-      color: rgb(1, 1, 1),
+      color: supernovaBlack,
     });
 
-    // Draw pink/purple gradient border effect
+    // Draw bronze gradient border effect
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2 + 3,
-      borderColor: rgb(0.93, 0.28, 0.60), // #ec4899 pink
+      borderColor: supernovaBronze, // #cd7f32 bronze
       borderWidth: 3,
     });
 
@@ -173,37 +176,37 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     });
   } catch (error) {
     console.error('Error embedding logo, using text fallback:', error);
-    // Fallback: Draw "M" letter with glamorous style
+    // Fallback: Draw "S" letter (Supernova) with glamorous style
     const logoSize = 70;
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
 
-    // Draw white circle
+    // Draw black circle
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2,
-      color: rgb(1, 1, 1),
+      color: supernovaBlack,
     });
 
-    // Draw pink border
+    // Draw bronze border
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2 + 3,
-      borderColor: rgb(0.93, 0.28, 0.60), // #ec4899 pink
+      borderColor: supernovaBronze, // #cd7f32 bronze
       borderWidth: 3,
     });
 
     const letterSize = 40;
-    const letter = 'M';
+    const letter = 'S';
     const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);
     page.drawText(letter, {
       x: logoX + logoSize / 2 - letterWidth / 2,
       y: logoY + logoSize / 2 - letterSize / 2 + 5,
       size: letterSize,
       font: helveticaBold,
-      color: rgb(0.93, 0.28, 0.60), // #ec4899 pink
+      color: supernovaBronze, // #cd7f32 bronze
     });
   }
 
@@ -224,13 +227,14 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const badgeText = ticket.ticketName.toUpperCase();
   const badgeWidth = helveticaBold.widthOfTextAtSize(badgeText, 12) + 20;
 
+  // Bronze/orange badge
   page.drawRectangle({
     x: margin + 90,
     y: badgeY - 5,
     width: badgeWidth,
     height: 25,
-    color: rgb(1, 1, 1),
-    borderColor: rgb(1, 1, 1),
+    color: supernovaBronze,
+    borderColor: supernovaBronze,
     borderWidth: 2,
   });
 
@@ -239,7 +243,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: badgeY,
     size: 12,
     font: helveticaBold,
-    color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
+    color: supernovaBlack,
   });
 
   let currentY = height - headerHeight - 60;
@@ -249,14 +253,14 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: currentY,
     size: 14,
     font: helveticaBold,
-    color: rgb(0, 0, 0),
+    color: supernovaBronze, // Bronze color for section headers
   });
 
   currentY -= 30;
 
   const leftColumnX = margin;
   const rightColumnX = width / 2 + 20;
-  const labelColor = rgb(0.4, 0.4, 0.4);
+  const labelColor = supernovaOrange; // Orange for labels
   const valueColor = rgb(0, 0, 0);
   const labelSize = 10;
   const valueSize = 12;
@@ -460,7 +464,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: currentY,
     size: 12,
     font: helveticaBold,
-    color: rgb(0.2, 0.2, 0.2),
+    color: supernovaBronze, // Bronze for section header
   });
 
   const instructions = [
@@ -492,19 +496,21 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: currentY,
     size: 14,
     font: helveticaBold,
-    color: rgb(0, 0, 0),
+    color: supernovaBronze, // Bronze color
   });
 
   currentY -= 20;
 
-  // Draw gray box for QR code
+  // Draw dark gray box for QR code (Supernova theme)
   const qrBoxHeight = 150;
   page.drawRectangle({
     x: margin,
     y: currentY - qrBoxHeight,
     width: contentWidth,
     height: qrBoxHeight,
-    color: rgb(0.95, 0.95, 0.95),
+    color: supernovaGray, // Dark gray background
+    borderColor: supernovaBronze, // Bronze border
+    borderWidth: 2,
   });
 
   // Generate and embed QR code
@@ -544,7 +550,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: qrY - 15,
     size: 8,
     font: helvetica,
-    color: rgb(0.4, 0.4, 0.4),
+    color: supernovaBronze, // Bronze color
   });
 
   // Serial number at bottom of box
@@ -554,18 +560,18 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: currentY - qrBoxHeight + 8,
     size: 7,
     font: helvetica,
-    color: rgb(0.5, 0.5, 0.5),
+    color: supernovaBronze, // Bronze color
   });
 
   // Footer section - well separated from QR box
   const footerY = 48;
 
-  // Draw footer separator line
+  // Draw footer separator line (bronze)
   page.drawLine({
     start: { x: margin, y: footerY + 8 },
     end: { x: width - margin, y: footerY + 8 },
-    thickness: 0.5,
-    color: rgb(0.8, 0.8, 0.8),
+    thickness: 1,
+    color: supernovaBronze, // Bronze line
   });
 
   const disclaimer = 'This ticket is non-transferable and valid for single entry only | Kjo biletë është jotransferueshme dhe e vlefshme vetëm për një hyrje';
@@ -574,7 +580,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: footerY,
     size: 7,
     font: helvetica,
-    color: rgb(0.5, 0.5, 0.5),
+    color: rgb(0.3, 0.3, 0.3),
   });
 
   const contactInfo = 'For support: info@dafinazeqiri.tickets | dafinazeqiri.tickets';
@@ -583,16 +589,16 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     y: footerY - 10,
     size: 7,
     font: helvetica,
-    color: rgb(0.6, 0.6, 0.6),
+    color: supernovaOrange, // Orange color
   });
 
-  const branding = 'Powered by ADJ | Dizajnimi & Zhvillimi ADJ';
+  const branding = '© 2025 SUPERNOVA - DafinaZeqiri.tickets';
   page.drawText(branding, {
     x: width / 2 - helveticaBold.widthOfTextAtSize(branding, 7) / 2,
     y: footerY - 20,
     size: 7,
     font: helveticaBold,
-    color: rgb(0.4, 0.4, 0.4),
+    color: supernovaBronze, // Bronze color
   });
 
   // Add generation timestamp

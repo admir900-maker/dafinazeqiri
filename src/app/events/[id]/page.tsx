@@ -730,7 +730,7 @@ export default function EventDetailPage() {
                                   </p>
                                 )}
                               </div>
-                              
+
                               {/* Google Maps Embed */}
                               {(event.address || event.venue) && (
                                 <div className="mt-4">

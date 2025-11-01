@@ -349,10 +349,10 @@ export default function EventDetailPage() {
             <div className="mb-6 inline-block">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-stone-900 rounded-full blur-md opacity-80" />
-                <Badge className="relative bg-black/90 backdrop-blur-xl text-orange-500 border-2 border-orange-500/60 px-6 py-3 text-sm font-black uppercase tracking-[0.2em] rounded-full shadow-2xl">
+                {/* <Badge className="relative bg-black/90 backdrop-blur-xl text-orange-500 border-2 border-orange-500/60 px-6 py-3 text-sm font-black uppercase tracking-[0.2em] rounded-full shadow-2xl">
                   <Star className="w-4 h-4 mr-2 inline animate-pulse" />
                   {typeof event.category === 'object' ? event.category.name : event.category}
-                </Badge>
+                </Badge> */}
               </div>
             </div>
 

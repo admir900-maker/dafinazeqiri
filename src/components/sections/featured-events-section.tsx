@@ -217,13 +217,13 @@ export function FeaturedEventsSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-2xl" style={{
+            {/* <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-2xl" style={{
               background: 'linear-gradient(135deg, #cd7f32, #b4530a)',
               animation: 'glow 2s ease-in-out infinite'
             }}>
               <Sparkles className="w-10 h-10 text-black" />
-            </div>
-            <h2 className="text-5xl md:text-6xl font-bold mb-4" style={{
+            </div> */}
+            {/* <h2 className="text-5xl md:text-6xl font-bold mb-4" style={{
               background: 'linear-gradient(135deg, #cd7f32, #b4530a, #b4530a)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -235,7 +235,7 @@ export function FeaturedEventsSection() {
             </h2>
             <p className="text-2xl font-light text-orange-100/95 max-w-2xl mx-auto drop-shadow-xl tracking-wide">
               DafinaZeqiri.tickets
-            </p>
+            </p> */}
           </motion.div>
         </div>
 

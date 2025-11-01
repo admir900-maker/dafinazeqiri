@@ -309,14 +309,14 @@ export class WalletPassGenerator {
    * Formats time string for display
    */
   private static formatTime(timeString: string): string {
-    if (!timeString) return '8:00 PM'; // Default time
+    if (!timeString) return '20:00'; // Default time
 
     try {
       const time = new Date(`2000-01-01T${timeString}`);
-      return time.toLocaleTimeString('en-US', {
-        hour: 'numeric',
+      return time.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true
+        hour12: false
       });
     } catch {
       return timeString; // Return original if parsing fails

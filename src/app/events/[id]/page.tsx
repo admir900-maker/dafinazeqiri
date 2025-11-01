@@ -147,10 +147,10 @@ export default function EventDetailPage() {
   }
 
   const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: false
     })
   }
 

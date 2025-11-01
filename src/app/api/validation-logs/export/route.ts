@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       const date = new Date(log.createdAt);
       return [
         date.toLocaleDateString(),
-        date.toLocaleTimeString(),
+        date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }),
         `"${log.eventTitle.replace(/"/g, '""')}"`,
         `"${log.userName.replace(/"/g, '""')}"`,
         `"${log.validatorName.replace(/"/g, '""')}"`,

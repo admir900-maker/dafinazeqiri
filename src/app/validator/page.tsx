@@ -1053,7 +1053,7 @@ Please try:
                                   <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                                     <span>{log.userName}</span>
                                     <span>•</span>
-                                    <span>{new Date(log.createdAt).toLocaleTimeString()}</span>
+                                    <span>{new Date(log.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                                     <span>•</span>
                                     <span className="capitalize">{log.validationType}</span>
                                   </div>

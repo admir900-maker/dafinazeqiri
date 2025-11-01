@@ -713,13 +713,56 @@ export default function EventDetailPage() {
                             )}
                           </div>
 
-                          <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/30 hover:border-orange-500/50 transition-all duration-300">
+                          <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/30 hover:border-orange-500/50 transition-all duration-300 md:col-span-2">
                             <h4 className="font-black text-orange-500 mb-3 flex items-center gap-2">
                               <MapPin className="w-5 h-5" />
-                              Location
+                              Location & Address
                             </h4>
-                            <p className="text-orange-100 font-bold text-lg">{event.venue}</p>
-                            <p className="text-orange-100/80">{event.location}</p>
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-orange-100 font-bold text-lg">{event.venue}</p>
+                                {event.address && (
+                                  <p className="text-orange-100/90 text-base mt-1">{event.address}</p>
+                                )}
+                                {(event.city || event.country) && (
+                                  <p className="text-orange-100/80 text-base">
+                                    {[event.city, event.country].filter(Boolean).join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              {/* Google Maps Embed */}
+                              {(event.address || event.venue) && (
+                                <div className="mt-4">
+                                  <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-orange-500/40 shadow-lg">
+                                    <iframe
+                                      width="100%"
+                                      height="100%"
+                                      style={{ border: 0 }}
+                                      loading="lazy"
+                                      allowFullScreen
+                                      referrerPolicy="no-referrer-when-downgrade"
+                                      src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8'}&q=${encodeURIComponent(
+                                        [event.address, event.venue, event.city, event.country].filter(Boolean).join(', ')
+                                      )}`}
+                                    />
+                                  </div>
+                                  <Button
+                                    onClick={() => {
+                                      const address = [event.address, event.venue, event.city, event.country]
+                                        .filter(Boolean)
+                                        .join(', ');
+                                      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+                                      window.open(mapsUrl, '_blank');
+                                    }}
+                                    className="mt-3 w-full bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold rounded-xl py-3 shadow-xl hover:shadow-2xl transition-all duration-300"
+                                  >
+                                    <Navigation className="w-5 h-5 mr-2" />
+                                    Open in Google Maps
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {event.ageLimit && (

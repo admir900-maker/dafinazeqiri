@@ -75,7 +75,7 @@ const adminNavItems: NavItem[] = [
     description: 'User management and roles'
   },
   {
-    href: '/validator',
+    href: '/admin/validator',
     label: 'Validation Logs',
     icon: CheckCircle,
     description: 'View validation activities'

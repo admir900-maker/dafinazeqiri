@@ -214,6 +214,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
+    // Ensure eventId is always populated
+    if (!booking.eventId || typeof booking.eventId === 'string') {
+      await booking.populate('eventId');
+    }
+
     // Verify booking belongs to the user in QR code
     if (booking.userId !== ticketUserId) {
       return NextResponse.json({ error: 'Invalid ticket ownership' }, { status: 400 });
@@ -238,12 +243,17 @@ export async function POST(req: NextRequest) {
 
     // Check if ticket is already used
     if (ticket.isUsed) {
+      // Ensure eventId is populated
+      if (!booking.eventId || typeof booking.eventId === 'string') {
+        await booking.populate('eventId');
+      }
+
       // Log failed validation attempt
       await logValidation(validationSettings, {
         success: false,
         ticketId: ticket.ticketId,
-        eventId: booking.eventId._id.toString(),
-        eventTitle: booking.eventId.title,
+        eventId: booking.eventId._id?.toString() || booking.eventId.toString(),
+        eventTitle: booking.eventId.title || 'Unknown Event',
         userId: booking.userId,
         userName: `User-${booking.userId}`,
         validatorId: userId,
@@ -267,9 +277,9 @@ export async function POST(req: NextRequest) {
           validatedBy: ticket.validatedBy,
         },
         event: {
-          title: booking.eventId.title,
-          date: booking.eventId.date,
-          location: booking.eventId.location,
+          title: booking.eventId.title || 'Unknown Event',
+          date: booking.eventId.date || new Date(),
+          location: booking.eventId.location || 'N/A',
         },
         customer: {
           userId: booking.userId
@@ -354,7 +364,20 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error validating ticket:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('❌ Error validating ticket:', error);
+    
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
+    return NextResponse.json({ 
+      success: false,
+      error: 'Internal server error',
+      message: 'An unexpected error occurred while validating the ticket. Please try again.',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

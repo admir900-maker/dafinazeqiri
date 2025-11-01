@@ -357,15 +357,16 @@ export default function EventDetailPage() {
             </div>
 
             {/* Massive Title */}
-            <h1
-              className="text-6xl md:text-8xl lg:text-9xl font-black text-white mb-8 leading-none"
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                textShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 60px rgba(251,191,36,0.2)'
-              }}
-            >
-              {event.title}
-            </h1>
+            <div className="mb-8">
+              <img 
+                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png" 
+                alt="Supernova" 
+                className="h-32 md:h-48 lg:h-56 w-auto object-contain"
+                style={{
+                  filter: 'drop-shadow(0 10px 40px rgba(0,0,0,0.8)) drop-shadow(0 0 60px rgba(251,191,36,0.2))',
+                }}
+              />
+            </div>
 
             {/* Artists - Elegant Display */}
             {event.artists && event.artists.length > 0 && (

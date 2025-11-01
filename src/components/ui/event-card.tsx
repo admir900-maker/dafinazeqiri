@@ -224,17 +224,17 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
                   </div>
                 )}
 
-                {/* Title - Large & Bold */}
-                <h3
-                  id={`event-title-${event._id}`}
-                  className={`font-black text-white line-clamp-2 drop-shadow-2xl ${variant === 'featured' ? 'text-5xl' : 'text-4xl'} leading-tight`}
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 40px rgba(251,191,36,0.3)'
-                  }}
-                >
-                  {event.title}
-                </h3>
+                {/* Title - Supernova Image */}
+                <div className="mb-4">
+                  <img 
+                    src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png" 
+                    alt="Supernova" 
+                    className={`w-auto object-contain drop-shadow-2xl ${variant === 'featured' ? 'h-20' : 'h-16'}`}
+                    style={{
+                      filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.8)) drop-shadow(0 0 40px rgba(251,191,36,0.3))'
+                    }}
+                  />
+                </div>
 
                 {/* Info Pills Row */}
                 <div className="flex flex-wrap items-center gap-3">

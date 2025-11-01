@@ -267,13 +267,17 @@ export default function BookingsPage() {
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden">
                             <Image
                               src={booking.event.posterImage}
-                              alt={booking.event.title}
+                              alt="Supernova Event"
                               fill
                               className="object-cover"
                             />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-gray-800">{booking.event.title}</h3>
+                            <img 
+                              src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png" 
+                              alt="Supernova" 
+                              className="h-8 w-auto object-contain mb-1"
+                            />
                             <p className="text-gray-600">Booking #{booking.bookingReference}</p>
                           </div>
                         </div>

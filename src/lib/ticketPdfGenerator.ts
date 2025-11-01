@@ -81,7 +81,11 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   const margin = 40;
   const contentWidth = width - (margin * 2);
 
-  // Supernova colors - bronze/orange theme
+  // Use ticket color if provided, otherwise use Supernova bronze
+  const ticketColor = ticket.color || '#cd7f32';
+  const colorRgb = hexToRgb(ticketColor);
+
+  // Supernova colors for other elements
   const supernovaBronze = rgb(0.80, 0.50, 0.20); // #cd7f32
   const supernovaOrange = rgb(0.71, 0.33, 0.04); // #b4530a
   const supernovaBlack = rgb(0, 0, 0); // #000000
@@ -115,20 +119,20 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
 
-    // Draw glamorous black circle background with bronze border
+    // Draw glamorous white circle background with ticket color border
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2,
-      color: supernovaBlack,
+      color: rgb(1, 1, 1),
     });
 
-    // Draw bronze gradient border effect
+    // Draw ticket color border effect
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2 + 3,
-      borderColor: supernovaBronze, // #cd7f32 bronze
+      borderColor: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
       borderWidth: 3,
     });
 
@@ -176,37 +180,37 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     });
   } catch (error) {
     console.error('Error embedding logo, using text fallback:', error);
-    // Fallback: Draw "S" letter (Supernova) with glamorous style
+    // Fallback: Draw "M" letter with glamorous style
     const logoSize = 70;
     const logoX = margin + 10;
     const logoY = height - headerHeight / 2 - logoSize / 2;
 
-    // Draw black circle
+    // Draw white circle
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2,
-      color: supernovaBlack,
+      color: rgb(1, 1, 1),
     });
 
-    // Draw bronze border
+    // Draw ticket color border
     page.drawCircle({
       x: logoX + logoSize / 2,
       y: logoY + logoSize / 2,
       size: logoSize / 2 + 3,
-      borderColor: supernovaBronze, // #cd7f32 bronze
+      borderColor: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
       borderWidth: 3,
     });
 
     const letterSize = 40;
-    const letter = 'S';
+    const letter = 'M';
     const letterWidth = helveticaBold.widthOfTextAtSize(letter, letterSize);
     page.drawText(letter, {
       x: logoX + logoSize / 2 - letterWidth / 2,
       y: logoY + logoSize / 2 - letterSize / 2 + 5,
       size: letterSize,
       font: helveticaBold,
-      color: supernovaBronze, // #cd7f32 bronze
+      color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
     });
   }
 

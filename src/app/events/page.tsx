@@ -213,7 +213,7 @@ function EventsPageContent() {
       <div className="min-h-screen">
         <PageLoading
           title="Loading Events"
-          description="Discovering amazing events for you..."
+          description="Supernova 2025"
           icon="music"
         />
       </div>
@@ -248,7 +248,7 @@ function EventsPageContent() {
           <div className="container mx-auto px-4 py-8">
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">All Events</h1>
             <p className="text-xl text-white drop-shadow-md">
-              Discover amazing concerts and live performances
+              Supernova 2025
             </p>
           </div>
         </div>

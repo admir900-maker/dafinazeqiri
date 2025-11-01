@@ -26,26 +26,26 @@ export async function generateMetadata(): Promise<Metadata> {
     const siteConfig = await getSiteConfig();
 
     return {
-      title: `${siteConfig.siteName} - Discover Amazing Concerts & Events`,
-      description: `Your ultimate destination for concert tickets and live music experiences. Discover, book, and enjoy unforgettable events with ${siteConfig.siteName}.`,
+      title: `${siteConfig.siteName} - Supernova 2025`,
+      description: `Supernova 2025 ${siteConfig.siteName}.`,
       keywords: "concerts, tickets, music events, live performances, festivals",
       authors: [{ name: `${siteConfig.siteName} Team` }],
       openGraph: {
-        title: `${siteConfig.siteName} - Discover Amazing Concerts & Events`,
-        description: `Your ultimate destination for concert tickets and live music experiences with ${siteConfig.siteName}.`,
+        title: `${siteConfig.siteName} - Supernova 2025`,
+        description: `Supernova 2025 ${siteConfig.siteName}.`,
         type: "website",
       },
     };
   } catch (error) {
     // Fallback metadata
     return {
-      title: "BiletAra - Discover Amazing Concerts & Events",
-      description: "Your ultimate destination for concert tickets and live music experiences. Discover, book, and enjoy unforgettable events with world-class artists.",
+      title: "Supernova 2025",
+      description: "Supernova 2025",
       keywords: "concerts, tickets, music events, live performances, festivals",
-      authors: [{ name: "BiletAra Team" }],
+      authors: [{ name: "Supernova 2025" }],
       openGraph: {
-        title: "BiletAra - Discover Amazing Concerts & Events",
-        description: "Your ultimate destination for concert tickets and live music experiences.",
+        title: "Supernova 2025",
+        description: "Supernova 2025.",
         type: "website",
       },
     };

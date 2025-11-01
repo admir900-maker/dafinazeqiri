@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 const heroSlides = [
   {
     title: "Experience Music Like Never Before",
-    subtitle: "Discover amazing concerts and live performances from world-class artists",
+    subtitle: "Supernova 2025",
     gradient: "from-orange-700 via-amber-900 to-orange-800",
     image: "/hero-1.jpg"
   },

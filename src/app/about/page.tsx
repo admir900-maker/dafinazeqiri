@@ -136,8 +136,7 @@ export default async function AboutPage() {
           <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Experience Something Amazing?</h2>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              Join the {siteConfig.siteName} community today and discover your next unforgettable live experience.
-              From intimate concerts to grand festivals, we have something for everyone.
+              Join the {siteConfig.siteName} community Supernova 2025 and start exploring unforgettable live events today!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

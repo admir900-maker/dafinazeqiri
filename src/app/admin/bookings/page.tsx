@@ -15,7 +15,8 @@ import {
   Download,
   DollarSign,
   Users,
-  Calendar
+  Calendar,
+  Undo2
 } from 'lucide-react';
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardContent } from '@/components/ui/admin-card';
 import { Button } from '@/components/ui/button';
@@ -215,7 +216,7 @@ export default function BookingManagementPage() {
 
       const result = await response.json();
       console.log('✅ Refund processed successfully:', result);
-
+      
       setMessage(`Refund of €${amount} processed successfully`);
       setShowRefundModal(false);
       setSelectedBooking(null);
@@ -530,20 +531,20 @@ export default function BookingManagementPage() {
                               </Button>
                             )}
 
-                            {booking.paymentStatus === 'paid' &&
-                              booking.status !== 'refunded' &&
-                              booking.paymentMethod === 'raiffeisen' && (
-                                <Button
-                                  onClick={() => initiateRefund(booking)}
-                                  disabled={updating === booking._id}
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                                  title="Issue refund"
-                                >
-                                  <Undo2 className="h-4 w-4" />
-                                </Button>
-                              )}
+                            {booking.paymentStatus === 'paid' && 
+                             booking.status !== 'refunded' && 
+                             booking.paymentMethod === 'raiffeisen' && (
+                              <Button
+                                onClick={() => initiateRefund(booking)}
+                                disabled={updating === booking._id}
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                title="Issue refund"
+                              >
+                                <Undo2 className="h-4 w-4" />
+                              </Button>
+                            )}
 
                             <Button
                               onClick={() => deleteBooking(booking._id)}
@@ -601,7 +602,7 @@ export default function BookingManagementPage() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Issue Refund</h3>
-
+              
               <div className="mb-4 p-4 bg-gray-50 rounded-md">
                 <p className="text-sm text-gray-600">Booking: <span className="font-medium text-gray-900">{selectedBooking.bookingReference}</span></p>
                 <p className="text-sm text-gray-600">Customer: <span className="font-medium text-gray-900">{selectedBooking.customerName || selectedBooking.customerEmail}</span></p>

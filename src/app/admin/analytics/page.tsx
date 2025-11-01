@@ -249,13 +249,13 @@ export default function AnalyticsPage() {
           </select>
           <Button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#cd7f32] hover:bg-[#b4530a]"
           >
             <Filter className="w-4 h-4 mr-2" />
             {showAdvanced ? 'Simple' : 'Advanced'}
           </Button>
           <Button onClick={exportData} className="bg-green-600 hover:bg-green-700">
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 w-4 mr-2" />
             Export
           </Button>
           <Button onClick={() => fetchAnalytics()} className="bg-blue-600 hover:bg-blue-700">
@@ -327,14 +327,14 @@ export default function AnalyticsPage() {
                       {data.summary.totalEvents} total, {data.summary.pastEvents} past
                     </p>
                   </div>
-                  <div className="p-3 bg-purple-600/20 rounded-lg">
-                    <Calendar className="w-6 h-6 text-purple-400" />
+                  <div className="p-3 bg-[#cd7f32]/20 rounded-lg">
+                    <Calendar className="w-6 h-6 text-[#cd7f32]" />
                   </div>
                 </div>
                 <div className="mt-4">
                   <div className="w-full bg-white/10 rounded-full h-2">
                     <div
-                      className="bg-purple-400 h-2 rounded-full"
+                      className="bg-[#cd7f32] h-2 rounded-full"
                       style={{
                         width: `${data.summary.totalEvents > 0 ? (data.summary.activeEvents / data.summary.totalEvents) * 100 : 0}%`
                       }}
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
               <AdminCard>
                 <AdminCardHeader>
                   <AdminCardTitle className="flex items-center gap-2">
-                    <PieChart className="w-5 h-5 text-purple-400" />
+                    <PieChart className="w-5 h-5 text-[#cd7f32]" />
                     Event Categories
                   </AdminCardTitle>
                 </AdminCardHeader>
@@ -476,7 +476,7 @@ export default function AnalyticsPage() {
                   <div className="space-y-3">
                     {data.categoryStats.length > 0 ? (
                       data.categoryStats.map((category, index) => {
-                        const colors = ['bg-purple-400', 'bg-blue-400', 'bg-green-400', 'bg-orange-500', 'bg-pink-400'];
+                        const colors = ['bg-[#cd7f32]', 'bg-[#b4530a]', 'bg-green-400', 'bg-orange-500', 'bg-pink-400'];
                         const color = colors[index % colors.length];
                         const percentage = data.summary.totalEvents > 0 ?
                           (category.count / data.summary.totalEvents * 100) : 0;
@@ -581,14 +581,14 @@ export default function AnalyticsPage() {
             <AdminCard>
               <AdminCardHeader>
                 <AdminCardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-purple-400" />
+                  <Calendar className="w-5 h-5 text-[#cd7f32]" />
                   Event Performance Analysis
                 </AdminCardTitle>
               </AdminCardHeader>
               <AdminCardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Calendar className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <Calendar className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white">{data.summary.activeEvents}</div>
                     <div className="text-white/60 text-sm">Active Events</div>
                   </div>
@@ -614,8 +614,8 @@ export default function AnalyticsPage() {
                     data.popularEvents.map((event, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
                         <div className="flex items-center gap-4">
-                          <div className="flex items-center justify-center w-10 h-10 bg-purple-600/20 rounded-full">
-                            <span className="text-purple-400 font-bold">{index + 1}</span>
+                          <div className="flex items-center justify-center w-10 h-10 bg-[#cd7f32]/20 rounded-full">
+                            <span className="text-[#cd7f32] font-bold">{index + 1}</span>
                           </div>
                           <div>
                             <div className="text-white font-medium">{event.name}</div>
@@ -664,7 +664,7 @@ export default function AnalyticsPage() {
                     <div className="text-white/60 text-sm">Conversion Rate</div>
                   </div>
                   <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <DollarSign className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <DollarSign className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white">{formatCurrency(calculateAverageOrderValue())}</div>
                     <div className="text-white/60 text-sm">Avg Order Value</div>
                   </div>

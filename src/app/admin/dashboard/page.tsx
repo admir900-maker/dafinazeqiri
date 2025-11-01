@@ -294,7 +294,7 @@ export default function AdminDashboard() {
               Manage Categories
             </Button>
             <Button
-              className="w-full justify-start bg-purple-600 text-white hover:bg-purple-700"
+              className="w-full justify-start bg-[#cd7f32] text-white hover:bg-[#b4530a]"
               onClick={() => router.push('/admin/bookings')}
             >
               <Ticket className="w-4 h-4 mr-2" />

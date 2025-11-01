@@ -207,7 +207,7 @@ export default function TicketsManagementPage() {
           </div>
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cd7f32] mx-auto mb-4"></div>
               <p className="text-gray-600">Loading tickets...</p>
             </div>
           </div>
@@ -238,8 +238,8 @@ export default function TicketsManagementPage() {
 
         {/* Message Display */}
         {message && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-blue-800">{message}</p>
+          <div className="mb-6 p-4 bg-orange-50 border border-[#cd7f32] rounded-md">
+            <p className="text-[#b4530a]">{message}</p>
           </div>
         )}
 
@@ -269,7 +269,7 @@ export default function TicketsManagementPage() {
               {/* Events List */}
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mr-2" />
+                  <RefreshCw className="h-6 w-6 animate-spin text-[#cd7f32] mr-2" />
                   <span>Loading events...</span>
                 </div>
               ) : filteredEvents.length === 0 ? (

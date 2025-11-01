@@ -289,7 +289,7 @@ export default function BookingManagementPage() {
           </div>
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cd7f32] mx-auto mb-4"></div>
               <p className="text-gray-600">Loading bookings...</p>
             </div>
           </div>
@@ -319,8 +319,8 @@ export default function BookingManagementPage() {
           <AdminCard>
             <AdminCardContent className="flex items-center p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg mr-4">
-                  <Calendar className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-orange-100 rounded-lg mr-4">
+                  <Calendar className="h-6 w-6 text-[#cd7f32]" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Bookings</p>
@@ -426,8 +426,8 @@ export default function BookingManagementPage() {
 
         {/* Message Display */}
         {message && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-blue-800">{message}</p>
+          <div className="mb-6 p-4 bg-orange-50 border border-[#cd7f32] rounded-md">
+            <p className="text-[#b4530a]">{message}</p>
           </div>
         )}
 
@@ -442,7 +442,7 @@ export default function BookingManagementPage() {
           <AdminCardContent>
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mr-2" />
+                <RefreshCw className="h-6 w-6 animate-spin text-[#cd7f32] mr-2" />
                 <span>Loading bookings...</span>
               </div>
             ) : bookings.length === 0 ? (
@@ -539,7 +539,7 @@ export default function BookingManagementPage() {
                                 disabled={updating === booking._id}
                                 size="sm"
                                 variant="outline"
-                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                className="text-[#cd7f32] border-[#cd7f32] hover:bg-orange-50"
                                 title="Issue refund"
                               >
                                 <Undo2 className="h-4 w-4" />
@@ -657,7 +657,7 @@ export default function BookingManagementPage() {
                 <Button
                   onClick={processRefund}
                   disabled={!refundAmount || parseFloat(refundAmount) <= 0 || updating === selectedBooking._id}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="flex-1 bg-[#cd7f32] hover:bg-[#b4530a] text-white"
                 >
                   {updating === selectedBooking._id ? (
                     <>

@@ -176,7 +176,7 @@ export default function AdminCategoriesPage() {
         </div>
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cd7f32] mx-auto mb-4"></div>
             <p className="text-gray-600">Loading categories...</p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function AdminCategoriesPage() {
         </div>
         <Button
           onClick={() => setIsCreating(true)}
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-[#cd7f32] hover:bg-[#b4530a]"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Category
@@ -393,7 +393,7 @@ export default function AdminCategoriesPage() {
               </Button>
               <Button
                 onClick={isCreating ? handleCreateCategory : handleUpdateCategory}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-[#cd7f32] hover:bg-[#b4530a]"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {isCreating ? 'Create' : 'Update'}

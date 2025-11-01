@@ -295,7 +295,7 @@ export default function EventsManagementPage() {
                 className="border-gray-300"
               />
             </div>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button className="bg-[#cd7f32] text-white hover:bg-[#b4530a]">
               <Search className="w-4 h-4" />
             </Button>
           </div>
@@ -544,7 +544,7 @@ export default function EventsManagementPage() {
                       </Badge>
                     )}
                     {event.bannerImage && (
-                      <Badge variant="outline" className="text-xs border-blue-400 text-blue-400">
+                      <Badge variant="outline" className="text-xs border-[#cd7f32] text-[#cd7f32]">
                         <FileImage className="w-3 h-3 mr-1" />
                         Banner
                       </Badge>
@@ -561,7 +561,7 @@ export default function EventsManagementPage() {
                 <div className="flex gap-2 pt-2">
                   <Button
                     onClick={() => startEdit(event)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                    className="flex-1 bg-[#cd7f32] hover:bg-[#b4530a] text-white text-xs"
                   >
                     <Edit className="w-3 h-3 mr-1" />
                     Edit

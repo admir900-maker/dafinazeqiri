@@ -176,14 +176,14 @@ export default function UserActivityPage() {
       case 'failed': return <XCircle className="w-4 h-4 text-red-400" />;
       case 'pending': return <Clock className="w-4 h-4 text-orange-500" />;
       case 'cancelled': return <AlertCircle className="w-4 h-4 text-gray-400" />;
-      default: return <Activity className="w-4 h-4 text-blue-400" />;
+      default: return <Activity className="w-4 h-4 text-[#cd7f32]" />;
     }
   };
 
   const getDeviceIcon = (device: string) => {
     switch (device) {
-      case 'mobile': return <Smartphone className="w-4 h-4 text-blue-400" />;
-      case 'tablet': return <Tablet className="w-4 h-4 text-purple-400" />;
+      case 'mobile': return <Smartphone className="w-4 h-4 text-[#cd7f32]" />;
+      case 'tablet': return <Tablet className="w-4 h-4 text-[#b4530a]" />;
       case 'desktop': return <Monitor className="w-4 h-4 text-green-400" />;
       default: return <Monitor className="w-4 h-4 text-gray-400" />;
     }
@@ -193,7 +193,7 @@ export default function UserActivityPage() {
     switch (browser) {
       case 'Chrome': return <Chrome className="w-4 h-4 text-orange-500" />;
       case 'Firefox': return <Globe className="w-4 h-4 text-orange-400" />;
-      case 'Safari': return <Globe className="w-4 h-4 text-blue-400" />;
+      case 'Safari': return <Globe className="w-4 h-4 text-[#cd7f32]" />;
       default: return <Activity className="w-4 h-4 text-gray-400" />;
     }
   };
@@ -237,7 +237,7 @@ export default function UserActivityPage() {
         </div>
         <div className="flex items-center justify-center min-h-96 text-white">
           <div className="text-center">
-            <Activity className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-pulse" />
+            <Activity className="w-12 h-12 mx-auto mb-4 text-[#cd7f32] animate-pulse" />
             <p className="text-lg">Loading user activities...</p>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function UserActivityPage() {
             <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">Error Loading Activities</h2>
             <p className="text-red-400 mb-6">{error}</p>
-            <Button onClick={() => fetchActivities()} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => fetchActivities()} className="bg-[#cd7f32] hover:bg-[#b4530a]">
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
@@ -277,7 +277,7 @@ export default function UserActivityPage() {
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#cd7f32] hover:bg-[#b4530a]"
           >
             <Filter className="w-4 h-4 mr-2" />
             {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -286,7 +286,7 @@ export default function UserActivityPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button onClick={() => fetchActivities(currentPage)} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={() => fetchActivities(currentPage)} className="bg-[#cd7f32] hover:bg-[#b4530a]">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
@@ -306,7 +306,7 @@ export default function UserActivityPage() {
                       {data.pagination.totalCount.toLocaleString()}
                     </p>
                   </div>
-                  <Activity className="w-8 h-8 text-blue-400" />
+                  <Activity className="w-8 h-8 text-[#cd7f32]" />
                 </div>
               </AdminCardContent>
             </AdminCard>
@@ -440,7 +440,7 @@ export default function UserActivityPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={() => fetchActivities(1)} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={() => fetchActivities(1)} className="bg-[#cd7f32] hover:bg-[#b4530a]">
                     <Search className="w-4 h-4 mr-2" />
                     Apply Filters
                   </Button>

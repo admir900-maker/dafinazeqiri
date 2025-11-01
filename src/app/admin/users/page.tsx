@@ -424,7 +424,7 @@ export default function UsersManagementPage() {
 
       {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
-        <AdminCard className="bg-blue-600/20 border-blue-400/30 backdrop-blur-sm">
+        <AdminCard className="bg-[#cd7f32]/20 border-[#cd7f32]/30 backdrop-blur-sm">
           <AdminCardContent className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-white font-medium">
@@ -444,7 +444,7 @@ export default function UsersManagementPage() {
                 <Button
                   onClick={performBulkAction}
                   disabled={!bulkAction}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-[#cd7f32] hover:bg-[#b4530a] text-white"
                 >
                   Apply
                 </Button>
@@ -530,7 +530,7 @@ export default function UsersManagementPage() {
                         className="p-0 h-auto text-white hover:bg-transparent"
                       >
                         {isSelected ? (
-                          <CheckSquare className="w-5 h-5 text-blue-400" />
+                          <CheckSquare className="w-5 h-5 text-[#cd7f32]" />
                         ) : (
                           <Square className="w-5 h-5" />
                         )}
@@ -588,7 +588,7 @@ export default function UsersManagementPage() {
                         <Button
                           onClick={() => fetchUserDetails(userData.id)}
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-[#cd7f32] hover:bg-[#b4530a] text-white"
                         >
                           <Eye className="w-3 h-3 mr-1" />
                           Details
@@ -609,7 +609,7 @@ export default function UsersManagementPage() {
                                 <Button
                                   onClick={() => promoteUser(userData.id, 'validator')}
                                   size="sm"
-                                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                                  className="bg-[#b4530a] hover:bg-[#8b3c07] text-white"
                                 >
                                   <CheckCircle className="w-3 h-3 mr-1" />
                                   Make Validator
@@ -620,7 +620,7 @@ export default function UsersManagementPage() {
                               <Button
                                 onClick={() => promoteUser(userData.id, 'manager')}
                                 size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                className="bg-[#cd7f32] hover:bg-[#b4530a] text-white"
                               >
                                 <Shield className="w-3 h-3 mr-1" />
                                 Make Manager
@@ -630,7 +630,7 @@ export default function UsersManagementPage() {
                               <Button
                                 onClick={() => promoteUser(userData.id, 'validator')}
                                 size="sm"
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                className="bg-[#b4530a] hover:bg-[#8b3c07] text-white"
                               >
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Make Validator

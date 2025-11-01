@@ -1,7 +1,7 @@
-# BiletAra Categories System Documentation
+# SUPERNOVA Categories System Documentation
 
 ## Overview
-A comprehensive categories system for the BiletAra event management platform, providing organized event browsing, filtering, and management capabilities.
+A comprehensive categories system for the SUPERNOVA event management platform, providing organized event browsing, filtering, and management capabilities.
 
 ## Features Implemented
 
@@ -251,6 +251,6 @@ Existing events will continue to work with legacy category strings. To use the n
 
 ## Conclusion
 
-The categories system provides a robust foundation for organizing events in BiletAra. It's built with scalability, performance, and user experience in mind, while maintaining backward compatibility with existing data.
+The categories system provides a robust foundation for organizing events in SUPERNOVA. It's built with scalability, performance, and user experience in mind, while maintaining backward compatibility with existing data.
 
 The implementation follows modern web development best practices and provides a solid base for future enhancements and features.

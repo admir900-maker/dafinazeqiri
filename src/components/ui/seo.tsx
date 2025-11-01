@@ -48,7 +48,7 @@ export const SEO: React.FC<SEOProps> = ({
   alternateLanguages = []
 }) => {
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
-    siteName: 'BiletAra', // fallback
+    siteName: 'SUPERNOVA', // fallback
     siteDescription: '',
     siteUrl: '',
     currency: 'EUR',
@@ -181,7 +181,7 @@ export const generateOrganizationStructuredData = async () => {
   try {
     const response = await fetch('/api/site-config')
     const siteConfig = response.ok ? await response.json() : {
-      siteName: 'BiletAra',
+      siteName: 'SUPERNOVA',
       siteDescription: 'Premier destination for live event tickets and entertainment experiences',
       siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets'
     }
@@ -210,7 +210,7 @@ export const generateOrganizationStructuredData = async () => {
     return {
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'BiletAra',
+      name: 'SUPERNOVA',
       description: 'Premier destination for live event tickets and entertainment experiences',
       url: process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets',
       logo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://dafinazeqiri.tickets'}/logo.png`,

@@ -16,7 +16,7 @@ interface SiteConfig {
 export function Footer() {
   const currentYear = new Date().getFullYear()
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
-    siteName: 'BiletAra', // fallback
+    siteName: 'SUPERNOVA', // fallback
     siteDescription: '',
     siteUrl: '',
     currency: 'EUR',

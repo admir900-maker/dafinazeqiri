@@ -71,7 +71,7 @@ export async function GET() {
       smtpUser: settings.smtpUser || '',
       smtpPass: settings.smtpPass ? '••••••••••••••••' : '',
       senderEmail: settings.senderEmail || '',
-      senderName: settings.senderName || 'BiletAra'
+      senderName: settings.senderName || 'SUPERNOVA'
     });
 
   } catch (error) {

@@ -44,13 +44,13 @@ export async function getSettings() {
 export function getFallbackSettings() {
   return {
     general: {
-      siteName: process.env.SITE_NAME || 'BiletAra',
+      siteName: process.env.SITE_NAME || 'SUPERNOVA',
       siteUrl: process.env.NEXT_PUBLIC_DOMAIN || 'https://dafinazeqiri.tickets',
       currency: 'EUR',
       timezone: 'UTC'
     },
     email: {
-      fromName: process.env.EMAIL_FROM_NAME || 'BiletAra',
+      fromName: process.env.EMAIL_FROM_NAME || 'SUPERNOVA',
       fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@dafinazeqiri.tickets',
       smtp: {
         host: process.env.SMTP_HOST || '',
@@ -155,7 +155,7 @@ export async function getSiteConfig() {
   const settings = await getSettings();
 
   return {
-    siteName: settings.general?.siteName || 'BiletAra',
+    siteName: settings.general?.siteName || 'SUPERNOVA',
     siteDescription: settings.general?.siteDescription || 'Event booking platform',
     siteUrl: settings.general?.siteUrl || process.env.NEXT_PUBLIC_DOMAIN || 'https://dafinazeqiri.tickets',
     currency: settings.general?.currency || 'EUR',

@@ -1,5 +1,5 @@
 /**
- * Performance monitoring utilities for the BiletAra application
+ * Performance monitoring utilities for the SUPERNOVA application
  * This file contains functions to monitor and optimize application performance
  */
 

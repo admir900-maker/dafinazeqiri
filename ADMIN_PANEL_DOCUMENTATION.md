@@ -1,7 +1,7 @@
-# BiletAra Admin Panel Documentation
+# SUPERNOVA Admin Panel Documentation
 
 ## Overview
-The BiletAra admin panel has been completely redesigned with a modern, responsive interface and proper navigation structure. All admin routes are now properly organized and connected.
+The SUPERNOVA admin panel has been completely redesigned with a modern, responsive interface and proper navigation structure. All admin routes are now properly organized and connected.
 
 ## Admin Routes Structure
 

@@ -1,6 +1,6 @@
-# BiletAra - Event Ticketing Platform
+# SUPERNOVA - Event Ticketing Platform
 
-BiletAra is a production-ready event ticketing platform built with Next.js 15, featuring secure payment processing, admin management, email notifications, and QR code ticket validation.
+SUPERNOVA is a production-ready event ticketing platform built with Next.js 15, featuring secure payment processing, admin management, email notifications, and QR code ticket validation.
 
 ## 🚀 Features
 

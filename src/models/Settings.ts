@@ -214,7 +214,7 @@ export interface ISettings extends mongoose.Document {
 
 const SettingsSchema = new mongoose.Schema<ISettings>({
   general: {
-    siteName: { type: String, default: 'BiletAra' },
+    siteName: { type: String, default: 'SUPERNOVA' },
     siteDescription: { type: String, default: 'Event booking platform' },
     siteUrl: { type: String, default: 'https://dafinazeqiri.tickets' },
     logoUrl: { type: String },
@@ -227,7 +227,7 @@ const SettingsSchema = new mongoose.Schema<ISettings>({
   },
 
   email: {
-    fromName: { type: String, default: 'BiletAra' },
+    fromName: { type: String, default: 'SUPERNOVA' },
     fromAddress: { type: String, default: 'noreply@dafinazeqiri.tickets' },
     replyToAddress: { type: String, default: 'info@dafinazeqiri.tickets' },
     supportEmail: { type: String, default: 'info@dafinazeqiri.tickets' },
@@ -400,7 +400,7 @@ const SettingsSchema = new mongoose.Schema<ISettings>({
     gdprCompliance: { type: Boolean, default: true },
     dataRetentionDays: { type: Number, default: 365 },
     contactEmail: { type: String, default: 'contact@dafinazeqiri.tickets' },
-    companyName: { type: String, default: 'BiletAra Ltd.' },
+    companyName: { type: String, default: 'SUPERNOVA Ltd.' },
     companyAddress: { type: String, default: '' }
   },
 

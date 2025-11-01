@@ -67,17 +67,17 @@ export async function POST(req: NextRequest) {
               <li><strong>Secure Connection:</strong> ${smtpSecure ? 'Yes (SSL/TLS)' : 'No'}</li>
               <li><strong>Username:</strong> ${smtpUser}</li>
               <li><strong>Sender Email:</strong> ${senderEmail}</li>
-              <li><strong>Sender Name:</strong> ${senderName || 'BiletAra'}</li>
+              <li><strong>Sender Name:</strong> ${senderName || 'SUPERNOVA'}</li>
             </ul>
           </div>
           <p style="color: #6b7280;">
             This is a test email to verify your SMTP configuration is working correctly. 
-            Your BiletAra application can now send emails for booking confirmations, 
+            Your SUPERNOVA application can now send emails for booking confirmations, 
             password resets, and other notifications.
           </p>
           <div style="text-align: center; margin-top: 30px;">
             <p style="color: #9ca3af; font-size: 14px;">
-              Sent by BiletAra Event Management System<br>
+              Sent by SUPERNOVA Event Management System<br>
               ${new Date().toLocaleString()}
             </p>
           </div>
@@ -94,11 +94,11 @@ Configuration Details:
 - Secure Connection: ${smtpSecure ? 'Yes (SSL/TLS)' : 'No'}
 - Username: ${smtpUser}
 - Sender Email: ${senderEmail}
-- Sender Name: ${senderName || 'BiletAra'}
+- Sender Name: ${senderName || 'SUPERNOVA'}
 
-This is a test email to verify your SMTP configuration. Your BiletAra application can now send emails for booking confirmations, password resets, and other notifications.
+This is a test email to verify your SMTP configuration. Your SUPERNOVA application can now send emails for booking confirmations, password resets, and other notifications.
 
-Sent by BiletAra Event Management System
+Sent by SUPERNOVA Event Management System
 ${new Date().toLocaleString()}
       `
     };

@@ -1,5 +1,5 @@
 /**
- * Comprehensive validation utilities for BiletAra application
+ * Comprehensive validation utilities for SUPERNOVA application
  * Provides both client-side and server-side validation functions
  */
 

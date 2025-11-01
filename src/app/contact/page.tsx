@@ -26,7 +26,7 @@ export default function ContactPage() {
     message: ''
   })
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
-    siteName: 'BiletAra', // fallback
+    siteName: 'SUPERNOVA', // fallback
     siteDescription: '',
     siteUrl: '',
     currency: 'EUR',

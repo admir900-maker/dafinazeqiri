@@ -154,7 +154,7 @@ export function AdminNavigation() {
 
 export function AdminHeader() {
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
-    siteName: 'BiletAra', // fallback
+    siteName: 'SUPERNOVA', // fallback
     siteDescription: '',
     siteUrl: '',
     currency: 'EUR',

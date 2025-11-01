@@ -16,7 +16,7 @@ export async function GET() {
         smtpUser: '',
         smtpPass: '',
         senderEmail: '',
-        senderName: 'BiletAra'
+        senderName: 'SUPERNOVA'
       });
     }
 
@@ -27,7 +27,7 @@ export async function GET() {
       smtpUser: settings.smtpUser || '',
       smtpPass: settings.smtpPass || '',
       senderEmail: settings.senderEmail || '',
-      senderName: settings.senderName || 'BiletAra'
+      senderName: settings.senderName || 'SUPERNOVA'
     });
   } catch (error) {
     console.error('Error fetching SMTP settings:', error);
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     settings.smtpUser = smtpUser;
     settings.smtpPass = smtpPass;
     settings.senderEmail = senderEmail;
-    settings.senderName = senderName || 'BiletAra';
+    settings.senderName = senderName || 'SUPERNOVA';
     settings.updatedAt = new Date();
 
     await settings.save();

@@ -386,7 +386,7 @@ export default function AdminSettingsPage() {
                   <Input
                     value={settings.general?.siteName || ''}
                     onChange={(e) => updateNestedSetting('general', 'siteName', e.target.value)}
-                    placeholder="BiletAra"
+                    placeholder="SUPERNOVA"
                   />
                 </div>
                 <div className="space-y-2">
@@ -654,7 +654,7 @@ export default function AdminSettingsPage() {
                   <Input
                     value={settings.email?.fromName || ''}
                     onChange={(e) => updateNestedSetting('email', 'fromName', e.target.value)}
-                    placeholder="BiletAra"
+                    placeholder="SUPERNOVA"
                   />
                 </div>
                 <div className="space-y-2">

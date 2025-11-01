@@ -28,7 +28,7 @@ export function Header({ }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
-    siteName: 'BiletAra', // fallback
+    siteName: 'SUPERNOVA', // fallback
     siteDescription: '',
     siteUrl: '',
     currency: 'EUR',

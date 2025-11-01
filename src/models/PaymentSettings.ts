@@ -35,7 +35,7 @@ const PaymentSettingsSchema = new mongoose.Schema({
   smtpUser: { type: String, required: false },
   smtpPass: { type: String, required: false },
   senderEmail: { type: String, required: false },
-  senderName: { type: String, default: 'BiletAra' },
+  senderName: { type: String, default: 'SUPERNOVA' },
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

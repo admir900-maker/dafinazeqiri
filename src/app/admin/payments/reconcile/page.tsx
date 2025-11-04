@@ -19,6 +19,8 @@ interface ReconcileResult {
   summary: {
     remoteStatus: string;
     statusCode?: string;
+    codeType?: 'success' | 'decline' | 'error' | 'technical' | 'unknown';
+    codeDescription?: string;
     recommendedAction: 'none' | 'markPaidAndResend' | 'markFailed';
     discrepancy: boolean;
   };
@@ -216,7 +218,28 @@ export default function ReconcileRaiAcceptPage() {
               </AdminCardHeader>
               <AdminCardContent className="space-y-2 text-sm">
                 <div><span className="text-gray-500">Order ID:</span> {result.remote.orderId}</div>
-                <div><span className="text-gray-500">Latest Status:</span> <Badge>{result.summary.remoteStatus || 'UNKNOWN'}</Badge> {result.summary.statusCode && <span className="text-gray-600 ml-2">(code {result.summary.statusCode})</span>}</div>
+                <div>
+                  <span className="text-gray-500">Latest Status:</span>{' '}
+                  <Badge className={
+                    result.summary.codeType === 'success' ? 'bg-green-100 text-green-800' :
+                    result.summary.codeType === 'decline' ? 'bg-red-100 text-red-800' :
+                    result.summary.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
+                    result.summary.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }>
+                    {result.summary.remoteStatus || 'UNKNOWN'}
+                  </Badge>
+                  {result.summary.statusCode && (
+                    <span className="text-gray-600 ml-2">
+                      (code {result.summary.statusCode})
+                    </span>
+                  )}
+                </div>
+                {result.summary.codeDescription && (
+                  <div className="text-sm p-2 bg-blue-50 border border-blue-200 rounded">
+                    <span className="font-semibold">Code {result.summary.statusCode}:</span> {result.summary.codeDescription}
+                  </div>
+                )}
                 {result.remote.error && (
                   <div className="text-red-600">API error: {result.remote.error}</div>
                 )}
@@ -264,6 +287,7 @@ export default function ReconcileRaiAcceptPage() {
                     <th className="p-2 text-left">Order ID</th>
                     <th className="p-2 text-left">Local Status</th>
                     <th className="p-2 text-left">RaiAccept Status</th>
+                    <th className="p-2 text-left">Description</th>
                     <th className="p-2 text-right">Amount</th>
                     <th className="p-2 text-left">Action</th>
                   </tr>
@@ -280,9 +304,18 @@ export default function ReconcileRaiAcceptPage() {
                         </Badge>
                       </td>
                       <td className="p-2">
-                        <Badge className={r.summary?.statusCode === '0000' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                        <Badge className={
+                          r.summary?.codeType === 'success' ? 'bg-green-100 text-green-800' :
+                          r.summary?.codeType === 'decline' ? 'bg-red-100 text-red-800' :
+                          r.summary?.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
+                          r.summary?.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }>
                           {r.summary.remoteStatus} {r.summary.statusCode ? `(${r.summary.statusCode})` : ''}
                         </Badge>
+                      </td>
+                      <td className="p-2 text-xs text-gray-600">
+                        {r.summary?.codeDescription || '—'}
                       </td>
                       <td className="p-2 text-right">€{Number(r.local?.totalAmount).toFixed(2)}</td>
                       <td className="p-2">

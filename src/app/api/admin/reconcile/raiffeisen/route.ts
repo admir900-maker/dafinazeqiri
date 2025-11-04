@@ -4,12 +4,97 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { createRaiAcceptClient } from '@/lib/raiAccept';
 
-function normalizeRemoteStatus(transactions: any[]): { status: string; statusCode?: string; last?: any } {
-  if (!Array.isArray(transactions) || transactions.length === 0) return { status: 'UNKNOWN' };
+// RaiAccept response codes and their interpretations
+const RAIACCEPT_CODES: Record<string, { type: 'success' | 'decline' | 'error' | 'technical', description: string }> = {
+  '0000': { type: 'success', description: 'Transaction successful' },
+  '1001': { type: 'decline', description: 'Decline by Issuer: Suspected fraud' },
+  '1002': { type: 'decline', description: 'Decline by Issuer: Card issue, contact bank' },
+  '1003': { type: 'decline', description: 'Card issue, contact bank or use another payment method' },
+  '1004': { type: 'decline', description: 'Decline by Issuer: Transaction not permitted' },
+  '1005': { type: 'decline', description: 'Decline by Issuer: Card reported as lost' },
+  '1006': { type: 'decline', description: 'Decline by Issuer: Card reported as stolen' },
+  '1007': { type: 'error', description: 'Duplicate transaction detected' },
+  '1008': { type: 'error', description: 'Invalid referencing transaction' },
+  '1009': { type: 'error', description: 'Currency not supported' },
+  '2001': { type: 'decline', description: 'Restricted card (embargoes)' },
+  '2002': { type: 'error', description: 'Invalid Merchant ID' },
+  '2003': { type: 'error', description: 'Invalid amount format' },
+  '2004': { type: 'decline', description: 'Insufficient funds' },
+  '2005': { type: 'error', description: 'Refund amount exceeds original transaction' },
+  '2006': { type: 'decline', description: '3-D Secure authentication failed' },
+  '2007': { type: 'decline', description: '3DS failed: Unknown device' },
+  '2008': { type: 'decline', description: '3DS failed: Unsupported device' },
+  '2009': { type: 'decline', description: '3DS frequency limit exceeded' },
+  '2010': { type: 'decline', description: '3DS: No card records exist' },
+  '2011': { type: 'decline', description: '3DS security failure' },
+  '2012': { type: 'decline', description: '3DS: Card not enrolled' },
+  '2013': { type: 'decline', description: '3DS: Max challenges exceeded' },
+  '2014': { type: 'decline', description: 'NPA transaction not supported by issuer' },
+  '2015': { type: 'decline', description: 'Merchant Initiated Auth (3RI) not supported' },
+  '2016': { type: 'technical', description: '3DS Access Control Server unreachable' },
+  '2017': { type: 'error', description: 'Decoupled 3DS Authentication expected' },
+  '2018': { type: 'decline', description: 'Decoupled Auth timeout' },
+  '2019': { type: 'error', description: 'Insufficient time for Decoupled Auth' },
+  '2020': { type: 'decline', description: '3DS authentication not performed by consumer' },
+  '2021': { type: 'technical', description: '3DS ACS timeout' },
+  '2022': { type: 'decline', description: 'Daily/monthly limits exceeded' },
+  '3001': { type: 'decline', description: 'Strong Customer Authentication required (Soft Decline)' },
+  '3002': { type: 'decline', description: 'Expired card' },
+  '3003': { type: 'error', description: 'Invalid card/account number' },
+  '3004': { type: 'error', description: 'Invalid expiration date' },
+  '3005': { type: 'error', description: 'Incorrect CVV' },
+  '3006': { type: 'technical', description: 'Technical error with processor' },
+  '3007': { type: 'technical', description: 'Technical error with payment schemes' },
+  '3008': { type: 'error', description: 'Invalid 3DS transaction' },
+  '3009': { type: 'decline', description: 'Suspected risk - low confidence' },
+  '3010': { type: 'decline', description: 'Suspected risk - medium confidence' },
+  '3011': { type: 'decline', description: 'Suspected risk - high confidence' },
+  '3012': { type: 'decline', description: 'Suspected risk - very high confidence' },
+  '3013': { type: 'decline', description: 'Preferred authentication method not supported' },
+  '3014': { type: 'decline', description: 'Content Security Policy validation failed' },
+  '3015': { type: 'error', description: 'Issuing Bank invalid or unknown' },
+  '3016': { type: 'technical', description: 'Issuing Bank unreachable' },
+  '3017': { type: 'decline', description: 'Possible security issue with card' },
+  '4001': { type: 'decline', description: 'Generic refusal from card issuer' },
+  '5001': { type: 'error', description: 'Too many transaction retries' },
+  '5002': { type: 'decline', description: 'Risk-related rule prevents transaction' },
+  '6001': { type: 'technical', description: 'Cannot insert into batch file for capture' },
+  '6002': { type: 'technical', description: 'No batch response file for capture' },
+  '6003': { type: 'technical', description: 'Batch file transaction count mismatch' },
+  '6004': { type: 'technical', description: 'Identifier field missing in batch processing' },
+  '6005': { type: 'technical', description: 'Unknown error during batch processing' },
+  '6006': { type: 'technical', description: 'Duplicate batch file sent' },
+  '6007': { type: 'technical', description: 'Duplicate transaction in batch file' },
+  '6008': { type: 'technical', description: 'Technical error with 3DS processing' },
+  '6009': { type: 'technical', description: 'Technical error in Risk module' },
+  '7001': { type: 'error', description: 'Refund: Invalid data' },
+  '7002': { type: 'technical', description: 'Processor response missing critical data' },
+  '7003': { type: 'technical', description: 'Tokenizer service technical error' },
+  '7004': { type: 'technical', description: 'Technical error - try again shortly' },
+  '7005': { type: 'error', description: 'Data validation error' },
+  '7006': { type: 'technical', description: 'Transaction timeout - cancelled by Gateway' },
+  '7007': { type: 'technical', description: 'Reversal request technical error' },
+  '7008': { type: 'decline', description: 'Authentication declined by 3DS router' },
+  '7009': { type: 'error', description: 'Card brand not supported' },
+  '7010': { type: 'technical', description: 'Infrastructure error' },
+  '7011': { type: 'technical', description: 'Communication error with processor' },
+  '9999': { type: 'technical', description: 'Unknown technical error' },
+};
+
+function getCodeInfo(statusCode?: string): { type: 'success' | 'decline' | 'error' | 'technical' | 'unknown', description: string } {
+  if (!statusCode) return { type: 'unknown', description: 'Unknown status' };
+  return RAIACCEPT_CODES[statusCode] || { type: 'unknown', description: `Unknown code: ${statusCode}` };
+}
+
+function normalizeRemoteStatus(transactions: any[]): { status: string; statusCode?: string; codeInfo: ReturnType<typeof getCodeInfo>; last?: any } {
+  if (!Array.isArray(transactions) || transactions.length === 0) {
+    return { status: 'UNKNOWN', codeInfo: { type: 'unknown', description: 'No transactions found' } };
+  }
   const last = transactions[transactions.length - 1];
   const status = last?.status || last?.transactionStatus || 'UNKNOWN';
   const statusCode = last?.statusCode || last?.transactionStatusCode;
-  return { status, statusCode, last };
+  const codeInfo = getCodeInfo(statusCode);
+  return { status, statusCode, codeInfo, last };
 }
 
 export async function GET(request: NextRequest) {
@@ -50,10 +135,10 @@ export async function GET(request: NextRequest) {
             txList = Array.isArray(orderTx?.transactions) ? orderTx.transactions : (Array.isArray(orderTx) ? orderTx : []);
           }
 
-          const { status: remoteStatus, statusCode } = normalizeRemoteStatus(txList);
+          const { status: remoteStatus, statusCode, codeInfo } = normalizeRemoteStatus(txList);
 
-          const success = statusCode === '0000' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
-          const failed = ['FAILED', 'DECLINED', 'ERROR', 'CANCELLED'].includes(remoteStatus);
+          const success = statusCode === '0000' || codeInfo.type === 'success' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
+          const failed = codeInfo.type === 'decline' || codeInfo.type === 'error' || ['FAILED', 'DECLINED', 'ERROR', 'CANCELLED'].includes(remoteStatus);
           let recommendedAction: 'none' | 'markPaidAndResend' | 'markFailed' = 'none';
           if (success && (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid')) {
             recommendedAction = 'markPaidAndResend';
@@ -84,6 +169,8 @@ export async function GET(request: NextRequest) {
             summary: {
               remoteStatus,
               statusCode,
+              codeType: codeInfo.type,
+              codeDescription: codeInfo.description,
               recommendedAction,
               discrepancy: recommendedAction !== 'none',
             }
@@ -136,7 +223,7 @@ export async function GET(request: NextRequest) {
       error: orderDetails?.error || orderTx?.error || null,
     };
 
-    const { status: remoteStatus, statusCode } = normalizeRemoteStatus(txList);
+    const { status: remoteStatus, statusCode, codeInfo } = normalizeRemoteStatus(txList);
 
     const local = booking ? {
       id: booking._id,
@@ -154,8 +241,8 @@ export async function GET(request: NextRequest) {
 
     let recommendedAction: 'none' | 'markPaidAndResend' | 'markFailed' = 'none';
     if (booking) {
-      const success = statusCode === '0000' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
-      const failed = ['FAILED', 'DECLINED', 'ERROR', 'CANCELLED'].includes(remoteStatus);
+      const success = statusCode === '0000' || codeInfo.type === 'success' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
+      const failed = codeInfo.type === 'decline' || codeInfo.type === 'error' || ['FAILED', 'DECLINED', 'ERROR', 'CANCELLED'].includes(remoteStatus);
       if (success && (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid')) {
         recommendedAction = 'markPaidAndResend';
       } else if (failed && (booking.status === 'pending' || booking.paymentStatus === 'pending')) {
@@ -170,6 +257,8 @@ export async function GET(request: NextRequest) {
       summary: {
         remoteStatus,
         statusCode,
+        codeType: codeInfo.type,
+        codeDescription: codeInfo.description,
         recommendedAction,
         discrepancy: booking ? (recommendedAction !== 'none') : false,
       }

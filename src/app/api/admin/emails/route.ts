@@ -27,23 +27,47 @@ async function fetchEmails(): Promise<EmailMessage[]> {
       host: process.env.IMAP_HOST || 'imap.gmail.com',
       port: parseInt(process.env.IMAP_PORT || '993'),
       tls: true,
-      tlsOptions: { rejectUnauthorized: false }
+      tlsOptions: { rejectUnauthorized: false },
+      authTimeout: 10000,
+      connTimeout: 10000
     };
+
+    console.log('IMAP Config:', {
+      user: imapConfig.user,
+      host: imapConfig.host,
+      port: imapConfig.port,
+      hasPassword: !!imapConfig.password
+    });
 
     const imap = new Imap(imapConfig);
     const emails: EmailMessage[] = [];
 
     imap.once('ready', () => {
+      console.log('IMAP connection ready');
+      
       imap.openBox('INBOX', false, (err: Error | null, box: any) => {
         if (err) {
+          console.error('Error opening INBOX:', err);
           reject(err);
           return;
         }
 
+        console.log('INBOX opened, total messages:', box.messages.total);
+
+        // If inbox is empty, return empty array
+        if (box.messages.total === 0) {
+          console.log('No messages in inbox');
+          imap.end();
+          resolve([]);
+          return;
+        }
+
         // Fetch last 50 emails
-        const fetchRange = box.messages.total > 0 
+        const fetchRange = box.messages.total > 0
           ? `${Math.max(1, box.messages.total - 49)}:${box.messages.total}`
           : '1:1';
+
+        console.log('Fetching range:', fetchRange);
 
         const fetch = imap.seq.fetch(fetchRange, {
           bodies: '',
@@ -71,7 +95,7 @@ async function fetchEmails(): Promise<EmailMessage[]> {
                   return '';
                 };
                 
-                emails.push({
+                const email: EmailMessage = {
                   id: `${seqno}`,
                   from: getAddressText(parsed.from) || 'Unknown',
                   to: getAddressText(parsed.to) || '',
@@ -86,20 +110,23 @@ async function fetchEmails(): Promise<EmailMessage[]> {
                   references: Array.isArray(parsed.references) 
                     ? parsed.references.join(',') 
                     : parsed.references || undefined
-                });
+                };
+                
+                emails.push(email);
+                console.log('Parsed email:', email.id, email.subject);
               } catch (error) {
                 console.error('Error parsing email:', error);
               }
             });
           });
-        });
-
-        fetch.once('error', (err: Error) => {
+        });        fetch.once('error', (err: Error) => {
           console.error('Fetch error:', err);
+          imap.end();
           reject(err);
         });
 
         fetch.once('end', () => {
+          console.log('Fetch complete, closing IMAP connection');
           imap.end();
         });
       });
@@ -111,12 +138,18 @@ async function fetchEmails(): Promise<EmailMessage[]> {
     });
 
     imap.once('end', () => {
+      console.log('IMAP connection ended, found', emails.length, 'emails');
       // Sort by date descending (newest first)
       emails.sort((a, b) => b.date.getTime() - a.date.getTime());
       resolve(emails);
     });
 
-    imap.connect();
+    try {
+      imap.connect();
+    } catch (error) {
+      console.error('IMAP connect error:', error);
+      reject(error);
+    }
   });
 }
 

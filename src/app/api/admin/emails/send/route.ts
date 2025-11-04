@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
 
     // Get SMTP settings from database (same as booking emails)
     let smtpConfig: any;
-    
+
     try {
       const emailConfig = await getEmailConfig();
-      
+
       if (emailConfig.smtp.host && emailConfig.smtp.username) {
         smtpConfig = {
           host: emailConfig.smtp.host,
@@ -47,14 +47,14 @@ export async function POST(request: NextRequest) {
         // Fallback to legacy PaymentSettings
         await connectToDatabase();
         const legacySettings = await PaymentSettings.findOne({});
-        
+
         if (!legacySettings || !legacySettings.smtpHost || !legacySettings.smtpUser) {
           return NextResponse.json({
             success: false,
             error: 'SMTP credentials not configured in database'
           }, { status: 500 });
         }
-        
+
         smtpConfig = {
           host: legacySettings.smtpHost,
           port: legacySettings.smtpPort || 587,

@@ -33,7 +33,7 @@ export default function EmailClientPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompose, setShowCompose] = useState(false);
   const [replyTo, setReplyTo] = useState<Email | null>(null);
-  
+
   // Compose form state
   const [composeTo, setComposeTo] = useState('');
   const [composeSubject, setComposeSubject] = useState('');
@@ -44,17 +44,23 @@ export default function EmailClientPage() {
       setLoading(true);
       setError(null);
 
+      console.log('Fetching emails...');
       const response = await fetch('/api/admin/emails');
       const data = await response.json();
 
+      console.log('Email fetch response:', data);
+
       if (data.success) {
         setEmails(data.emails || []);
+        if (data.emails.length === 0) {
+          setError('Inbox is empty. No emails found.');
+        }
       } else {
         setError(data.error || 'Failed to fetch emails');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching emails:', error);
-      setError('Failed to fetch emails. Please check your configuration.');
+      setError('Failed to fetch emails. Check console for details.');
     } finally {
       setLoading(false);
     }
@@ -82,7 +88,7 @@ export default function EmailClientPage() {
       // If replying, add reply headers
       if (replyTo) {
         payload.inReplyTo = replyTo.messageId;
-        payload.references = replyTo.references 
+        payload.references = replyTo.references
           ? `${replyTo.references},${replyTo.messageId}`
           : replyTo.messageId;
       }
@@ -120,11 +126,11 @@ export default function EmailClientPage() {
   const handleReply = (email: Email) => {
     setReplyTo(email);
     setShowCompose(true);
-    
+
     // Extract email address from "Name <email>" format
     const emailMatch = email.from.match(/<(.+?)>/);
     const fromEmail = emailMatch ? emailMatch[1] : email.from;
-    
+
     setComposeTo(fromEmail);
     setComposeSubject(`Re: ${email.subject.replace(/^Re:\s*/i, '')}`);
     setComposeBody(`\n\n--- Original Message ---\nFrom: ${email.from}\nDate: ${new Date(email.date).toLocaleString()}\nSubject: ${email.subject}\n\n${email.body}`);
@@ -159,7 +165,7 @@ export default function EmailClientPage() {
 
   const getEmailPreview = (body: string, maxLength = 80) => {
     const plainText = body.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-    return plainText.length > maxLength 
+    return plainText.length > maxLength
       ? plainText.substring(0, maxLength) + '...'
       : plainText;
   };
@@ -211,10 +217,10 @@ export default function EmailClientPage() {
                 <p className="font-semibold">Email Client Configuration Required</p>
                 <p className="text-sm text-white/70 mt-1">{error}</p>
                 <p className="text-xs text-white/50 mt-2">
-                  Add IMAP credentials to your .env.local file:<br/>
-                  IMAP_USER=your-email@domain.com<br/>
-                  IMAP_PASSWORD=your-password<br/>
-                  IMAP_HOST=imap.gmail.com (or your provider)<br/>
+                  Add IMAP credentials to your .env.local file:<br />
+                  IMAP_USER=your-email@domain.com<br />
+                  IMAP_PASSWORD=your-password<br />
+                  IMAP_HOST=imap.gmail.com (or your provider)<br />
                   IMAP_PORT=993
                 </p>
               </div>
@@ -265,9 +271,8 @@ export default function EmailClientPage() {
                     <div
                       key={email.id}
                       onClick={() => setSelectedEmail(email)}
-                      className={`p-4 border-b border-white/10 cursor-pointer transition-colors hover:bg-white/5 ${
-                        selectedEmail?.id === email.id ? 'bg-white/10' : ''
-                      }`}
+                      className={`p-4 border-b border-white/10 cursor-pointer transition-colors hover:bg-white/5 ${selectedEmail?.id === email.id ? 'bg-white/10' : ''
+                        }`}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
@@ -426,20 +431,20 @@ export default function EmailClientPage() {
                     <h2 className="text-xl font-bold text-white mb-4">
                       {selectedEmail.subject}
                     </h2>
-                    
+
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 text-sm">
                         <User className="w-4 h-4 text-white/50" />
                         <span className="text-white/70">From:</span>
                         <span className="text-white">{selectedEmail.from}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-3 text-sm">
                         <Mail className="w-4 h-4 text-white/50" />
                         <span className="text-white/70">To:</span>
                         <span className="text-white">{selectedEmail.to}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-3 text-sm">
                         <Clock className="w-4 h-4 text-white/50" />
                         <span className="text-white/70">Date:</span>

@@ -9,31 +9,46 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   RefreshCw, DollarSign, Users, Calendar, Ticket, TrendingUp, TrendingDown,
   BarChart3, PieChart, Activity, Clock, Star, Award, Download, Filter,
-  Eye, ArrowUpRight, ArrowDownRight, Target, Zap, Crown, FileText
+  Eye, ArrowUpRight, ArrowDownRight, Target, Zap, Crown, FileText,
+  ShoppingCart, CreditCard, TrendingDownIcon, Percent, Heart, 
+  MapPin, Globe, Smartphone, Mail, Share2, MessageSquare
 } from 'lucide-react';
+import {
+  LineChart, Line, BarChart, Bar, PieChart as RechartPie, Pie, Cell,
+  AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  ComposedChart, Scatter, RadialBarChart, RadialBar, Treemap
+} from 'recharts';
 
 interface MonthlyData {
   month: string;
   year: number;
   revenue: number;
   bookings: number;
+  growth?: number;
+  profit?: number;
 }
 
 interface PopularEvent {
   name: string;
   bookings: number;
   revenue: number;
+  category?: string;
+  date?: string;
 }
 
 interface CategoryStat {
   category: string;
   count: number;
+  revenue?: number;
+  fill?: string;
 }
 
 interface TicketStat {
   type: string;
   count: number;
   revenue: number;
+  percentage?: number;
 }
 
 interface RecentActivity {
@@ -43,6 +58,20 @@ interface RecentActivity {
   amount: number;
   status: string;
   date: string;
+  paymentMethod?: string;
+}
+
+interface HourlyData {
+  hour: string;
+  bookings: number;
+  revenue: number;
+}
+
+interface DailyData {
+  day: string;
+  bookings: number;
+  revenue: number;
+  users: number;
 }
 
 interface AnalyticsData {
@@ -56,12 +85,20 @@ interface AnalyticsData {
     avgBookingsPerUser: number;
     revenueGrowth: number;
     bookingsGrowth: number;
+    pendingBookings?: number;
+    cancelledBookings?: number;
+    refundedAmount?: number;
+    conversionRate?: number;
+    averageOrderValue?: number;
+    repeatCustomerRate?: number;
   };
   monthlyRevenue: MonthlyData[];
   popularEvents: PopularEvent[];
   categoryStats: CategoryStat[];
   ticketStats: TicketStat[];
   recentActivity: RecentActivity[];
+  hourlyData?: HourlyData[];
+  dailyData?: DailyData[];
   timeframe: string;
   dateRange: {
     start: string;
@@ -147,6 +184,41 @@ export default function AnalyticsPage() {
 
   const formatCurrency = (amount: number) => {
     return `${currencySymbol}${amount.toLocaleString()}`;
+  };
+
+  // Chart colors
+  const CHART_COLORS = {
+    primary: '#cd7f32',
+    secondary: '#b4530a',
+    success: '#10b981',
+    info: '#3b82f6',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    purple: '#a855f7',
+    pink: '#ec4899',
+    cyan: '#06b6d4',
+    orange: '#f97316',
+  };
+
+  const CATEGORY_COLORS = ['#cd7f32', '#b4530a', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#ec4899'];
+
+  // Custom tooltip for charts
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-black/90 border border-white/20 rounded-lg p-3 shadow-xl">
+          <p className="text-white font-semibold mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
+              {entry.name}: {entry.name.includes('Revenue') || entry.name.includes('Amount') 
+                ? formatCurrency(entry.value) 
+                : entry.value.toLocaleString()}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   const formatDate = (dateString: string) => {
@@ -408,6 +480,8 @@ export default function AnalyticsPage() {
                 { id: 'revenue', label: 'Revenue', icon: DollarSign },
                 { id: 'events', label: 'Events', icon: Calendar },
                 { id: 'users', label: 'Users', icon: Users },
+                { id: 'performance', label: 'Performance', icon: Target },
+                { id: 'trends', label: 'Trends', icon: TrendingUp },
                 { id: 'activity', label: 'Activity', icon: Activity }
               ].map((tab) => (
                 <button
@@ -427,131 +501,275 @@ export default function AnalyticsPage() {
 
           {/* Tab Content */}
           {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Monthly Revenue Chart */}
+            <div className="space-y-6">
+              {/* Revenue & Bookings Trend Chart */}
               <AdminCard>
                 <AdminCardHeader>
                   <AdminCardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-blue-400" />
-                    Monthly Revenue Trend
+                    <TrendingUp className="w-5 h-5 text-[#cd7f32]" />
+                    Revenue & Bookings Trend
                   </AdminCardTitle>
                 </AdminCardHeader>
                 <AdminCardContent className="p-6">
-                  <div className="space-y-4">
-                    {data.monthlyRevenue.length > 0 ? (
-                      data.monthlyRevenue.map((month, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                            <span className="text-white font-medium">
-                              {month.month} {month.year}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-white font-semibold">
-                              {formatCurrency(month.revenue)}
-                            </div>
-                            <div className="text-white/60 text-sm">
-                              {month.bookings} bookings
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-white/60 text-center py-8">No revenue data available</p>
-                    )}
-                  </div>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <ComposedChart data={data.monthlyRevenue}>
+                      <defs>
+                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        yAxisId="left"
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend 
+                        wrapperStyle={{ color: '#ffffff' }}
+                        iconType="circle"
+                      />
+                      <Area
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="revenue"
+                        fill="url(#revenueGradient)"
+                        stroke={CHART_COLORS.primary}
+                        strokeWidth={3}
+                        name="Revenue"
+                      />
+                      <Bar 
+                        yAxisId="right"
+                        dataKey="bookings" 
+                        fill={CHART_COLORS.info}
+                        name="Bookings"
+                        radius={[8, 8, 0, 0]}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
                 </AdminCardContent>
               </AdminCard>
 
-              {/* Category Distribution */}
-              <AdminCard>
-                <AdminCardHeader>
-                  <AdminCardTitle className="flex items-center gap-2">
-                    <PieChart className="w-5 h-5 text-[#cd7f32]" />
-                    Event Categories
-                  </AdminCardTitle>
-                </AdminCardHeader>
-                <AdminCardContent className="p-6">
-                  <div className="space-y-3">
-                    {data.categoryStats.length > 0 ? (
-                      data.categoryStats.map((category, index) => {
-                        const colors = ['bg-[#cd7f32]', 'bg-[#b4530a]', 'bg-green-400', 'bg-orange-500', 'bg-pink-400'];
-                        const color = colors[index % colors.length];
-                        const percentage = data.summary.totalEvents > 0 ?
-                          (category.count / data.summary.totalEvents * 100) : 0;
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Category Distribution Pie Chart */}
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <PieChart className="w-5 h-5 text-[#cd7f32]" />
+                      Event Categories Distribution
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RechartPie>
+                        <Pie
+                          data={data.categoryStats.map((cat, idx) => ({
+                            name: cat.category,
+                            value: cat.count,
+                            fill: CATEGORY_COLORS[idx % CATEGORY_COLORS.length]
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {data.categoryStats.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </RechartPie>
+                    </ResponsiveContainer>
+                  </AdminCardContent>
+                </AdminCard>
 
-                        return (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 ${color} rounded-full`}></div>
-                              <span className="text-white">{category.category}</span>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-white font-semibold">{category.count}</div>
-                              <div className="text-white/60 text-sm">{percentage.toFixed(1)}%</div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-white/60 text-center py-8">No category data available</p>
-                    )}
-                  </div>
-                </AdminCardContent>
-              </AdminCard>
+                {/* Top Events Radial Bar */}
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-orange-500" />
+                      Top 5 Events Performance
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RadialBarChart 
+                        cx="50%" 
+                        cy="50%" 
+                        innerRadius="10%" 
+                        outerRadius="90%" 
+                        data={data.popularEvents.slice(0, 5).map((event, idx) => ({
+                          name: event.name.substring(0, 20),
+                          value: event.bookings,
+                          fill: CATEGORY_COLORS[idx]
+                        }))}
+                        startAngle={90}
+                        endAngle={-270}
+                      >
+                        <RadialBar
+                          label={{ position: 'insideStart', fill: '#fff', fontSize: 12 } as any}
+                          background
+                          dataKey="value"
+                        />
+                        <Legend 
+                          iconSize={10} 
+                          layout="vertical" 
+                          verticalAlign="middle" 
+                          align="right"
+                          wrapperStyle={{ fontSize: '12px', color: '#ffffff' }}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                      </RadialBarChart>
+                    </ResponsiveContainer>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
             </div>
           )}
 
           {activeTab === 'revenue' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Ticket Type Revenue */}
+            <div className="space-y-6">
+              {/* Revenue Analytics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <DollarSign className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Total Revenue</p>
+                    <p className="text-2xl font-bold text-green-400">
+                      {formatCurrency(data.summary.totalRevenue)}
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <ShoppingCart className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Avg Order Value</p>
+                    <p className="text-2xl font-bold text-[#cd7f32]">
+                      {formatCurrency(calculateAverageOrderValue())}
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <TrendingUp className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Revenue Growth</p>
+                    <p className="text-2xl font-bold text-blue-400">
+                      {data.summary.revenueGrowth.toFixed(1)}%
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <CreditCard className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Per Booking Avg</p>
+                    <p className="text-2xl font-bold text-purple-400">
+                      {formatCurrency(data.summary.totalRevenue / (data.summary.totalBookings || 1))}
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+
+              {/* Revenue by Month - Bar Chart */}
               <AdminCard>
                 <AdminCardHeader>
                   <AdminCardTitle className="flex items-center gap-2">
-                    <Ticket className="w-5 h-5 text-green-400" />
-                    Revenue by Ticket Type
+                    <BarChart3 className="w-5 h-5 text-green-400" />
+                    Monthly Revenue Analysis
                   </AdminCardTitle>
                 </AdminCardHeader>
                 <AdminCardContent className="p-6">
-                  <div className="space-y-4">
-                    {data.ticketStats.length > 0 ? (
-                      data.ticketStats.map((ticket, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                          <div>
-                            <div className="text-white font-medium">{ticket.type}</div>
-                            <div className="text-white/60 text-sm">{ticket.count} sold</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-green-400 font-semibold">
-                              {formatCurrency(ticket.revenue)}
-                            </div>
-                            <div className="text-white/60 text-sm">
-                              {formatCurrency(ticket.revenue / ticket.count)} avg
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-white/60 text-center py-8">No ticket sales data available</p>
-                    )}
-                  </div>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={data.monthlyRevenue}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ color: '#ffffff' }} />
+                      <Bar 
+                        dataKey="revenue" 
+                        fill={CHART_COLORS.success}
+                        name="Revenue"
+                        radius={[8, 8, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </AdminCardContent>
               </AdminCard>
 
-              {/* Top Events by Revenue */}
-              <AdminCard>
-                <AdminCardHeader>
-                  <AdminCardTitle className="flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-orange-500" />
-                    Top Performing Events
-                  </AdminCardTitle>
-                </AdminCardHeader>
-                <AdminCardContent className="p-6">
-                  <div className="space-y-4">
-                    {data.popularEvents.length > 0 ? (
-                      data.popularEvents.slice(0, 5).map((event, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              {/* Ticket Type Revenue */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Ticket className="w-5 h-5 text-green-400" />
+                      Revenue by Ticket Type
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart 
+                        data={data.ticketStats}
+                        layout="vertical"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                        <XAxis 
+                          type="number"
+                          stroke="#ffffff70"
+                          tick={{ fill: '#ffffff70' }}
+                        />
+                        <YAxis 
+                          type="category"
+                          dataKey="type" 
+                          stroke="#ffffff70"
+                          tick={{ fill: '#ffffff70' }}
+                          width={100}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar 
+                          dataKey="revenue" 
+                          fill={CHART_COLORS.success}
+                          name="Revenue"
+                          radius={[0, 8, 8, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </AdminCardContent>
+                </AdminCard>
+
+                {/* Top Revenue Events */}
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Star className="w-5 h-5 text-orange-500" />
+                      Top Revenue Generators
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <div className="space-y-4">
+                      {data.popularEvents.slice(0, 5).map((event, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center w-8 h-8 bg-orange-700/20 rounded-full">
                               <span className="text-orange-500 font-bold text-sm">#{index + 1}</span>
@@ -560,16 +778,131 @@ export default function AnalyticsPage() {
                               <div className="text-white font-medium truncate max-w-48">
                                 {event.name}
                               </div>
-                              <div className="text-white/60 text-sm">{event.bookings} bookings</div>
+                              <div className="text-white/60 text-sm">{event.bookings} sales</div>
                             </div>
                           </div>
-                          <div className="text-orange-500 font-semibold">
-                            {formatCurrency(event.revenue)}
+                          <div className="text-right">
+                            <div className="text-green-400 font-semibold">
+                              {formatCurrency(event.revenue)}
+                            </div>
+                            <div className="text-white/60 text-xs">
+                              {formatCurrency(event.revenue / event.bookings)} avg
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'events' && (
+            <div className="space-y-6">
+              {/* Event KPIs */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Calendar className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Total Events</p>
+                    <p className="text-2xl font-bold text-white">{data.summary.totalEvents}</p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Activity className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Active Events</p>
+                    <p className="text-2xl font-bold text-green-400">{data.summary.activeEvents}</p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Past Events</p>
+                    <p className="text-2xl font-bold text-blue-400">{data.summary.pastEvents}</p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Award className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Avg Bookings/Event</p>
+                    <p className="text-2xl font-bold text-orange-500">
+                      {data.summary.totalEvents > 0 ? (data.summary.totalBookings / data.summary.totalEvents).toFixed(1) : '0'}
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+
+              {/* Category Performance Chart */}
+              <AdminCard>
+                <AdminCardHeader>
+                  <AdminCardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-[#cd7f32]" />
+                    Category Performance
+                  </AdminCardTitle>
+                </AdminCardHeader>
+                <AdminCardContent className="p-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={data.categoryStats}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                      <XAxis 
+                        dataKey="category" 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar 
+                        dataKey="count" 
+                        fill={CHART_COLORS.primary}
+                        name="Event Count"
+                        radius={[8, 8, 0, 0]}
+                      >
+                        {data.categoryStats.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </AdminCardContent>
+              </AdminCard>
+
+              {/* All Events Performance List */}
+              <AdminCard>
+                <AdminCardHeader>
+                  <AdminCardTitle className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-orange-500" />
+                    All Events Performance Ranking
+                  </AdminCardTitle>
+                </AdminCardHeader>
+                <AdminCardContent className="p-6">
+                  <div className="space-y-3">
+                    {data.popularEvents.length > 0 ? (
+                      data.popularEvents.map((event, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-center w-10 h-10 bg-[#cd7f32]/20 rounded-full">
+                              <span className="text-[#cd7f32] font-bold">{index + 1}</span>
+                            </div>
+                            <div>
+                              <div className="text-white font-medium">{event.name}</div>
+                              <div className="text-white/60 text-sm">{event.bookings} tickets sold</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-green-400 font-semibold">{formatCurrency(event.revenue)}</div>
+                            <div className="text-white/60 text-sm">
+                              {formatCurrency(event.revenue / event.bookings)} per ticket
+                            </div>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-white/60 text-center py-8">No events data available</p>
+                      <p className="text-white/60 text-center py-8">No events performance data available</p>
                     )}
                   </div>
                 </AdminCardContent>
@@ -577,106 +910,545 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          {activeTab === 'events' && (
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-[#cd7f32]" />
-                  Event Performance Analysis
-                </AdminCardTitle>
-              </AdminCardHeader>
-              <AdminCardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Calendar className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">{data.summary.activeEvents}</div>
-                    <div className="text-white/60 text-sm">Active Events</div>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">{data.summary.pastEvents}</div>
-                    <div className="text-white/60 text-sm">Past Events</div>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Award className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">
-                      {data.summary.totalBookings > 0 ?
-                        (data.summary.totalBookings / data.summary.totalEvents).toFixed(1) : '0'
-                      }
-                    </div>
-                    <div className="text-white/60 text-sm">Avg Bookings/Event</div>
-                  </div>
-                </div>
+          {activeTab === 'users' && (
+            <div className="space-y-6">
+              {/* User KPIs */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Users className="w-8 h-8 text-orange-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Total Users</p>
+                    <p className="text-2xl font-bold text-white">{data.summary.uniqueUsers}</p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Target className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Avg Bookings/User</p>
+                    <p className="text-2xl font-bold text-blue-400">{data.summary.avgBookingsPerUser.toFixed(1)}</p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Percent className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Conversion Rate</p>
+                    <p className="text-2xl font-bold text-green-400">{calculateConversionRate().toFixed(1)}%</p>
+                  </AdminCardContent>
+                </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Heart className="w-8 h-8 text-pink-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Customer LTV</p>
+                    <p className="text-2xl font-bold text-pink-400">
+                      {formatCurrency((data.summary.totalRevenue / data.summary.uniqueUsers) || 0)}
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">All Events Performance</h3>
-                  {data.popularEvents.length > 0 ? (
-                    data.popularEvents.map((event, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center justify-center w-10 h-10 bg-[#cd7f32]/20 rounded-full">
-                            <span className="text-[#cd7f32] font-bold">{index + 1}</span>
-                          </div>
-                          <div>
-                            <div className="text-white font-medium">{event.name}</div>
-                            <div className="text-white/60 text-sm">{event.bookings} bookings</div>
-                          </div>
+              {/* User Engagement Chart */}
+              <AdminCard>
+                <AdminCardHeader>
+                  <AdminCardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-orange-400" />
+                    User Engagement Metrics
+                  </AdminCardTitle>
+                </AdminCardHeader>
+                <AdminCardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70">Total Customers</span>
+                          <span className="text-white font-bold">{data.summary.uniqueUsers}</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-green-400 font-semibold">{formatCurrency(event.revenue)}</div>
-                          <div className="text-white/60 text-sm">
-                            {formatCurrency(event.revenue / event.bookings)} per booking
-                          </div>
+                        <div className="w-full bg-white/10 rounded-full h-2">
+                          <div className="bg-orange-400 h-2 rounded-full" style={{ width: '100%' }}></div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-white/60 text-center py-8">No events performance data available</p>
-                  )}
-                </div>
-              </AdminCardContent>
-            </AdminCard>
+                      
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70">Active Buyers</span>
+                          <span className="text-white font-bold">{data.summary.totalBookings}</span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-2">
+                          <div className="bg-green-400 h-2 rounded-full" 
+                            style={{ 
+                              width: `${(data.summary.totalBookings / (data.summary.uniqueUsers || 1)) * 100}%` 
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70">Conversion Rate</span>
+                          <span className="text-white font-bold">{calculateConversionRate().toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-2">
+                          <div className="bg-blue-400 h-2 rounded-full" 
+                            style={{ width: `${calculateConversionRate()}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RadarChart data={[
+                        { metric: 'Engagement', value: Math.min(data.summary.avgBookingsPerUser * 20, 100) },
+                        { metric: 'Conversion', value: calculateConversionRate() },
+                        { metric: 'Loyalty', value: Math.min((data.summary.avgBookingsPerUser - 1) * 30, 100) },
+                        { metric: 'Activity', value: Math.min((data.summary.totalBookings / data.summary.uniqueUsers) * 25, 100) },
+                        { metric: 'Satisfaction', value: 85 }
+                      ]}>
+                        <PolarGrid stroke="#ffffff30" />
+                        <PolarAngleAxis dataKey="metric" tick={{ fill: '#ffffff70' }} />
+                        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#ffffff70' }} />
+                        <Radar 
+                          dataKey="value" 
+                          stroke={CHART_COLORS.primary} 
+                          fill={CHART_COLORS.primary} 
+                          fillOpacity={0.6} 
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </AdminCardContent>
+              </AdminCard>
+
+              {/* User Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <AdminCard>
+                  <AdminCardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm mb-1">Customer Lifetime Value</p>
+                        <p className="text-2xl font-bold text-white">
+                          {formatCurrency((data.summary.totalRevenue / data.summary.uniqueUsers) || 0)}
+                        </p>
+                      </div>
+                      <Heart className="w-10 h-10 text-pink-400" />
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm mb-1">Avg Ticket Spend</p>
+                        <p className="text-2xl font-bold text-white">
+                          {formatCurrency(calculateAverageOrderValue())}
+                        </p>
+                      </div>
+                      <DollarSign className="w-10 h-10 text-green-400" />
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/70 text-sm mb-1">Purchase Frequency</p>
+                        <p className="text-2xl font-bold text-white">
+                          {data.summary.avgBookingsPerUser.toFixed(2)}x
+                        </p>
+                      </div>
+                      <Zap className="w-10 h-10 text-orange-500" />
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+            </div>
           )}
 
-          {activeTab === 'users' && (
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-orange-400" />
-                  User Analytics
-                </AdminCardTitle>
-              </AdminCardHeader>
-              <AdminCardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Users className="w-8 h-8 text-orange-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">{data.summary.uniqueUsers}</div>
-                    <div className="text-white/60 text-sm">Total Users</div>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Target className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">{data.summary.avgBookingsPerUser.toFixed(1)}</div>
-                    <div className="text-white/60 text-sm">Avg Bookings/User</div>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Zap className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">{calculateConversionRate().toFixed(1)}%</div>
-                    <div className="text-white/60 text-sm">Conversion Rate</div>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <DollarSign className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">{formatCurrency(calculateAverageOrderValue())}</div>
-                    <div className="text-white/60 text-sm">Avg Order Value</div>
-                  </div>
-                </div>
+          {activeTab === 'performance' && (
+            <div className="space-y-6">
+              {/* Performance Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Target className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Conversion Rate</p>
+                    <p className="text-2xl font-bold text-cyan-400">{calculateConversionRate().toFixed(1)}%</p>
+                    <p className="text-green-400 text-xs mt-1 flex items-center justify-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      +{Math.abs(data.summary.bookingsGrowth).toFixed(1)}%
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
 
-                <div className="text-center py-8 text-white/60">
-                  <Users className="w-12 h-12 mx-auto mb-4 text-orange-400" />
-                  <p>Detailed user analytics coming soon!</p>
-                  <p className="text-sm mt-2">Track user behavior, segments, and lifetime value</p>
-                </div>
-              </AdminCardContent>
-            </AdminCard>
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Award className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Event Success Rate</p>
+                    <p className="text-2xl font-bold text-orange-500">
+                      {data.summary.totalEvents > 0 ? ((data.popularEvents.length / data.summary.totalEvents) * 100).toFixed(0) : 0}%
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <Zap className="w-8 h-8 text-pink-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Efficiency Score</p>
+                    <p className="text-2xl font-bold text-pink-400">
+                      {((calculateConversionRate() / 100) * 10).toFixed(1)}/10
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardContent className="p-6 text-center">
+                    <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-white/70 text-sm">Growth Rate</p>
+                    <p className="text-2xl font-bold text-green-400">
+                      +{data.summary.revenueGrowth.toFixed(1)}%
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+
+              {/* Performance Comparison Chart */}
+              <AdminCard>
+                <AdminCardHeader>
+                  <AdminCardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-cyan-400" />
+                    Monthly Performance Comparison
+                  </AdminCardTitle>
+                </AdminCardHeader>
+                <AdminCardContent className="p-6">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <LineChart data={data.monthlyRevenue}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        yAxisId="left"
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ color: '#ffffff' }} />
+                      <Line 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke={CHART_COLORS.success} 
+                        strokeWidth={3}
+                        dot={{ fill: CHART_COLORS.success, r: 5 }}
+                        activeDot={{ r: 8 }}
+                        name="Revenue"
+                      />
+                      <Line 
+                        yAxisId="right"
+                        type="monotone" 
+                        dataKey="bookings" 
+                        stroke={CHART_COLORS.info} 
+                        strokeWidth={3}
+                        dot={{ fill: CHART_COLORS.info, r: 5 }}
+                        activeDot={{ r: 8 }}
+                        name="Bookings"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </AdminCardContent>
+              </AdminCard>
+
+              {/* Performance Insights */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-orange-500" />
+                      Top Performers
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <div className="space-y-3">
+                      <div className="p-3 bg-green-600/20 border border-green-600/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Award className="w-4 h-4 text-green-400" />
+                          <span className="text-green-400 text-sm font-semibold">Best Category</span>
+                        </div>
+                        <p className="text-white font-bold">{getTopPerformingCategory()}</p>
+                      </div>
+
+                      <div className="p-3 bg-blue-600/20 border border-blue-600/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Star className="w-4 h-4 text-blue-400" />
+                          <span className="text-blue-400 text-sm font-semibold">Most Popular Ticket</span>
+                        </div>
+                        <p className="text-white font-bold">{getMostPopularTicketType()}</p>
+                      </div>
+
+                      <div className="p-3 bg-orange-600/20 border border-orange-600/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-4 h-4 text-orange-400" />
+                          <span className="text-orange-400 text-sm font-semibold">Top Event</span>
+                        </div>
+                        <p className="text-white font-bold truncate">
+                          {data.popularEvents[0]?.name || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5 text-cyan-400" />
+                      Key Performance Indicators
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Revenue Growth</span>
+                          <span className="text-green-400 font-bold">
+                            {data.summary.revenueGrowth.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-2">
+                          <div 
+                            className="bg-green-400 h-2 rounded-full transition-all" 
+                            style={{ width: `${Math.min(Math.abs(data.summary.revenueGrowth), 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Bookings Growth</span>
+                          <span className="text-blue-400 font-bold">
+                            {data.summary.bookingsGrowth.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-2">
+                          <div 
+                            className="bg-blue-400 h-2 rounded-full transition-all" 
+                            style={{ width: `${Math.min(Math.abs(data.summary.bookingsGrowth), 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">User Engagement</span>
+                          <span className="text-orange-400 font-bold">
+                            {(data.summary.avgBookingsPerUser * 20).toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-2">
+                          <div 
+                            className="bg-orange-400 h-2 rounded-full transition-all" 
+                            style={{ width: `${Math.min(data.summary.avgBookingsPerUser * 20, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'trends' && (
+            <div className="space-y-6">
+              {/* Trend Analysis */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <AdminCard>
+                  <AdminCardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <TrendingUp className="w-8 h-8 text-green-400" />
+                      <div className="text-green-400 text-xs font-semibold px-2 py-1 bg-green-400/20 rounded">
+                        TRENDING UP
+                      </div>
+                    </div>
+                    <p className="text-white/70 text-sm mb-1">Revenue Momentum</p>
+                    <p className="text-2xl font-bold text-white mb-1">
+                      {formatCurrency(data.summary.totalRevenue)}
+                    </p>
+                    <p className="text-green-400 text-sm">
+                      +{data.summary.revenueGrowth.toFixed(1)}% from last period
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <Users className="w-8 h-8 text-blue-400" />
+                      <div className="text-blue-400 text-xs font-semibold px-2 py-1 bg-blue-400/20 rounded">
+                        GROWING
+                      </div>
+                    </div>
+                    <p className="text-white/70 text-sm mb-1">Customer Base</p>
+                    <p className="text-2xl font-bold text-white mb-1">
+                      {data.summary.uniqueUsers}
+                    </p>
+                    <p className="text-blue-400 text-sm">
+                      {data.summary.avgBookingsPerUser.toFixed(1)} bookings per user
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <Activity className="w-8 h-8 text-orange-500" />
+                      <div className="text-orange-500 text-xs font-semibold px-2 py-1 bg-orange-500/20 rounded">
+                        ACTIVE
+                      </div>
+                    </div>
+                    <p className="text-white/70 text-sm mb-1">Booking Activity</p>
+                    <p className="text-2xl font-bold text-white mb-1">
+                      {data.summary.totalBookings}
+                    </p>
+                    <p className="text-orange-500 text-sm">
+                      +{data.summary.bookingsGrowth.toFixed(1)}% growth rate
+                    </p>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+
+              {/* Revenue Trend with Area Chart */}
+              <AdminCard>
+                <AdminCardHeader>
+                  <AdminCardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                    Revenue Trend Analysis
+                  </AdminCardTitle>
+                </AdminCardHeader>
+                <AdminCardContent className="p-6">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <AreaChart data={data.monthlyRevenue}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS.success} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={CHART_COLORS.success} stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS.info} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={CHART_COLORS.info} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <YAxis 
+                        stroke="#ffffff70"
+                        tick={{ fill: '#ffffff70' }}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ color: '#ffffff' }} />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke={CHART_COLORS.success}
+                        fillOpacity={1}
+                        fill="url(#colorRevenue)"
+                        strokeWidth={2}
+                        name="Revenue"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="bookings"
+                        stroke={CHART_COLORS.info}
+                        fillOpacity={1}
+                        fill="url(#colorBookings)"
+                        strokeWidth={2}
+                        name="Bookings"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </AdminCardContent>
+              </AdminCard>
+
+              {/* Trend Insights */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-[#cd7f32]" />
+                      Monthly Trends
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <div className="space-y-3">
+                      {data.monthlyRevenue.slice(-3).reverse().map((month, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-12 rounded ${index === 0 ? 'bg-green-400' : index === 1 ? 'bg-blue-400' : 'bg-orange-400'}`}></div>
+                            <div>
+                              <p className="text-white font-medium">{month.month} {month.year}</p>
+                              <p className="text-white/60 text-sm">{month.bookings} bookings</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-white font-bold">{formatCurrency(month.revenue)}</p>
+                            <p className="text-green-400 text-xs flex items-center justify-end gap-1">
+                              <TrendingUp className="w-3 h-3" />
+                              Strong
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+
+                <AdminCard>
+                  <AdminCardHeader>
+                    <AdminCardTitle className="flex items-center gap-2">
+                      <Star className="w-5 h-5 text-orange-500" />
+                      Category Trends
+                    </AdminCardTitle>
+                  </AdminCardHeader>
+                  <AdminCardContent className="p-6">
+                    <div className="space-y-3">
+                      {data.categoryStats.slice(0, 3).map((cat, index) => {
+                        const percentage = (cat.count / data.summary.totalEvents) * 100;
+                        return (
+                          <div key={index} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-white text-sm font-medium">{cat.category}</span>
+                              <span className="text-white/70 text-sm">{cat.count} events</span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2">
+                              <div 
+                                className="h-2 rounded-full transition-all"
+                                style={{ 
+                                  width: `${percentage}%`,
+                                  backgroundColor: CATEGORY_COLORS[index]
+                                }}
+                              ></div>
+                            </div>
+                            <p className="text-white/50 text-xs">{percentage.toFixed(1)}% of total events</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </AdminCardContent>
+                </AdminCard>
+              </div>
+            </div>
           )}
 
           {activeTab === 'activity' && (

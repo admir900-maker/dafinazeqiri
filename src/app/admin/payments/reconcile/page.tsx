@@ -222,10 +222,10 @@ export default function ReconcileRaiAcceptPage() {
                   <span className="text-gray-500">Latest Status:</span>{' '}
                   <Badge className={
                     result.summary.codeType === 'success' ? 'bg-green-100 text-green-800' :
-                    result.summary.codeType === 'decline' ? 'bg-red-100 text-red-800' :
-                    result.summary.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
-                    result.summary.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
+                      result.summary.codeType === 'decline' ? 'bg-red-100 text-red-800' :
+                        result.summary.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
+                          result.summary.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
                   }>
                     {result.summary.remoteStatus || 'UNKNOWN'}
                   </Badge>
@@ -306,10 +306,10 @@ export default function ReconcileRaiAcceptPage() {
                       <td className="p-2">
                         <Badge className={
                           r.summary?.codeType === 'success' ? 'bg-green-100 text-green-800' :
-                          r.summary?.codeType === 'decline' ? 'bg-red-100 text-red-800' :
-                          r.summary?.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
-                          r.summary?.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
+                            r.summary?.codeType === 'decline' ? 'bg-red-100 text-red-800' :
+                              r.summary?.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
+                                r.summary?.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
                         }>
                           {r.summary.remoteStatus} {r.summary.statusCode ? `(${r.summary.statusCode})` : ''}
                         </Badge>

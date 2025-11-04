@@ -266,159 +266,159 @@ export default function BookingsPage() {
                 {bookings
                   .filter((b) => b.status === 'confirmed')
                   .map((booking) => (
-                  <div key={booking._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                    <div className="p-6">
-                      {/* Booking Header */}
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-                        <div className="flex items-center gap-4 mb-4 lg:mb-0">
-                          <div className="relative w-16 h-16 rounded-xl overflow-hidden">
-                            <Image
-                              src={booking.event.posterImage}
-                              alt="Supernova Event"
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div>
-                            <img
-                              src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
-                              alt="Supernova"
-                              className="h-8 w-auto object-contain mb-1"
-                            />
-                            <p className="text-gray-600">Booking #{booking.bookingReference}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)} flex items-center gap-1`}>
-                            {getStatusIcon(booking.status)}
-                            {getStatusText(booking.status)}
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-gray-800">
-                              {booking.totalAmount.toFixed(2)} {booking.currency}
-                            </p>
-                            <p className="text-sm text-gray-600 flex items-center gap-1 justify-end">
-                              <CreditCard className="w-4 h-4" />
-                              {booking.paymentMethod}
-                            </p>
-                            {booking.status === 'confirmed' && (() => {
-                              const last = booking.emailLastSentAt ? new Date(booking.emailLastSentAt) : null;
-                              const now = new Date();
-                              const canResend = !last || (now.getTime() - last.getTime()) >= 60 * 60 * 1000;
-                              const minsLeft = last ? Math.ceil((60 * 60 * 1000 - (now.getTime() - last.getTime())) / 60000) : 0;
-                              return (
-                              <button
-                                onClick={() => sendConfirmationEmail(booking._id)}
-                                disabled={!canResend}
-                                className={`mt-2 text-xs px-3 py-1 rounded-full transition-colors flex items-center gap-1 ${canResend ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
-                              >
-                                <Mail className="w-3 h-3" />
-                                {canResend ? (booking.emailSent ? 'Resend Email' : 'Send Email') : `Try again in ${minsLeft}m`}
-                              </button>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Event Details */}
-                      <div className="grid md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          <span>{format(new Date(booking.event.date), 'PPp')}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <MapPin className="w-4 h-4" />
-                          <span>{booking.event.venue}, {booking.event.city}</span>
-                        </div>
-                      </div>
-
-                      {/* Tickets */}
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                          <Ticket className="w-5 h-5" />
-                          Your Tickets ({booking.tickets.length})
-                        </h4>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {booking.tickets.map((ticket, index) => (
-                            <div key={ticket.ticketId} className="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="font-medium text-gray-800">{ticket.ticketName}</span>
-                                <span className="text-sm font-bold text-purple-600">
-                                  {ticket.price.toFixed(2)} {booking.currency}
-                                </span>
-                              </div>
-
-                              <div className="mb-3">
-                                <div className="text-xs text-gray-500 mb-1">Ticket ID</div>
-                                <div className="text-sm font-mono text-gray-700">{ticket.ticketId.slice(0, 8)}...</div>
-                              </div>
-
-                              {ticket.isUsed ? (
-                                <div className="text-center py-2">
-                                  <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-1" />
-                                  <p className="text-sm text-green-600 font-medium">Used</p>
-                                  {ticket.usedAt && (
-                                    <p className="text-xs text-gray-500">
-                                      {format(new Date(ticket.usedAt), 'PPp')}
-                                    </p>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => setSelectedTicket({ booking, ticket })}
-                                      className="flex-1 bg-purple-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1"
-                                    >
-                                      <QrCode className="w-4 h-4" />
-                                      View QR
-                                    </button>
-                                    <button
-                                      onClick={() => downloadQRCode(ticket.qrCode, ticket.ticketId)}
-                                      className="bg-gray-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-gray-700 transition-colors flex items-center justify-center"
-                                    >
-                                      <Download className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => addToWallet(booking._id, ticket.ticketId, 'apple')}
-                                      className="flex-1 bg-black text-white py-2 px-3 rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center justify-center gap-1"
-                                    >
-                                      <Wallet className="w-4 h-4" />
-                                      Apple Wallet
-                                    </button>
-                                    <button
-                                      onClick={() => addToWallet(booking._id, ticket.ticketId, 'google')}
-                                      className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
-                                    >
-                                      <Smartphone className="w-4 h-4" />
-                                      Google Pay
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
+                    <div key={booking._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                      <div className="p-6">
+                        {/* Booking Header */}
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                          <div className="flex items-center gap-4 mb-4 lg:mb-0">
+                            <div className="relative w-16 h-16 rounded-xl overflow-hidden">
+                              <Image
+                                src={booking.event.posterImage}
+                                alt="Supernova Event"
+                                fill
+                                className="object-cover"
+                              />
                             </div>
-                          ))}
+                            <div>
+                              <img
+                                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
+                                alt="Supernova"
+                                className="h-8 w-auto object-contain mb-1"
+                              />
+                              <p className="text-gray-600">Booking #{booking.bookingReference}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)} flex items-center gap-1`}>
+                              {getStatusIcon(booking.status)}
+                              {getStatusText(booking.status)}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-gray-800">
+                                {booking.totalAmount.toFixed(2)} {booking.currency}
+                              </p>
+                              <p className="text-sm text-gray-600 flex items-center gap-1 justify-end">
+                                <CreditCard className="w-4 h-4" />
+                                {booking.paymentMethod}
+                              </p>
+                              {booking.status === 'confirmed' && (() => {
+                                const last = booking.emailLastSentAt ? new Date(booking.emailLastSentAt) : null;
+                                const now = new Date();
+                                const canResend = !last || (now.getTime() - last.getTime()) >= 60 * 60 * 1000;
+                                const minsLeft = last ? Math.ceil((60 * 60 * 1000 - (now.getTime() - last.getTime())) / 60000) : 0;
+                                return (
+                                  <button
+                                    onClick={() => sendConfirmationEmail(booking._id)}
+                                    disabled={!canResend}
+                                    className={`mt-2 text-xs px-3 py-1 rounded-full transition-colors flex items-center gap-1 ${canResend ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
+                                  >
+                                    <Mail className="w-3 h-3" />
+                                    {canResend ? (booking.emailSent ? 'Resend Email' : 'Send Email') : `Try again in ${minsLeft}m`}
+                                  </button>
+                                );
+                              })()}
+                            </div>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Booking Info */}
-                      <div className="mt-6 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                        <div className="flex flex-wrap gap-4">
-                          <span>Booked: {format(new Date(booking.createdAt), 'PPp')}</span>
-                          {booking.confirmedAt && (
-                            <span>Confirmed: {format(new Date(booking.confirmedAt), 'PPp')}</span>
-                          )}
-                          {booking.notes && (
-                            <span className="text-red-600">Note: {booking.notes}</span>
-                          )}
+                        {/* Event Details */}
+                        <div className="grid md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>{format(new Date(booking.event.date), 'PPp')}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>{booking.event.venue}, {booking.event.city}</span>
+                          </div>
+                        </div>
+
+                        {/* Tickets */}
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <Ticket className="w-5 h-5" />
+                            Your Tickets ({booking.tickets.length})
+                          </h4>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {booking.tickets.map((ticket, index) => (
+                              <div key={ticket.ticketId} className="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="font-medium text-gray-800">{ticket.ticketName}</span>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {ticket.price.toFixed(2)} {booking.currency}
+                                  </span>
+                                </div>
+
+                                <div className="mb-3">
+                                  <div className="text-xs text-gray-500 mb-1">Ticket ID</div>
+                                  <div className="text-sm font-mono text-gray-700">{ticket.ticketId.slice(0, 8)}...</div>
+                                </div>
+
+                                {ticket.isUsed ? (
+                                  <div className="text-center py-2">
+                                    <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-1" />
+                                    <p className="text-sm text-green-600 font-medium">Used</p>
+                                    {ticket.usedAt && (
+                                      <p className="text-xs text-gray-500">
+                                        {format(new Date(ticket.usedAt), 'PPp')}
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => setSelectedTicket({ booking, ticket })}
+                                        className="flex-1 bg-purple-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1"
+                                      >
+                                        <QrCode className="w-4 h-4" />
+                                        View QR
+                                      </button>
+                                      <button
+                                        onClick={() => downloadQRCode(ticket.qrCode, ticket.ticketId)}
+                                        className="bg-gray-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-gray-700 transition-colors flex items-center justify-center"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => addToWallet(booking._id, ticket.ticketId, 'apple')}
+                                        className="flex-1 bg-black text-white py-2 px-3 rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center justify-center gap-1"
+                                      >
+                                        <Wallet className="w-4 h-4" />
+                                        Apple Wallet
+                                      </button>
+                                      <button
+                                        onClick={() => addToWallet(booking._id, ticket.ticketId, 'google')}
+                                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                                      >
+                                        <Smartphone className="w-4 h-4" />
+                                        Google Pay
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Booking Info */}
+                        <div className="mt-6 pt-4 border-t border-gray-200 text-sm text-gray-600">
+                          <div className="flex flex-wrap gap-4">
+                            <span>Booked: {format(new Date(booking.createdAt), 'PPp')}</span>
+                            {booking.confirmedAt && (
+                              <span>Confirmed: {format(new Date(booking.confirmedAt), 'PPp')}</span>
+                            )}
+                            {booking.notes && (
+                              <span className="text-red-600">Note: {booking.notes}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>

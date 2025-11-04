@@ -83,16 +83,16 @@ export async function GET(request: NextRequest) {
           revenue: { $sum: '$ticketPrice' },
           items: includeDetails
             ? {
-                $push: {
-                  bookingId: '$bookingId',
-                  bookingReference: '$bookingReference',
-                  customerName: '$customerName',
-                  customerEmail: '$customerEmail',
-                  ticketId: '$ticketId',
-                  ticketPrice: '$ticketPrice',
-                  createdAt: '$createdAt',
-                },
-              }
+              $push: {
+                bookingId: '$bookingId',
+                bookingReference: '$bookingReference',
+                customerName: '$customerName',
+                customerEmail: '$customerEmail',
+                ticketId: '$ticketId',
+                ticketPrice: '$ticketPrice',
+                createdAt: '$createdAt',
+              },
+            }
             : undefined,
         },
       },

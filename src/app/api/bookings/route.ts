@@ -28,7 +28,7 @@ export async function GET(_req: NextRequest) {
       createdAt: booking.createdAt,
       confirmedAt: booking.confirmedAt,
       emailSent: booking.emailSent,
-  emailLastSentAt: booking.emailLastSentAt,
+      emailLastSentAt: booking.emailLastSentAt,
       notes: booking.notes,
       tickets: booking.tickets.map((ticket: any) => ({
         ticketId: ticket.ticketId,

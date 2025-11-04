@@ -112,7 +112,7 @@ export default function SoldTicketsPage() {
         setResendingId(id);
         const res = await fetch(`/api/admin/bookings/${id}/resend`, { method: 'POST' });
         // Consume JSON to avoid body leak
-        try { await res.json(); } catch {}
+        try { await res.json(); } catch { }
       }
       setMessage(`Resend complete for ${ids.length} booking(s).`);
     } catch (e: any) {
@@ -125,17 +125,17 @@ export default function SoldTicketsPage() {
   const exportCSV = () => {
     // Build CSV for current, visible groups and their loaded items
     const rows: string[] = [];
-    rows.push(['Event','Event Date','Ticket Name','Booking Ref','Customer','Email','Price','Sold At'].join(','));
+    rows.push(['Event', 'Event Date', 'Ticket Name', 'Booking Ref', 'Customer', 'Email', 'Price', 'Sold At'].join(','));
     for (const g of groups) {
-      const evt = g.eventTitle?.replaceAll('"','""') || '';
-      const tname = g.ticketName?.replaceAll('"','""') || '';
+      const evt = g.eventTitle?.replaceAll('"', '""') || '';
+      const tname = g.ticketName?.replaceAll('"', '""') || '';
       if (!g.items || g.items.length === 0) {
         rows.push([`"${evt}"`, `"${formatDateTime(g.eventDate)}"`, `"${tname}"`, '', '', '', g.revenue.toFixed(2), ''].join(','));
         continue;
       }
       for (const it of g.items) {
-        const cust = (it.customerName || '').replaceAll('"','""');
-        const email = (it.customerEmail || '').replaceAll('"','""');
+        const cust = (it.customerName || '').replaceAll('"', '""');
+        const email = (it.customerEmail || '').replaceAll('"', '""');
         rows.push([
           `"${evt}"`,
           `"${formatDateTime(g.eventDate)}"`,
@@ -152,7 +152,7 @@ export default function SoldTicketsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sold-tickets-${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `sold-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

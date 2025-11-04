@@ -37,10 +37,10 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Only send email for paid bookings
-    if (booking.paymentStatus !== 'paid') {
+    // Only send email for confirmed and paid bookings
+    if (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid') {
       return NextResponse.json({
-        error: 'Email can only be sent for confirmed bookings'
+        error: 'Email can only be sent for confirmed and paid bookings'
       }, { status: 400 });
     }
 

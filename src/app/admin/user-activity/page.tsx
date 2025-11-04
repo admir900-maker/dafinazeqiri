@@ -212,7 +212,7 @@ export default function UserActivityPage() {
         return 'text-orange-500';
       case 'page_view':
       case 'event_view':
-        return 'text-[#cd7f32]';
+        return 'text-blue-400';
       default:
         return 'text-white';
     }

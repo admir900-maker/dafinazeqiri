@@ -80,6 +80,7 @@ export default function BookingManagementPage() {
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     try {
@@ -228,6 +229,25 @@ export default function BookingManagementPage() {
       setMessage(error instanceof Error ? error.message : 'Failed to process refund');
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const resendTickets = async (bookingId: string) => {
+    try {
+      setResendingId(bookingId);
+      const response = await fetch(`/api/admin/bookings/${bookingId}/resend`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to resend tickets');
+      }
+      setMessage('Tickets resent successfully');
+    } catch (error) {
+      console.error('❌ Error resending tickets:', error);
+      setMessage(error instanceof Error ? error.message : 'Failed to resend tickets');
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -546,6 +566,23 @@ export default function BookingManagementPage() {
                                 </Button>
                               )}
 
+                            {booking.status === 'confirmed' && booking.paymentStatus === 'paid' && (
+                              <Button
+                                onClick={() => resendTickets(booking._id)}
+                                disabled={resendingId === booking._id}
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-700 border-blue-700 hover:bg-blue-50"
+                                title="Resend tickets via email"
+                              >
+                                {resendingId === booking._id ? (
+                                  <RefreshCw className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <MailIcon />
+                                )}
+                              </Button>
+                            )}
+
                             <Button
                               onClick={() => deleteBooking(booking._id)}
                               disabled={updating === booking._id}
@@ -677,5 +714,13 @@ export default function BookingManagementPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+      <path d="M1.5 6.75A2.25 2.25 0 013.75 4.5h16.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 17.25V6.75zm2.818-.75a.75.75 0 00-.568 1.26l6.75 6.75a1.5 1.5 0 002.122 0l6.75-6.75a.75.75 0 00-.568-1.26H4.318z" />
+    </svg>
   );
 }

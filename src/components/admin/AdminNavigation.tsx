@@ -99,6 +99,12 @@ const adminNavItems: NavItem[] = [
     description: 'Payment settings and methods'
   },
   {
+    href: '/admin/payments/reconcile',
+    label: 'Reconcile',
+    icon: CreditCard,
+    description: 'Cross-check RaiAccept vs local'
+  },
+  {
     href: '/admin/payment-options',
     label: 'Payment Options',
     icon: CreditCard,

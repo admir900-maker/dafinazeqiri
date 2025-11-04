@@ -337,19 +337,22 @@ export class RaiAcceptAPI {
   async getOrderDetails(orderIdentification: string): Promise<any> {
     try {
       const token = await this.authenticate();
+      // Try primary endpoint
+      let response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}` , {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const response = await fetch(
-        `${this.apiBaseUrl}/v1/orders/${orderIdentification}`,
-        {
+      // Fallback to versioned path if needed
+      if (!response.ok) {
+        response = await fetch(`${this.apiBaseUrl}/v1/orders/${orderIdentification}`, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
 
       if (!response.ok) {
-        throw new Error(`Get order details failed: ${response.statusText}`);
+        throw new Error(`Get order details failed: ${response.status} ${response.statusText}`);
       }
 
       return await response.json();
@@ -366,23 +369,49 @@ export class RaiAcceptAPI {
     try {
       const token = await this.authenticate();
 
-      const response = await fetch(
-        `${this.apiBaseUrl}/v1/transactions/${transactionId}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Try simple transactions endpoint
+      let response = await fetch(`${this.apiBaseUrl}/v1/transactions/${transactionId}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) {
-        throw new Error(`Get transaction status failed: ${response.statusText}`);
+        // Let caller provide orderId if needed; this is a best-effort helper
+        throw new Error(`Get transaction status failed: ${response.status} ${response.statusText}`);
       }
 
       return await response.json();
     } catch (error) {
       logError('RaiAccept get transaction status failed', error, { source: 'raiaccept' });
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieve all transactions for an order (optional)
+   * POST https://trapi.raiaccept.com/orders/{orderIdentification}/transactions
+   */
+  async getOrderTransactions(orderIdentification: string): Promise<any> {
+    try {
+      const token = await this.authenticate();
+
+      const response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}/transactions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}), // per docs: send without body; some gateways require an empty JSON
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Get order transactions failed: ${response.status} ${response.statusText} - ${text}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      logError('RaiAccept get order transactions failed', error, { source: 'raiaccept' });
       throw error;
     }
   }

@@ -432,7 +432,7 @@ export default function AnalyticsPage() {
               <AdminCard>
                 <AdminCardHeader>
                   <AdminCardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-[#cd7f32]" />
+                    <BarChart3 className="w-5 h-5 text-blue-400" />
                     Monthly Revenue Trend
                   </AdminCardTitle>
                 </AdminCardHeader>
@@ -442,7 +442,7 @@ export default function AnalyticsPage() {
                       data.monthlyRevenue.map((month, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-[#cd7f32] rounded-full"></div>
+                            <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
                             <span className="text-white font-medium">
                               {month.month} {month.year}
                             </span>
@@ -593,7 +593,7 @@ export default function AnalyticsPage() {
                     <div className="text-white/60 text-sm">Active Events</div>
                   </div>
                   <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Clock className="w-8 h-8 text-[#b4530a] mx-auto mb-2" />
+                    <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white">{data.summary.pastEvents}</div>
                     <div className="text-white/60 text-sm">Past Events</div>
                   </div>
@@ -654,7 +654,7 @@ export default function AnalyticsPage() {
                     <div className="text-white/60 text-sm">Total Users</div>
                   </div>
                   <div className="text-center p-4 bg-white/5 rounded-lg">
-                    <Target className="w-8 h-8 text-[#cd7f32] mx-auto mb-2" />
+                    <Target className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white">{data.summary.avgBookingsPerUser.toFixed(1)}</div>
                     <div className="text-white/60 text-sm">Avg Bookings/User</div>
                   </div>
@@ -730,12 +730,12 @@ export default function AnalyticsPage() {
             <AdminCardTitle>Analytics Dashboard</AdminCardTitle>
           </AdminCardHeader>
           <AdminCardContent className="p-8 text-center">
-            <BarChart3 className="w-16 h-16 text-[#cd7f32] mx-auto mb-4" />
+            <BarChart3 className="w-16 h-16 text-blue-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">No Analytics Data</h2>
             <p className="text-white/70 mb-6">
               Create some events and bookings to see comprehensive analytics and insights.
             </p>
-            <Button onClick={() => fetchAnalytics()} className="bg-[#cd7f32] hover:bg-[#b4530a]">
+            <Button onClick={() => fetchAnalytics()} className="bg-blue-600 hover:bg-blue-700">
               <RefreshCw className="w-4 h-4 mr-2" />
               Check Again
             </Button>

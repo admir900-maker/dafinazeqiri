@@ -88,15 +88,20 @@ class EmailService {
       });
     } else {
       // Fallback to environment variables
+      // Supports providers like ZeptoMail: set SMTP_HOST=smtp.zeptomail.eu, SMTP_PORT=587, SMTP_USERNAME=emailapikey, SMTP_PASSWORD=<token>
+      const envHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+      const envPort = parseInt(process.env.SMTP_PORT || '587');
+      const envUser = process.env.SMTP_USERNAME || process.env.SMTP_USER || '';
+      const envPass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS || '';
+      const envSecure = process.env.SMTP_SECURE === 'true' ? true : false; // port 587 typically secure=false (STARTTLS)
+
       this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: false, // true for 465, false for other ports
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
+        host: envHost,
+        port: envPort,
+        secure: envSecure,
+        auth: envUser && envPass ? { user: envUser, pass: envPass } : undefined,
         tls: {
+          // For ZeptoMail and common providers, STARTTLS on 587 works; allow relaxed TLS in dev
           rejectUnauthorized: false
         }
       });

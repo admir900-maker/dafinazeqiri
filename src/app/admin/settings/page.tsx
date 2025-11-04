@@ -84,6 +84,8 @@ export default function AdminSettingsPage() {
   const [testing, setTesting] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<any>({});
   const [showPasswords, setShowPasswords] = useState<any>({});
+  const [testEmail, setTestEmail] = useState('');
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
 
   // Load settings on component mount
   useEffect(() => {
@@ -704,6 +706,84 @@ export default function AdminSettingsPage() {
                   onCheckedChange={(checked) => updateNestedSetting('email', 'smtp.secure', checked)}
                 />
                 <Label>Use SSL/TLS</Label>
+              </div>
+
+              {/* Template toggles */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Templates</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={settings.email?.templates?.bookingConfirmation ?? true}
+                      onCheckedChange={(checked) => updateNestedSetting('email', 'templates.bookingConfirmation', checked)}
+                    />
+                    <Label>Send booking confirmation emails</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={settings.email?.templates?.eventReminders ?? true}
+                      onCheckedChange={(checked) => updateNestedSetting('email', 'templates.eventReminders', checked)}
+                    />
+                    <Label>Send event reminders</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={settings.email?.templates?.welcomeEmail ?? true}
+                      onCheckedChange={(checked) => updateNestedSetting('email', 'templates.welcomeEmail', checked)}
+                    />
+                    <Label>Send welcome email</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={settings.email?.templates?.passwordReset ?? true}
+                      onCheckedChange={(checked) => updateNestedSetting('email', 'templates.passwordReset', checked)}
+                    />
+                    <Label>Enable password reset email</Label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Send test email */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Send Test Email</h3>
+                <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+                  <div className="flex-1 w-full">
+                    <Label>Recipient</Label>
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={testEmail}
+                      onChange={(e) => setTestEmail(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        setSendingTestEmail(true);
+                        const res = await fetch('/api/admin/email/test', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ to: testEmail })
+                        });
+                        const data = await res.json();
+                        alert(data.message || (res.ok ? 'Test email sent' : 'Failed to send test email'));
+                      } catch (e) {
+                        alert('Failed to send test email');
+                      } finally {
+                        setSendingTestEmail(false);
+                      }
+                    }}
+                    disabled={!testEmail || sendingTestEmail}
+                    variant="outline"
+                  >
+                    {sendingTestEmail ? (
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Mail className="w-4 h-4 mr-2" />
+                    )}
+                    Send Test
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-4">
                 <TestButton

@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import Event from '@/models/Event';
 import { sendBookingConfirmationEmail } from '@/lib/emailService';
+import { getSetting } from '@/lib/settings';
 
 /**
  * RaiAccept Webhook Handler
@@ -88,8 +89,11 @@ export async function POST(request: NextRequest) {
 
       await booking.save();
 
-      // Send confirmation email with tickets if not already sent
-      if (!booking.emailSent) {
+      // Check email template setting
+      const sendConfirmationEnabled = await getSetting('email.templates.bookingConfirmation', true);
+
+      // Send confirmation email with tickets if enabled and not already sent
+      if (sendConfirmationEnabled && !booking.emailSent) {
         try {
           console.log('📧 Sending confirmation email to:', booking.customerEmail);
 
@@ -110,6 +114,8 @@ export async function POST(request: NextRequest) {
           console.error('❌ Failed to send email:', emailError);
           // Don't fail the webhook if email fails
         }
+      } else if (!sendConfirmationEnabled) {
+        console.log('ℹ️ Booking confirmation emails are disabled by settings; skipping email send.');
       } else {
         console.log('ℹ️ Email already sent for this booking');
       }

@@ -284,7 +284,7 @@ export default function TicketsManagementPage() {
                     <div
                       key={event._id}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${selectedEvent?._id === event._id
-                        ? 'border-[#cd7f32] bg-orange-50'
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       onClick={() => setSelectedEvent(event)}

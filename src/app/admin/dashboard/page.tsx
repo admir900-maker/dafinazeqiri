@@ -209,7 +209,7 @@ export default function AdminDashboard() {
       value: stats.overview?.totalEvents || stats.totalEvents || 0,
       icon: Calendar,
       description: `${stats.overview?.activeEvents || 0} active events`,
-      color: 'text-[#cd7f32]'
+      color: 'text-blue-400'
     },
     {
       title: 'Total Bookings',
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
         </div>
         <Button
           onClick={fetchDashboardData}
-          className="bg-[#cd7f32] text-white hover:bg-[#b4530a]"
+          className="bg-blue-600 text-white hover:bg-blue-700"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
@@ -321,7 +321,7 @@ export default function AdminDashboard() {
                 stats.recentActivity.map((activity: any) => (
                   <div key={activity.id} className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1">
-                      {activity.status === 'upcoming' && <Calendar className="w-4 h-4 text-[#cd7f32]" />}
+                      {activity.status === 'upcoming' && <Calendar className="w-4 h-4 text-blue-400" />}
                       {activity.status === 'past' && <Clock className="w-4 h-4 text-gray-400" />}
                     </div>
                     <div className="flex-1">

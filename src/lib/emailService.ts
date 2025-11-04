@@ -450,6 +450,7 @@ export async function sendBookingConfirmationEmail(booking: any): Promise<boolea
       title: booking.eventId?.title || 'Event Title Not Available',
       description: booking.eventId?.description || '',
       date: booking.eventId?.date ? new Date(booking.eventId.date) : new Date(),
+      time: booking.eventId?.time || '00:00',
       location: booking.eventId?.location || 'Location Not Available',
       venue: booking.eventId?.venue || booking.eventId?.location || 'Venue Not Available',
       address: booking.eventId?.address || booking.eventId?.venue || booking.eventId?.location || '',

@@ -16,6 +16,8 @@ interface EventData {
   eventTitle?: string;
   date?: Date;
   eventDate?: Date;
+  time?: string;
+  eventTime?: string;
   location?: string;
   venue?: string;
   eventVenue?: string;
@@ -291,6 +293,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
   currentY -= lineHeight;
 
   // Event Time
+  const eventTime = event.eventTime || event.time || formatTime(eventDate);
   page.drawText('Time | Koha', {
     x: leftColumnX,
     y: currentY,
@@ -298,7 +301,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     font: helveticaBold,
     color: labelColor,
   });
-  page.drawText(formatTime(eventDate), {
+  page.drawText(eventTime, {
     x: leftColumnX,
     y: currentY - 15,
     size: valueSize,

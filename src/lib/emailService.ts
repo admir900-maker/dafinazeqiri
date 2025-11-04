@@ -161,6 +161,7 @@ class EmailService {
       title: string;
       description?: string;
       date: Date;
+      time?: string;
       location: string;
       venue?: string;
       address?: string;
@@ -193,6 +194,7 @@ class EmailService {
         {
           title: event.title,
           date: event.date,
+          time: event.time,
           location: event.location,
           venue: event.venue,
           city: event.city,

@@ -37,6 +37,7 @@ export interface IBooking extends mongoose.Document {
   createdAt: Date;
   confirmedAt?: Date;
   emailSent: boolean;
+  emailLastSentAt?: Date;
   notes?: string;
   refundAmount?: number;
   refundedAt?: Date;
@@ -90,6 +91,7 @@ const BookingSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   confirmedAt: { type: Date },
   emailSent: { type: Boolean, default: false },
+  emailLastSentAt: { type: Date },
   notes: { type: String },
   refundAmount: { type: Number },
   refundedAt: { type: Date },

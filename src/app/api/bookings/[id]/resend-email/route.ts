@@ -44,11 +44,24 @@ export async function POST(
       }, { status: 400 });
     }
 
+    // Enforce 1-hour cooldown between resends
+    const now = new Date();
+    const last = booking.emailLastSentAt ? new Date(booking.emailLastSentAt) : null;
+    if (last && now.getTime() - last.getTime() < 60 * 60 * 1000) {
+      const retryAfterMs = 60 * 60 * 1000 - (now.getTime() - last.getTime());
+      const retryAfterSeconds = Math.ceil(retryAfterMs / 1000);
+      return NextResponse.json({
+        error: 'You can resend the email only once per hour',
+        retryAfterSeconds
+      }, { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } });
+    }
+
     // Send confirmation email
     await sendBookingConfirmationEmail(booking);
 
     // Update email sent flag
     booking.emailSent = true;
+    booking.emailLastSentAt = new Date();
     await booking.save();
 
     return NextResponse.json({

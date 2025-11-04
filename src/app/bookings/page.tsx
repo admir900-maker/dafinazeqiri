@@ -43,6 +43,7 @@ interface Booking {
   createdAt: string;
   confirmedAt?: string;
   emailSent: boolean;
+  emailLastSentAt?: string;
   notes?: string;
   tickets: BookingTicket[];
   event: EventInfo;
@@ -165,15 +166,19 @@ export default function BookingsPage() {
 
   const sendConfirmationEmail = async (bookingId: string) => {
     try {
-      const response = await fetch(`/api/bookings/${bookingId}/send-email`, {
+      const response = await fetch(`/api/bookings/${bookingId}/resend-email`, {
         method: 'POST',
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert(`Confirmation email sent successfully to ${data.emailAddress}`);
+        alert(`Confirmation email sent successfully`);
         fetchBookings(); // Refresh to update emailSent status
+      } else if (response.status === 429) {
+        const secs = data.retryAfterSeconds ?? 3600;
+        const mins = Math.ceil(secs / 60);
+        alert(`Please wait ${mins} minute(s) before resending the email.`);
       } else {
         alert(data.error || 'Failed to send email. Please try again.');
       }
@@ -258,7 +263,9 @@ export default function BookingsPage() {
               </div>
             ) : (
               <div className="grid gap-6">
-                {bookings.map((booking) => (
+                {bookings
+                  .filter((b) => b.status === 'confirmed')
+                  .map((booking) => (
                   <div key={booking._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
                     <div className="p-6">
                       {/* Booking Header */}
@@ -294,18 +301,22 @@ export default function BookingsPage() {
                               <CreditCard className="w-4 h-4" />
                               {booking.paymentMethod}
                             </p>
-                            {booking.status === 'confirmed' && (
+                            {booking.status === 'confirmed' && (() => {
+                              const last = booking.emailLastSentAt ? new Date(booking.emailLastSentAt) : null;
+                              const now = new Date();
+                              const canResend = !last || (now.getTime() - last.getTime()) >= 60 * 60 * 1000;
+                              const minsLeft = last ? Math.ceil((60 * 60 * 1000 - (now.getTime() - last.getTime())) / 60000) : 0;
+                              return (
                               <button
                                 onClick={() => sendConfirmationEmail(booking._id)}
-                                className={`mt-2 text-xs px-3 py-1 rounded-full transition-colors flex items-center gap-1 ${booking.emailSent
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                  }`}
+                                disabled={!canResend}
+                                className={`mt-2 text-xs px-3 py-1 rounded-full transition-colors flex items-center gap-1 ${canResend ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
                               >
                                 <Mail className="w-3 h-3" />
-                                {booking.emailSent ? 'Resend Email' : 'Send Email'}
+                                {canResend ? (booking.emailSent ? 'Resend Email' : 'Send Email') : `Try again in ${minsLeft}m`}
                               </button>
-                            )}
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

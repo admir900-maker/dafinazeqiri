@@ -388,20 +388,18 @@ export class RaiAcceptAPI {
   }
 
   /**
-   * Retrieve all transactions for an order (optional)
-   * POST https://trapi.raiaccept.com/orders/{orderIdentification}/transactions
+   * Retrieve all transactions for an order
+   * GET https://trapi.raiaccept.com/orders/{orderIdentification}/transactions
    */
   async getOrderTransactions(orderIdentification: string): Promise<any> {
     try {
       const token = await this.authenticate();
 
       const response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}/transactions`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({}), // per docs: send without body; some gateways require an empty JSON
       });
 
       if (!response.ok) {

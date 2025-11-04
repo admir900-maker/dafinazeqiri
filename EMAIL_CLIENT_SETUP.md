@@ -16,66 +16,85 @@ Add these environment variables to your `.env.local` file:
 ```env
 # IMAP Settings for receiving emails
 IMAP_USER=info@dafinazeqiri.tickets
-IMAP_PASSWORD=your-email-password
-IMAP_HOST=imap.gmail.com
+IMAP_PASSWORD=wRo9_oja
+IMAP_HOST=imappro.zoho.eu
 IMAP_PORT=993
 ```
 
 ### 2. SMTP Settings (for sending emails)
 
-The system uses your existing SMTP settings from the email service:
+**The email client uses your existing SMTP configuration from the database (Admin Panel > Settings > Email Settings).**
+
+No additional SMTP environment variables are needed! The system automatically uses the same SMTP settings that send booking confirmation emails.
+
+This ensures:
+- Consistent sender email across all system emails
+- Centralized SMTP configuration management
+- No duplicate configuration needed
+
+## Zoho Mail Configuration (Current Setup)
+
+Your current configuration for Zoho Mail:
 
 ```env
-# SMTP Settings (already configured)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=info@dafinazeqiri.tickets
-SMTP_PASSWORD=your-email-password
-SMTP_SECURE=false
+IMAP_USER=info@dafinazeqiri.tickets
+IMAP_PASSWORD=wRo9_oja
+IMAP_HOST=imappro.zoho.eu
+IMAP_PORT=993
 ```
 
-## Gmail Configuration
+**SMTP:** Automatically uses your database settings configured in Admin Panel > Settings > Email Settings
 
-If using Gmail, you need to:
+### Zoho Mail Requirements
+- IMAP access must be enabled in your Zoho Mail account
+- For security, consider using an App Password instead of your main password
+- Go to Zoho Mail Settings > Security > App Passwords to generate one
 
-### Option 1: App Passwords (Recommended)
+## Other Email Providers (Alternative Options)
+
+### Gmail Configuration
+
+```env
+IMAP_HOST=imap.gmail.com
+IMAP_PORT=993
+IMAP_USER=your-email@gmail.com
+IMAP_PASSWORD=your-app-password
+```
+
+#### Gmail Setup Options:
+
+**Option 1: App Passwords (Recommended)**
 1. Go to your Google Account settings
 2. Enable 2-Step Verification
 3. Go to Security > App passwords
 4. Generate an app password for "Mail"
-5. Use this password in IMAP_PASSWORD and SMTP_PASSWORD
+5. Use this password in IMAP_PASSWORD
 
-### Option 2: Less Secure Apps (Not Recommended)
+**Option 2: Less Secure Apps (Not Recommended)**
 1. Go to your Google Account
 2. Navigate to Security
 3. Enable "Less secure app access"
 4. Use your regular password
 
-## Other Email Providers
-
 ### Microsoft/Outlook
 ```env
 IMAP_HOST=outlook.office365.com
 IMAP_PORT=993
-SMTP_HOST=smtp.office365.com
-SMTP_PORT=587
 ```
 
 ### Yahoo Mail
 ```env
 IMAP_HOST=imap.mail.yahoo.com
 IMAP_PORT=993
-SMTP_HOST=smtp.mail.yahoo.com
-SMTP_PORT=587
 ```
 
 ### Custom Domain (cPanel, Plesk, etc.)
 ```env
 IMAP_HOST=mail.yourdomain.com
 IMAP_PORT=993
-SMTP_HOST=mail.yourdomain.com
-SMTP_PORT=587
 ```
+
+**Note:** SMTP settings are managed through Admin Panel > Settings > Email Settings for all providers.
 
 ## Features
 

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import nodemailer from 'nodemailer';
+import { connectToDatabase } from '@/lib/mongodb';
+import PaymentSettings from '@/models/PaymentSettings';
+import { getEmailConfig } from '@/lib/settings';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,16 +27,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get SMTP settings from environment or use configured settings
-    const smtpConfig = {
-      host: process.env.SMTP_HOST || process.env.EMAIL_HOST,
-      port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER || process.env.EMAIL_USER,
-        pass: process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD
+    // Get SMTP settings from database (same as booking emails)
+    let smtpConfig: any;
+    
+    try {
+      const emailConfig = await getEmailConfig();
+      
+      if (emailConfig.smtp.host && emailConfig.smtp.username) {
+        smtpConfig = {
+          host: emailConfig.smtp.host,
+          port: emailConfig.smtp.port || 587,
+          secure: emailConfig.smtp.secure || false,
+          auth: {
+            user: emailConfig.smtp.username,
+            pass: emailConfig.smtp.password
+          }
+        };
+      } else {
+        // Fallback to legacy PaymentSettings
+        await connectToDatabase();
+        const legacySettings = await PaymentSettings.findOne({});
+        
+        if (!legacySettings || !legacySettings.smtpHost || !legacySettings.smtpUser) {
+          return NextResponse.json({
+            success: false,
+            error: 'SMTP credentials not configured in database'
+          }, { status: 500 });
+        }
+        
+        smtpConfig = {
+          host: legacySettings.smtpHost,
+          port: legacySettings.smtpPort || 587,
+          secure: legacySettings.smtpSecure || false,
+          auth: {
+            user: legacySettings.smtpUser,
+            pass: legacySettings.smtpPass
+          }
+        };
       }
-    };
+    } catch (error) {
+      console.error('Error loading SMTP settings:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to load SMTP configuration'
+      }, { status: 500 });
+    }
 
     if (!smtpConfig.auth.user || !smtpConfig.auth.pass) {
       return NextResponse.json({

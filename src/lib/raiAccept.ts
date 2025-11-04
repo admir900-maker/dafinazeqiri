@@ -338,7 +338,7 @@ export class RaiAcceptAPI {
     try {
       const token = await this.authenticate();
       // Try primary endpoint
-      let response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}` , {
+      let response = await fetch(`${this.apiBaseUrl}/orders/${orderIdentification}`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });

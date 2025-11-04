@@ -63,6 +63,12 @@ const adminNavItems: NavItem[] = [
     description: 'Manage ticket types and pricing'
   },
   {
+    href: '/admin/tickets/sales',
+    label: 'Sold Tickets',
+    icon: Ticket,
+    description: 'View sold tickets and resend'
+  },
+  {
     href: '/admin/bookings',
     label: 'Bookings',
     icon: Ticket,

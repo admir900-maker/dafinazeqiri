@@ -17,7 +17,7 @@ export async function POST(
     }
 
     await connectToDatabase();
-    const { id } = await params;
+  const { id } = await params;
 
     const booking = await Booking.findById(id).populate('eventId');
     if (!booking) {

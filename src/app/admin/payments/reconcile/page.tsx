@@ -107,7 +107,7 @@ export default function ReconcileRaiAcceptPage() {
       }
       setScanResults(out);
       setMessage(out.length ? `Found ${out.length} discrepancies` : 'No discrepancies found in recent pending bookings');
-    } catch (e:any) {
+    } catch (e: any) {
       setMessage(e.message);
     } finally {
       setScanning(false);
@@ -137,11 +137,11 @@ export default function ReconcileRaiAcceptPage() {
               </div>
               <div className="flex items-end gap-2">
                 <Button onClick={check} disabled={loading} className="min-w-[140px]">
-                  {loading ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin"/>Checking...</>) : (<><Search className="h-4 w-4 mr-2"/>Check</>)}
+                  {loading ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Checking...</>) : (<><Search className="h-4 w-4 mr-2" />Check</>)}
                 </Button>
                 <Button variant="outline" onClick={() => { setBookingId(''); setOrderId(''); setResult(null); setMessage(null); }}>Clear</Button>
                 <Button variant="outline" onClick={scanPending} disabled={scanning}>
-                  {scanning ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin"/>Scanning...</>) : 'Scan recent pending'}
+                  {scanning ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>) : 'Scan recent pending'}
                 </Button>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function ReconcileRaiAcceptPage() {
 
         {message && (
           <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4"/> {message}
+            <AlertTriangle className="h-4 w-4" /> {message}
           </div>
         )}
 
@@ -173,19 +173,19 @@ export default function ReconcileRaiAcceptPage() {
                     <div className="flex gap-2 pt-2">
                       {result.summary.recommendedAction === 'markPaidAndResend' && (
                         <Button onClick={applyFix} disabled={fixing} className="bg-green-600 hover:bg-green-700 text-white">
-                          {fixing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin"/> : <CheckCircle className="h-4 w-4 mr-2"/>}
+                          {fixing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                           Mark Paid
                         </Button>
                       )}
                       {result.summary.recommendedAction === 'markFailed' && (
                         <Button onClick={applyFix} disabled={fixing} variant="outline" className="text-red-700 border-red-700 hover:bg-red-50">
-                          {fixing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin"/> : <XCircle className="h-4 w-4 mr-2"/>}
+                          {fixing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
                           Mark Failed
                         </Button>
                       )}
                       {result.local && (
                         <Button onClick={resend} disabled={fixing} variant="outline" className="text-blue-700 border-blue-700 hover:bg-blue-50">
-                          <Mail className="h-4 w-4 mr-2"/> Resend Tickets
+                          <Mail className="h-4 w-4 mr-2" /> Resend Tickets
                         </Button>
                       )}
                     </div>
@@ -217,12 +217,12 @@ export default function ReconcileRaiAcceptPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(result.remote.transactions || []).map((t:any, idx:number) => (
+                        {(result.remote.transactions || []).map((t: any, idx: number) => (
                           <tr key={idx} className="border-t">
                             <td className="p-2 whitespace-nowrap">{t.transactionId || t.id || '—'}</td>
                             <td className="p-2">{t.status || t.transactionStatus || '—'}</td>
                             <td className="p-2">{t.statusCode || t.transactionStatusCode || '—'}</td>
-                            <td className="p-2 text-right">{(t.transactionAmount ?? t.amount) ? `${(t.transactionAmount ?? t.amount)/100} ${t.transactionCurrency ?? ''}` : '—'}</td>
+                            <td className="p-2 text-right">{(t.transactionAmount ?? t.amount) ? `${(t.transactionAmount ?? t.amount) / 100} ${t.transactionCurrency ?? ''}` : '—'}</td>
                           </tr>
                         ))}
                       </tbody>

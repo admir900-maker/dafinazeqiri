@@ -10,7 +10,7 @@ import {
   RefreshCw, DollarSign, Users, Calendar, Ticket, TrendingUp, TrendingDown,
   BarChart3, PieChart, Activity, Clock, Star, Award, Download, Filter,
   Eye, ArrowUpRight, ArrowDownRight, Target, Zap, Crown, FileText,
-  ShoppingCart, CreditCard, TrendingDownIcon, Percent, Heart, 
+  ShoppingCart, CreditCard, TrendingDownIcon, Percent, Heart,
   MapPin, Globe, Smartphone, Mail, Share2, MessageSquare
 } from 'lucide-react';
 import {
@@ -210,8 +210,8 @@ export default function AnalyticsPage() {
           <p className="text-white font-semibold mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.name.includes('Revenue') || entry.name.includes('Amount') 
-                ? formatCurrency(entry.value) 
+              {entry.name}: {entry.name.includes('Revenue') || entry.name.includes('Amount')
+                ? formatCurrency(entry.value)
                 : entry.value.toLocaleString()}
             </p>
           ))}
@@ -515,29 +515,29 @@ export default function AnalyticsPage() {
                     <ComposedChart data={data.monthlyRevenue}>
                       <defs>
                         <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         yAxisId="left"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         yAxisId="right"
                         orientation="right"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend 
+                      <Legend
                         wrapperStyle={{ color: '#ffffff' }}
                         iconType="circle"
                       />
@@ -550,9 +550,9 @@ export default function AnalyticsPage() {
                         strokeWidth={3}
                         name="Revenue"
                       />
-                      <Bar 
+                      <Bar
                         yAxisId="right"
-                        dataKey="bookings" 
+                        dataKey="bookings"
                         fill={CHART_COLORS.info}
                         name="Bookings"
                         radius={[8, 8, 0, 0]}
@@ -608,11 +608,11 @@ export default function AnalyticsPage() {
                   </AdminCardHeader>
                   <AdminCardContent className="p-6">
                     <ResponsiveContainer width="100%" height={300}>
-                      <RadialBarChart 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius="10%" 
-                        outerRadius="90%" 
+                      <RadialBarChart
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="10%"
+                        outerRadius="90%"
                         data={data.popularEvents.slice(0, 5).map((event, idx) => ({
                           name: event.name.substring(0, 20),
                           value: event.bookings,
@@ -626,10 +626,10 @@ export default function AnalyticsPage() {
                           background
                           dataKey="value"
                         />
-                        <Legend 
-                          iconSize={10} 
-                          layout="vertical" 
-                          verticalAlign="middle" 
+                        <Legend
+                          iconSize={10}
+                          layout="vertical"
+                          verticalAlign="middle"
                           align="right"
                           wrapperStyle={{ fontSize: '12px', color: '#ffffff' }}
                         />
@@ -696,19 +696,19 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={data.monthlyRevenue}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ color: '#ffffff' }} />
-                      <Bar 
-                        dataKey="revenue" 
+                      <Bar
+                        dataKey="revenue"
                         fill={CHART_COLORS.success}
                         name="Revenue"
                         radius={[8, 8, 0, 0]}
@@ -729,26 +729,26 @@ export default function AnalyticsPage() {
                   </AdminCardHeader>
                   <AdminCardContent className="p-6">
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart 
+                      <BarChart
                         data={data.ticketStats}
                         layout="vertical"
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                        <XAxis 
+                        <XAxis
                           type="number"
                           stroke="#ffffff70"
                           tick={{ fill: '#ffffff70' }}
                         />
-                        <YAxis 
+                        <YAxis
                           type="category"
-                          dataKey="type" 
+                          dataKey="type"
                           stroke="#ffffff70"
                           tick={{ fill: '#ffffff70' }}
                           width={100}
                         />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar 
-                          dataKey="revenue" 
+                        <Bar
+                          dataKey="revenue"
                           fill={CHART_COLORS.success}
                           name="Revenue"
                           radius={[0, 8, 8, 0]}
@@ -846,18 +846,18 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={data.categoryStats}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                      <XAxis 
-                        dataKey="category" 
+                      <XAxis
+                        dataKey="category"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar 
-                        dataKey="count" 
+                      <Bar
+                        dataKey="count"
                         fill={CHART_COLORS.primary}
                         name="Event Count"
                         radius={[8, 8, 0, 0]}
@@ -966,16 +966,16 @@ export default function AnalyticsPage() {
                           <div className="bg-orange-400 h-2 rounded-full" style={{ width: '100%' }}></div>
                         </div>
                       </div>
-                      
+
                       <div className="p-4 bg-white/5 rounded-lg border border-white/10">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-white/70">Active Buyers</span>
                           <span className="text-white font-bold">{data.summary.totalBookings}</span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2">
-                          <div className="bg-green-400 h-2 rounded-full" 
-                            style={{ 
-                              width: `${(data.summary.totalBookings / (data.summary.uniqueUsers || 1)) * 100}%` 
+                          <div className="bg-green-400 h-2 rounded-full"
+                            style={{
+                              width: `${(data.summary.totalBookings / (data.summary.uniqueUsers || 1)) * 100}%`
                             }}
                           ></div>
                         </div>
@@ -987,7 +987,7 @@ export default function AnalyticsPage() {
                           <span className="text-white font-bold">{calculateConversionRate().toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2">
-                          <div className="bg-blue-400 h-2 rounded-full" 
+                          <div className="bg-blue-400 h-2 rounded-full"
                             style={{ width: `${calculateConversionRate()}%` }}
                           ></div>
                         </div>
@@ -1005,11 +1005,11 @@ export default function AnalyticsPage() {
                         <PolarGrid stroke="#ffffff30" />
                         <PolarAngleAxis dataKey="metric" tick={{ fill: '#ffffff70' }} />
                         <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#ffffff70' }} />
-                        <Radar 
-                          dataKey="value" 
-                          stroke={CHART_COLORS.primary} 
-                          fill={CHART_COLORS.primary} 
-                          fillOpacity={0.6} 
+                        <Radar
+                          dataKey="value"
+                          stroke={CHART_COLORS.primary}
+                          fill={CHART_COLORS.primary}
+                          fillOpacity={0.6}
                         />
                       </RadarChart>
                     </ResponsiveContainer>
@@ -1123,17 +1123,17 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width="100%" height={350}>
                     <LineChart data={data.monthlyRevenue}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         yAxisId="left"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         yAxisId="right"
                         orientation="right"
                         stroke="#ffffff70"
@@ -1141,21 +1141,21 @@ export default function AnalyticsPage() {
                       />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ color: '#ffffff' }} />
-                      <Line 
+                      <Line
                         yAxisId="left"
-                        type="monotone" 
-                        dataKey="revenue" 
-                        stroke={CHART_COLORS.success} 
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke={CHART_COLORS.success}
                         strokeWidth={3}
                         dot={{ fill: CHART_COLORS.success, r: 5 }}
                         activeDot={{ r: 8 }}
                         name="Revenue"
                       />
-                      <Line 
+                      <Line
                         yAxisId="right"
-                        type="monotone" 
-                        dataKey="bookings" 
-                        stroke={CHART_COLORS.info} 
+                        type="monotone"
+                        dataKey="bookings"
+                        stroke={CHART_COLORS.info}
                         strokeWidth={3}
                         dot={{ fill: CHART_COLORS.info, r: 5 }}
                         activeDot={{ r: 8 }}
@@ -1223,8 +1223,8 @@ export default function AnalyticsPage() {
                           </span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2">
-                          <div 
-                            className="bg-green-400 h-2 rounded-full transition-all" 
+                          <div
+                            className="bg-green-400 h-2 rounded-full transition-all"
                             style={{ width: `${Math.min(Math.abs(data.summary.revenueGrowth), 100)}%` }}
                           ></div>
                         </div>
@@ -1238,8 +1238,8 @@ export default function AnalyticsPage() {
                           </span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2">
-                          <div 
-                            className="bg-blue-400 h-2 rounded-full transition-all" 
+                          <div
+                            className="bg-blue-400 h-2 rounded-full transition-all"
                             style={{ width: `${Math.min(Math.abs(data.summary.bookingsGrowth), 100)}%` }}
                           ></div>
                         </div>
@@ -1253,8 +1253,8 @@ export default function AnalyticsPage() {
                           </span>
                         </div>
                         <div className="w-full bg-white/10 rounded-full h-2">
-                          <div 
-                            className="bg-orange-400 h-2 rounded-full transition-all" 
+                          <div
+                            className="bg-orange-400 h-2 rounded-full transition-all"
                             style={{ width: `${Math.min(data.summary.avgBookingsPerUser * 20, 100)}%` }}
                           ></div>
                         </div>
@@ -1338,21 +1338,21 @@ export default function AnalyticsPage() {
                     <AreaChart data={data.monthlyRevenue}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_COLORS.success} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={CHART_COLORS.success} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={CHART_COLORS.success} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={CHART_COLORS.success} stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_COLORS.info} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={CHART_COLORS.info} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={CHART_COLORS.info} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={CHART_COLORS.info} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
-                      <YAxis 
+                      <YAxis
                         stroke="#ffffff70"
                         tick={{ fill: '#ffffff70' }}
                       />
@@ -1432,9 +1432,9 @@ export default function AnalyticsPage() {
                               <span className="text-white/70 text-sm">{cat.count} events</span>
                             </div>
                             <div className="w-full bg-white/10 rounded-full h-2">
-                              <div 
+                              <div
                                 className="h-2 rounded-full transition-all"
-                                style={{ 
+                                style={{
                                   width: `${percentage}%`,
                                   backgroundColor: CATEGORY_COLORS[index]
                                 }}

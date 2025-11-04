@@ -17,7 +17,8 @@ import {
   Tag,
   BookOpen,
   CheckCircle,
-  Activity
+  Activity,
+  Mail
 } from 'lucide-react';
 
 interface NavItem {
@@ -97,6 +98,12 @@ const adminNavItems: NavItem[] = [
     label: 'User Activity',
     icon: Activity,
     description: 'Monitor user behavior and actions'
+  },
+  {
+    href: '/admin/emails',
+    label: 'Email Client',
+    icon: Mail,
+    description: 'View and reply to emails'
   },
   {
     href: '/admin/payments',

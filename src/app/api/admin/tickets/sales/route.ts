@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
 
     const match: any = {
       status: 'confirmed',
+      paymentStatus: 'paid',
     };
 
     if (eventId) {

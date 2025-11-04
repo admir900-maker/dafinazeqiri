@@ -171,7 +171,7 @@ export default function SoldTicketsPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sold Tickets</h1>
-          <p className="text-gray-600">All successfully sold tickets grouped by ticket type</p>
+          <p className="text-gray-600">All confirmed tickets grouped by ticket type</p>
         </div>
 
         {/* Filters */}

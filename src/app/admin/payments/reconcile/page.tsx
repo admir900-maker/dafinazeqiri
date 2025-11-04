@@ -27,8 +27,10 @@ interface ReconcileResult {
 export default function ReconcileRaiAcceptPage() {
   const [bookingId, setBookingId] = useState('');
   const [orderId, setOrderId] = useState('');
+  const [customerName, setCustomerName] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ReconcileResult | null>(null);
+  const [customerResults, setCustomerResults] = useState<ReconcileResult[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [fixing, setFixing] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -38,13 +40,23 @@ export default function ReconcileRaiAcceptPage() {
     try {
       setLoading(true);
       setResult(null);
+      setCustomerResults([]);
       const params = new URLSearchParams();
-      if (bookingId) params.append('bookingId', bookingId.trim());
-      if (orderId) params.append('orderId', orderId.trim());
-      const res = await fetch(`/api/admin/reconcile/raiffeisen?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to reconcile');
-      setResult(data);
+      if (customerName.trim()) {
+        params.append('customerName', customerName.trim());
+        const res = await fetch(`/api/admin/reconcile/raiffeisen?${params.toString()}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to search');
+        setCustomerResults(data.results || []);
+        setMessage(data.count ? `Found ${data.count} booking(s) for "${data.customerName}"` : `No bookings found for "${data.customerName}"`);
+      } else {
+        if (bookingId) params.append('bookingId', bookingId.trim());
+        if (orderId) params.append('orderId', orderId.trim());
+        const res = await fetch(`/api/admin/reconcile/raiffeisen?${params.toString()}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to reconcile');
+        setResult(data);
+      }
     } catch (e: any) {
       setMessage(e.message);
     } finally {
@@ -126,7 +138,7 @@ export default function ReconcileRaiAcceptPage() {
 
         <AdminCard>
           <AdminCardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm text-gray-700 mb-1">Booking ID</label>
                 <Input value={bookingId} onChange={(e) => setBookingId(e.target.value)} placeholder="Mongo _id" />
@@ -135,11 +147,15 @@ export default function ReconcileRaiAcceptPage() {
                 <label className="block text-sm text-gray-700 mb-1">RaiAccept Order ID</label>
                 <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="P-..." />
               </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Customer Name</label>
+                <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Name Surname" />
+              </div>
               <div className="flex items-end gap-2">
                 <Button onClick={check} disabled={loading} className="min-w-[140px]">
                   {loading ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Checking...</>) : (<><Search className="h-4 w-4 mr-2" />Check</>)}
                 </Button>
-                <Button variant="outline" onClick={() => { setBookingId(''); setOrderId(''); setResult(null); setMessage(null); }}>Clear</Button>
+                <Button variant="outline" onClick={() => { setBookingId(''); setOrderId(''); setCustomerName(''); setResult(null); setCustomerResults([]); setMessage(null); }}>Clear</Button>
                 <Button variant="outline" onClick={scanPending} disabled={scanning}>
                   {scanning ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>) : 'Scan recent pending'}
                 </Button>
@@ -232,6 +248,95 @@ export default function ReconcileRaiAcceptPage() {
               </AdminCardContent>
             </AdminCard>
           </div>
+        )}
+
+        {customerResults.length > 0 && (
+          <AdminCard>
+            <AdminCardHeader>
+              <AdminCardTitle>Customer Bookings ({customerResults.length})</AdminCardTitle>
+            </AdminCardHeader>
+            <AdminCardContent className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="p-2 text-left">Customer</th>
+                    <th className="p-2 text-left">Booking Ref</th>
+                    <th className="p-2 text-left">Order ID</th>
+                    <th className="p-2 text-left">Local Status</th>
+                    <th className="p-2 text-left">RaiAccept Status</th>
+                    <th className="p-2 text-right">Amount</th>
+                    <th className="p-2 text-left">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerResults.map((r, i) => (
+                    <tr key={i} className="border-b hover:bg-gray-50">
+                      <td className="p-2">{r.local?.customerName || '—'}</td>
+                      <td className="p-2">{r.local?.bookingReference}</td>
+                      <td className="p-2 text-xs">{r.remote?.orderId}</td>
+                      <td className="p-2">
+                        <Badge className={r.local?.status === 'confirmed' && r.local?.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                          {r.local?.status}/{r.local?.paymentStatus}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <Badge className={r.summary?.statusCode === '0000' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                          {r.summary.remoteStatus} {r.summary.statusCode ? `(${r.summary.statusCode})` : ''}
+                        </Badge>
+                      </td>
+                      <td className="p-2 text-right">€{Number(r.local?.totalAmount).toFixed(2)}</td>
+                      <td className="p-2">
+                        <div className="flex gap-1">
+                          {r.summary.recommendedAction === 'markPaidAndResend' && (
+                            <Button size="sm" onClick={async () => {
+                              setFixing(true);
+                              try {
+                                const resp = await fetch('/api/admin/reconcile/raiffeisen', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bookingId: r.local.id, action: 'markPaidAndResend', resend: false })
+                                });
+                                if (resp.ok) setMessage('Marked paid'); else setMessage('Failed to mark paid');
+                              } finally { setFixing(false); }
+                            }} className="bg-green-600 hover:bg-green-700 text-white">
+                              Mark Paid
+                            </Button>
+                          )}
+                          {r.summary.recommendedAction === 'markFailed' && (
+                            <Button size="sm" variant="outline" onClick={async () => {
+                              setFixing(true);
+                              try {
+                                const resp = await fetch('/api/admin/reconcile/raiffeisen', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bookingId: r.local.id, action: 'markFailed' })
+                                });
+                                if (resp.ok) setMessage('Marked failed'); else setMessage('Failed to mark failed');
+                              } finally { setFixing(false); }
+                            }} className="text-red-700 border-red-700 hover:bg-red-50">
+                              Mark Failed
+                            </Button>
+                          )}
+                          {r.local && (
+                            <Button size="sm" variant="outline" onClick={async () => {
+                              setFixing(true);
+                              try {
+                                const resp = await fetch(`/api/admin/bookings/${r.local.id}/resend`, { method: 'POST' });
+                                const data = await resp.json();
+                                if (resp.ok) setMessage('Tickets resent'); else setMessage(data.error || 'Failed to resend');
+                              } finally { setFixing(false); }
+                            }} className="text-blue-700 border-blue-700 hover:bg-blue-50">
+                              <Mail className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </AdminCardContent>
+          </AdminCard>
         )}
 
         {scanResults.length > 0 && (

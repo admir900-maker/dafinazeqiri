@@ -18,8 +18,14 @@ interface EmailMessage {
   references?: string;
 }
 
+// Simple in-memory cache per mailbox+limit to avoid re-fetching over IMAP on every request
+type CacheKey = string; // `${mailbox}::${limit}`
+type CacheEntry = { emails: EmailMessage[]; fetchedAt: number };
+const emailCacheMap = new Map<CacheKey, CacheEntry>();
+const inFlightMap = new Map<CacheKey, Promise<EmailMessage[]>>();
+
 // Function to fetch emails using IMAP
-async function fetchEmails(): Promise<EmailMessage[]> {
+async function fetchEmails(mailbox: string, limit: number): Promise<EmailMessage[]> {
   return new Promise((resolve, reject) => {
     const imapConfig = {
       user: process.env.IMAP_USER || '',
@@ -42,17 +48,25 @@ async function fetchEmails(): Promise<EmailMessage[]> {
     const imap = new Imap(imapConfig);
     const emails: EmailMessage[] = [];
 
+    // Safety timer: if IMAP operations take too long, close the connection
+    // Keep server total under client timeout; target ~50s
+    const MAX_FETCH_MS = 50000; // 50s
+    const safetyTimer = setTimeout(() => {
+      console.warn('IMAP fetch taking too long, closing connection early');
+      try { imap.end(); } catch (e) { }
+    }, MAX_FETCH_MS);
+
     imap.once('ready', () => {
       console.log('IMAP connection ready');
-      
-      imap.openBox('INBOX', false, (err: Error | null, box: any) => {
+      const boxName = mailbox || 'INBOX';
+      imap.openBox(boxName, false, (err: Error | null, box: any) => {
         if (err) {
-          console.error('Error opening INBOX:', err);
+          console.error(`Error opening ${boxName}:`, err);
           reject(err);
           return;
         }
 
-        console.log('INBOX opened, total messages:', box.messages.total);
+        console.log(`${boxName} opened, total messages:`, box.messages.total);
 
         // If inbox is empty, return empty array
         if (box.messages.total === 0) {
@@ -62,9 +76,10 @@ async function fetchEmails(): Promise<EmailMessage[]> {
           return;
         }
 
-        // Fetch last 50 emails
+        // Fetch last N emails (keeps response fast). Increase if needed.
+        const safeLimit = Math.max(1, Math.min(100, Number.isFinite(limit) ? limit : 20));
         const fetchRange = box.messages.total > 0
-          ? `${Math.max(1, box.messages.total - 49)}:${box.messages.total}`
+          ? `${Math.max(1, box.messages.total - (safeLimit - 1))}:${box.messages.total}`
           : '1:1';
 
         console.log('Fetching range:', fetchRange);
@@ -85,7 +100,7 @@ async function fetchEmails(): Promise<EmailMessage[]> {
             stream.once('end', async () => {
               try {
                 const parsed = await simpleParser(buffer);
-                
+
                 // Helper to extract text from AddressObject
                 const getAddressText = (addr: any): string => {
                   if (!addr) return '';
@@ -94,7 +109,7 @@ async function fetchEmails(): Promise<EmailMessage[]> {
                   if (Array.isArray(addr) && addr[0]?.text) return addr[0].text;
                   return '';
                 };
-                
+
                 const email: EmailMessage = {
                   id: `${seqno}`,
                   from: getAddressText(parsed.from) || 'Unknown',
@@ -107,11 +122,11 @@ async function fetchEmails(): Promise<EmailMessage[]> {
                   hasAttachments: (parsed.attachments?.length || 0) > 0,
                   messageId: parsed.messageId || `${seqno}`,
                   inReplyTo: parsed.inReplyTo || undefined,
-                  references: Array.isArray(parsed.references) 
-                    ? parsed.references.join(',') 
+                  references: Array.isArray(parsed.references)
+                    ? parsed.references.join(',')
                     : parsed.references || undefined
                 };
-                
+
                 emails.push(email);
                 console.log('Parsed email:', email.id, email.subject);
               } catch (error) {
@@ -119,7 +134,7 @@ async function fetchEmails(): Promise<EmailMessage[]> {
               }
             });
           });
-        });        fetch.once('error', (err: Error) => {
+        }); fetch.once('error', (err: Error) => {
           console.error('Fetch error:', err);
           imap.end();
           reject(err);
@@ -134,6 +149,7 @@ async function fetchEmails(): Promise<EmailMessage[]> {
 
     imap.once('error', (err: Error) => {
       console.error('IMAP error:', err);
+      try { clearTimeout(safetyTimer); } catch { }
       reject(err);
     });
 
@@ -141,6 +157,7 @@ async function fetchEmails(): Promise<EmailMessage[]> {
       console.log('IMAP connection ended, found', emails.length, 'emails');
       // Sort by date descending (newest first)
       emails.sort((a, b) => b.date.getTime() - a.date.getTime());
+      try { clearTimeout(safetyTimer); } catch { }
       resolve(emails);
     });
 
@@ -175,13 +192,61 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const emails = await fetchEmails();
+    // Respect query params
+    const { searchParams } = new URL(request.url);
+    const forceRefresh = searchParams.get('refresh') === '1';
+    const mailbox = searchParams.get('mailbox') || 'INBOX';
+    const limitParam = parseInt(searchParams.get('limit') || '20', 10);
+    const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(100, limitParam)) : 20;
 
-    return NextResponse.json({
+    const cacheKey: CacheKey = `${mailbox}::${limit}`;
+
+    // Serve from cache if fresh and not forcing refresh
+    const now = Date.now();
+    const cacheTTL = 2 * 60 * 1000; // 2 minutes
+    const existing = emailCacheMap.get(cacheKey);
+    if (!forceRefresh && existing && now - existing.fetchedAt < cacheTTL) {
+      const response = {
+        success: true,
+        emails: existing.emails,
+        count: existing.emails.length,
+        cache: true,
+        mailbox,
+        limit,
+      };
+      console.log(`Returning cached emails for ${cacheKey}:`, response.count);
+      return NextResponse.json(response);
+    }
+
+    // Deduplicate concurrent fetches per cacheKey
+    if (!inFlightMap.has(cacheKey)) {
+      inFlightMap.set(
+        cacheKey,
+        fetchEmails(mailbox, limit)
+          .then((emails) => {
+            emailCacheMap.set(cacheKey, { emails, fetchedAt: Date.now() });
+            return emails;
+          })
+          .finally(() => {
+            inFlightMap.delete(cacheKey);
+          })
+      );
+    }
+
+    const emails = await inFlightMap.get(cacheKey)!;
+
+    const response = {
       success: true,
       emails,
-      count: emails.length
-    });
+      count: emails.length,
+      cache: false,
+      mailbox,
+      limit,
+    };
+
+    console.log(`Returning response with ${response.count} emails for ${cacheKey}`);
+
+    return NextResponse.json(response);
 
   } catch (error: any) {
     console.error('Error fetching emails:', error);

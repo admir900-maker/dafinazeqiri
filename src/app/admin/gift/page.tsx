@@ -14,6 +14,9 @@ interface GiftTicket {
   ticketId: string;
   bookingReference: string;
   status: string;
+  isValidated?: boolean;
+  validatedAt?: string;
+  validatedBy?: string;
   createdAt: string;
   sentAt?: string;
 }
@@ -194,7 +197,7 @@ export default function GiftTicketsPage() {
                       </td>
                       <td className="px-3 py-2">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${t.isValidated ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
-                          {t.isValidated ? `✓ ${new Date(t.validatedAt).toLocaleDateString()}` : 'Not used'}
+                          {t.isValidated && t.validatedAt ? `✓ ${new Date(t.validatedAt).toLocaleDateString()}` : 'Not used'}
                         </span>
                       </td>
                       <td className="px-3 py-2 text-gray-600">{new Date(t.createdAt).toLocaleString()}</td>

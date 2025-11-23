@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
 
     // Send email with attachment using database SMTP settings
     const emailConfig = await getEmailConfig();
-    const siteConfig = await getSiteConfig();
 
     // Try to get SMTP settings from new Settings collection
     let smtpHost = emailConfig.smtp.host;

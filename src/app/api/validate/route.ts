@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import GiftTicket from '@/models/GiftTicket';
 import Settings from '@/models/Settings';
 import ValidationLog from '@/models/ValidationLog';
 import { logApiError } from '@/lib/errorLogger';
@@ -192,6 +193,106 @@ export async function POST(req: NextRequest) {
     }
 
     const { eventId, ticketId, userId: ticketUserId, bookingId } = parsedData;
+
+    // Check if this is a gift ticket (ticketId starts with GFT-)
+    if (ticketId && ticketId.startsWith('GFT-')) {
+      const giftTicket = await GiftTicket.findOne({ ticketId });
+
+      if (!giftTicket) {
+        return NextResponse.json({ error: 'Gift ticket not found' }, { status: 404 });
+      }
+
+      // Check if gift ticket email was sent successfully
+      if (giftTicket.status !== 'sent') {
+        return NextResponse.json({
+          error: 'Gift ticket not ready',
+          message: 'This gift ticket has not been successfully sent yet.'
+        }, { status: 400 });
+      }
+
+      // Check if ticket is already validated
+      if (giftTicket.isValidated) {
+        await logValidation(validationSettings, {
+          success: false,
+          ticketId: giftTicket.ticketId,
+          eventId: 'gift-ticket',
+          eventTitle: giftTicket.ticketType,
+          userId: giftTicket.recipientEmail,
+          userName: giftTicket.recipientEmail,
+          validatorId: userId,
+          validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+          qrData: qrCodeData,
+          message: 'Gift ticket already validated',
+          timestamp: new Date(),
+          validationType: 'entry',
+          request: req
+        });
+
+        return NextResponse.json({
+          success: false,
+          error: 'Ticket already validated',
+          message: `This gift ticket has already been validated on ${new Date(giftTicket.validatedAt).toLocaleString()}.`,
+          ticket: {
+            ticketId: giftTicket.ticketId,
+            ticketName: giftTicket.ticketType,
+            price: giftTicket.price,
+            usedAt: giftTicket.validatedAt,
+            validatedBy: giftTicket.validatedBy,
+          },
+          event: {
+            title: giftTicket.ticketType,
+            date: new Date(),
+            location: 'Gift Ticket Event',
+          },
+          customer: {
+            email: giftTicket.recipientEmail
+          }
+        }, { status: 400 });
+      }
+
+      // Mark gift ticket as validated
+      giftTicket.isValidated = true;
+      giftTicket.validatedAt = new Date();
+      giftTicket.validatedBy = userId;
+      await giftTicket.save();
+
+      // Log successful validation
+      await logValidation(validationSettings, {
+        success: true,
+        ticketId: giftTicket.ticketId,
+        eventId: 'gift-ticket',
+        eventTitle: giftTicket.ticketType,
+        userId: giftTicket.recipientEmail,
+        userName: giftTicket.recipientEmail,
+        validatorId: userId,
+        validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+        qrData: qrCodeData,
+        message: 'Gift ticket validated successfully',
+        timestamp: new Date(),
+        validationType: 'entry',
+        request: req
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Gift ticket validated successfully',
+        ticket: {
+          ticketId: giftTicket.ticketId,
+          ticketName: giftTicket.ticketType,
+          price: giftTicket.price,
+          usedAt: giftTicket.validatedAt,
+          validatedBy: userId
+        },
+        event: {
+          title: giftTicket.ticketType,
+          date: new Date(),
+          location: 'Gift Ticket Event'
+        },
+        customer: {
+          email: giftTicket.recipientEmail
+        }
+      });
+    }
 
     if (!eventId || !ticketId || !ticketUserId) {
       return NextResponse.json({ error: 'Incomplete QR code data - missing eventId, ticketId, or userId' }, { status: 400 });

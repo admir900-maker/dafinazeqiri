@@ -1,0 +1,212 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardContent } from '@/components/ui/admin-card';
+import { Loader2, Gift, RefreshCw, Send } from 'lucide-react';
+
+interface GiftTicket {
+  _id: string;
+  recipientEmail: string;
+  ticketType: string;
+  price: number;
+  currency: string;
+  ticketId: string;
+  bookingReference: string;
+  status: string;
+  createdAt: string;
+  sentAt?: string;
+}
+
+export default function GiftTicketsPage() {
+  const [tickets, setTickets] = useState<GiftTicket[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Form state
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [ticketType, setTicketType] = useState('VIP Gift');
+  const [price, setPrice] = useState('0');
+  const [currency, setCurrency] = useState('EUR');
+
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/admin/gift?limit=50', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error(`List error ${res.status}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed');
+      setTickets(data.tickets || []);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchTickets(); }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recipientEmail || !ticketType || !price) return;
+    try {
+      setCreating(true);
+      setError(null);
+      const res = await fetch('/api/admin/gift/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail,
+          ticketType,
+          price: parseFloat(price),
+          currency,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || `Create failed ${res.status}`);
+      setRecipientEmail('');
+      setPrice('0');
+      await fetchTickets();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2"><Gift className="w-7 h-7 text-[#cd7f32]" /> Gift Tickets</h1>
+          <p className="text-gray-600">Generate and email standalone gift tickets (not part of normal bookings).</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchTickets} disabled={loading} className="border-gray-300 text-gray-700 hover:bg-gray-50">
+            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+          </Button>
+        </div>
+      </div>
+
+      {/* Create Gift Ticket */}
+      <AdminCard>
+        <AdminCardHeader>
+          <AdminCardTitle>Create Gift Ticket</AdminCardTitle>
+        </AdminCardHeader>
+        <AdminCardContent>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
+              <input
+                type="email"
+                required
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ticket Type</label>
+                <input
+                  type="text"
+                  required
+                  value={ticketType}
+                  onChange={(e) => setTicketType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <input
+                  type="text"
+                  required
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <div className="flex justify-end">
+              <Button type="submit" disabled={creating} className="bg-[#cd7f32] hover:bg-[#b4530a]">
+                {creating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                {creating ? 'Generating...' : 'Generate & Send'}
+              </Button>
+            </div>
+          </form>
+        </AdminCardContent>
+      </AdminCard>
+
+      {/* List */}
+      <AdminCard>
+        <AdminCardHeader>
+          <AdminCardTitle>Recent Gift Tickets</AdminCardTitle>
+        </AdminCardHeader>
+        <AdminCardContent>
+          {loading ? (
+            <div className="p-8 text-center text-gray-600"><Loader2 className="w-6 h-6 mx-auto mb-3 animate-spin" />Loading...</div>
+          ) : tickets.length === 0 ? (
+            <div className="p-8 text-center text-gray-600">No gift tickets yet.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Recipient</th>
+                    <th className="px-3 py-2 text-left">Type</th>
+                    <th className="px-3 py-2 text-right">Price</th>
+                    <th className="px-3 py-2 text-left">Currency</th>
+                    <th className="px-3 py-2 text-left">Ticket ID</th>
+                    <th className="px-3 py-2 text-left">Reference</th>
+                    <th className="px-3 py-2 text-left">Email Status</th>
+                    <th className="px-3 py-2 text-left">Validated</th>
+                    <th className="px-3 py-2 text-left">Created</th>
+                    <th className="px-3 py-2 text-left">Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.map(t => (
+                    <tr key={t._id} className="border-t border-gray-200 hover:bg-gray-50">
+                      <td className="px-3 py-2 font-medium text-gray-900">{t.recipientEmail}</td>
+                      <td className="px-3 py-2 text-gray-700">{t.ticketType}</td>
+                      <td className="px-3 py-2 text-right text-gray-700">{t.price.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-gray-700">{t.currency}</td>
+                      <td className="px-3 py-2 text-gray-700">{t.ticketId}</td>
+                      <td className="px-3 py-2 text-gray-700">{t.bookingReference}</td>
+                      <td className="px-3 py-2">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${t.status === 'sent' ? 'bg-green-100 text-green-700' : t.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{t.status}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${t.isValidated ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {t.isValidated ? `✓ ${new Date(t.validatedAt).toLocaleDateString()}` : 'Not used'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">{new Date(t.createdAt).toLocaleString()}</td>
+                      <td className="px-3 py-2 text-gray-600">{t.sentAt ? new Date(t.sentAt).toLocaleString() : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </AdminCardContent>
+      </AdminCard>
+    </div>
+  );
+}

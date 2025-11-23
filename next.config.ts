@@ -39,6 +39,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Allow attachments to be displayed in iframes (for PDF preview)
+        source: '/api/admin/emails/attachment',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+        ]
+      },
+      {
         source: '/(.*)',
         headers: [
           {

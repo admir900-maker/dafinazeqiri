@@ -272,8 +272,8 @@ export default function EmailClientPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Email Client</h1>
-          <p className="text-white/60">Manage incoming emails and send replies</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Email Client</h1>
+          <p className="text-gray-600">Manage incoming emails and send replies</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -314,7 +314,7 @@ export default function EmailClientPage() {
                   return (
                     <>
                       <p className="font-semibold">{title}</p>
-                      <p className="text-sm text-white/70 mt-1 break-all">{error}</p>
+                      <p className="text-sm text-gray-700 mt-1 break-all">{error}</p>
                       {isUnauthorized ? (
                         <div className="mt-3">
                           <Button asChild className="bg-blue-600 hover:bg-blue-700">
@@ -322,7 +322,7 @@ export default function EmailClientPage() {
                           </Button>
                         </div>
                       ) : isNotConfigured ? (
-                        <p className="text-xs text-white/50 mt-2">
+                        <p className="text-xs text-gray-600 mt-2">
                           Add IMAP credentials to your .env.local file and restart the server:<br />
                           IMAP_USER=your-email@domain.com<br />
                           IMAP_PASSWORD=your-password<br />
@@ -368,13 +368,13 @@ export default function EmailClientPage() {
             </AdminCardHeader>
             <AdminCardContent className="p-0">
               {/* Mailboxes */}
-              <div className="p-2 border-b border-white/10 max-h-40 overflow-y-auto">
+              <div className="p-2 border-b border-gray-200 max-h-40 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-1">
                   {mailboxes.map((mb) => (
                     <button
                       key={mb.path}
                       onClick={() => { setSelectedMailbox(mb.path); setSelectedEmail(null); setLimit('20'); }}
-                      className={`text-left text-xs px-2 py-1 rounded ${selectedMailbox === mb.path ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}
+                      className={`text-left text-xs px-2 py-1 rounded ${selectedMailbox === mb.path ? 'bg-blue-100 text-blue-900 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
                       {mb.path}
                     </button>
@@ -382,15 +382,15 @@ export default function EmailClientPage() {
                 </div>
               </div>
               {/* Search */}
-              <div className="p-4 border-b border-white/10">
+              <div className="p-4 border-b border-gray-200">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search emails..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -398,14 +398,14 @@ export default function EmailClientPage() {
               {/* Email List */}
               <div className="max-h-[600px] overflow-y-auto">
                 {loading ? (
-                  <div className="p-8 text-center text-white/60">
-                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-blue-400" />
-                    <p>Loading emails...</p>
-                    <p className="text-xs text-white/40 mt-2">First load may take up to a minute while connecting to the mail server.</p>
+                  <div className="p-8 text-center text-gray-600">
+                    <Loader2 className="w-8 h-8 mx-auto mb-3 text-blue-500 animate-spin" />
+                    <p>Fetching emails...</p>
+                    <p className="text-xs text-gray-500 mt-2">First load may take up to a minute while connecting to the mail server.</p>
                   </div>
                 ) : filteredEmails.length === 0 ? (
-                  <div className="p-8 text-center text-white/60">
-                    <Mail className="w-12 h-12 mx-auto mb-3 text-white/30" />
+                  <div className="p-8 text-center text-gray-600">
+                    <Mail className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                     <p>No emails found</p>
                   </div>
                 ) : (
@@ -413,23 +413,23 @@ export default function EmailClientPage() {
                     <div
                       key={email.id}
                       onClick={() => { setSelectedEmail(email); fetchEmailBody(email); }}
-                      className={`p-4 border-b border-white/10 cursor-pointer transition-colors hover:bg-white/5 ${selectedEmail?.id === email.id ? 'bg-white/10' : ''
+                      className={`p-4 border-b border-gray-200 cursor-pointer transition-colors hover:bg-gray-50 ${selectedEmail?.id === email.id ? 'bg-blue-50' : ''
                         }`}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-medium text-sm truncate">
+                          <p className="text-gray-900 font-medium text-sm truncate">
                             {email.from.split('<')[0].trim() || email.from}
                           </p>
-                          <p className="text-white/70 text-xs truncate">
+                          <p className="text-gray-700 text-xs truncate">
                             {email.subject}
                           </p>
                         </div>
-                        <span className="text-white/50 text-xs ml-2 whitespace-nowrap">
+                        <span className="text-gray-500 text-xs ml-2 whitespace-nowrap">
                           {formatDate(email.date)}
                         </span>
                       </div>
-                      <p className="text-white/50 text-xs truncate">
+                      <p className="text-gray-600 text-xs truncate">
                         {email.body ? getEmailPreview(email.body) : 'Open to view message'}
                       </p>
                     </div>
@@ -456,7 +456,7 @@ export default function EmailClientPage() {
                       setReplyTo(null);
                     }}
                     variant="ghost"
-                    className="text-white/70 hover:text-white"
+                    className="text-gray-700 hover:text-gray-900"
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Back
@@ -466,40 +466,40 @@ export default function EmailClientPage() {
               <AdminCardContent className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">To</label>
+                    <label className="block text-gray-700 text-sm mb-2 font-medium">To</label>
                     <input
                       type="email"
                       value={composeTo}
                       onChange={(e) => setComposeTo(e.target.value)}
                       placeholder="recipient@example.com"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Subject</label>
+                    <label className="block text-gray-700 text-sm mb-2 font-medium">Subject</label>
                     <input
                       type="text"
                       value={composeSubject}
                       onChange={(e) => setComposeSubject(e.target.value)}
                       placeholder="Email subject"
-                      className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Message</label>
+                    <label className="block text-gray-700 text-sm mb-2 font-medium">Message</label>
                     <textarea
                       value={composeBody}
                       onChange={(e) => setComposeBody(e.target.value)}
                       placeholder="Type your message here..."
                       rows={12}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     />
                   </div>
 
                   <div className="flex justify-between items-center pt-4">
-                    <div className="text-white/50 text-sm">
+                    <div className="text-gray-600 text-sm">
                       {replyTo && (
                         <span className="flex items-center gap-2">
                           <Reply className="w-4 h-4" />
@@ -514,7 +514,7 @@ export default function EmailClientPage() {
                           setReplyTo(null);
                         }}
                         variant="ghost"
-                        className="text-white/70 hover:text-white"
+                        className="text-gray-700 hover:text-gray-900"
                       >
                         Cancel
                       </Button>
@@ -559,7 +559,7 @@ export default function EmailClientPage() {
                     <Button
                       onClick={() => setSelectedEmail(null)}
                       variant="ghost"
-                      className="text-white/70 hover:text-white"
+                      className="text-gray-700 hover:text-gray-900"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
@@ -569,28 +569,28 @@ export default function EmailClientPage() {
               <AdminCardContent className="p-6">
                 <div className="space-y-4">
                   {/* Email Header */}
-                  <div className="pb-4 border-b border-white/10">
-                    <h2 className="text-xl font-bold text-white mb-4">
+                  <div className="pb-4 border-b border-gray-200">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">
                       {selectedEmail.subject}
                     </h2>
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 text-sm">
-                        <User className="w-4 h-4 text-white/50" />
-                        <span className="text-white/70">From:</span>
-                        <span className="text-white">{selectedEmail.from}</span>
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-600">From:</span>
+                        <span className="text-gray-900">{selectedEmail.from}</span>
                       </div>
 
                       <div className="flex items-center gap-3 text-sm">
-                        <Mail className="w-4 h-4 text-white/50" />
-                        <span className="text-white/70">To:</span>
-                        <span className="text-white">{selectedEmail.to}</span>
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-600">To:</span>
+                        <span className="text-gray-900">{selectedEmail.to}</span>
                       </div>
 
                       <div className="flex items-center gap-3 text-sm">
-                        <Clock className="w-4 h-4 text-white/50" />
-                        <span className="text-white/70">Date:</span>
-                        <span className="text-white">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-600">Date:</span>
+                        <span className="text-gray-900">
                           {new Date(selectedEmail.date).toLocaleString()}
                         </span>
                       </div>
@@ -601,11 +601,11 @@ export default function EmailClientPage() {
                   <div className="py-4">
                     {selectedEmail.html ? (
                       <div
-                        className="text-white/90 prose prose-invert max-w-none"
+                        className="text-gray-900 prose max-w-none"
                         dangerouslySetInnerHTML={{ __html: selectedEmail.html }}
                       />
                     ) : (
-                      <div className="text-white/90 whitespace-pre-wrap">
+                      <div className="text-gray-900 whitespace-pre-wrap">
                         {selectedEmail.body}
                       </div>
                     )}
@@ -613,8 +613,8 @@ export default function EmailClientPage() {
 
                   {/* Attachments */}
                   {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
-                    <div className="pt-4 border-t border-white/10">
-                      <h4 className="text-white font-semibold mb-3 text-sm">Attachments</h4>
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-gray-900 font-semibold mb-3 text-sm">Attachments</h4>
                       <ul className="space-y-3">
                         {selectedEmail.attachments.map((att) => {
                           const isPdf = (att.contentType || '').toLowerCase().includes('pdf');
@@ -624,25 +624,35 @@ export default function EmailClientPage() {
                           const isPreviewing = previewAttachmentIndex === att.index;
                           return (
                             <li key={att.index} className="text-sm">
-                              <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 <div className="min-w-0 flex-1">
-                                  <span className="text-white/90 truncate block">{att.filename}</span>
-                                  <span className="text-white/50 text-xs">{att.contentType} {formatBytes(att.size) ? `· ${formatBytes(att.size)}` : ''}</span>
+                                  <span className="text-gray-900 font-medium truncate block">{att.filename}</span>
+                                  <span className="text-gray-600 text-xs">{att.contentType} {formatBytes(att.size) ? `· ${formatBytes(att.size)}` : ''}</span>
                                 </div>
                                 <div className="flex gap-2 shrink-0">
                                   {isPdf && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-white/90"
-                                      onClick={() => setPreviewAttachmentIndex(isPreviewing ? null : att.index)}
-                                    >
-                                      {isPreviewing ? 'Close Preview' : 'Preview'}
-                                    </Button>
+                                    <>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="bg-white border-gray-300 text-gray-900 hover:bg-gray-100"
+                                        onClick={() => window.open(previewUrl, '_blank')}
+                                      >
+                                        Open PDF
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="bg-white border-gray-300 text-gray-900 hover:bg-gray-100"
+                                        onClick={() => setPreviewAttachmentIndex(isPreviewing ? null : att.index)}
+                                      >
+                                        {isPreviewing ? 'Close Preview' : 'Preview Here'}
+                                      </Button>
+                                    </>
                                   )}
                                   <a
                                     href={downloadUrl}
-                                    className="text-blue-400 hover:underline"
+                                    className="text-blue-600 hover:text-blue-700 hover:underline font-medium inline-flex items-center px-3 py-1"
                                     target="_blank"
                                     rel="noreferrer"
                                   >
@@ -651,13 +661,27 @@ export default function EmailClientPage() {
                                 </div>
                               </div>
                               {isPdf && isPreviewing && (
-                                <div className="mt-3 border border-white/10 rounded overflow-hidden bg-black/20">
-                                  <iframe
-                                    title={`preview-${att.index}`}
-                                    src={previewUrl}
+                                <div className="mt-3 border border-gray-300 rounded overflow-hidden bg-white shadow-sm">
+                                  <object
+                                    data={previewUrl}
+                                    type="application/pdf"
                                     className="w-full"
                                     style={{ height: '600px' }}
-                                  />
+                                  >
+                                    <div className="p-8 text-center">
+                                      <p className="text-gray-600 mb-4">
+                                        Unable to display PDF preview in browser.
+                                      </p>
+                                      <a
+                                        href={downloadUrl}
+                                        className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                      >
+                                        Click here to download and view the PDF
+                                      </a>
+                                    </div>
+                                  </object>
                                 </div>
                               )}
                             </li>
@@ -668,7 +692,7 @@ export default function EmailClientPage() {
                   )}
 
                   {/* Quick Actions */}
-                  <div className="pt-4 border-t border-white/10 flex gap-2">
+                  <div className="pt-4 border-t border-gray-200 flex gap-2">
                     <Button
                       onClick={() => handleReply(selectedEmail)}
                       className="bg-blue-600 hover:bg-blue-700"
@@ -678,7 +702,7 @@ export default function EmailClientPage() {
                     </Button>
                     <Button
                       variant="ghost"
-                      className="text-white/70 hover:text-white"
+                      className="text-gray-700 hover:text-gray-900"
                     >
                       <Forward className="w-4 h-4 mr-2" />
                       Forward
@@ -690,11 +714,11 @@ export default function EmailClientPage() {
           ) : (
             <AdminCard>
               <AdminCardContent className="p-16 text-center">
-                <Mail className="w-16 h-16 mx-auto mb-4 text-white/30" />
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <Mail className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   No Email Selected
                 </h3>
-                <p className="text-white/60 mb-6">
+                <p className="text-gray-600 mb-6">
                   Select an email from the list to view its contents
                 </p>
                 <Button

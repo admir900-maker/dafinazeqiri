@@ -6,16 +6,21 @@ import { simpleParser } from 'mailparser';
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      console.log('[Attachment] Unauthorized access attempt');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const mailbox = searchParams.get('mailbox') || 'INBOX';
     const uidParam = searchParams.get('uid');
     const idxParam = searchParams.get('index');
-  const inlineParam = searchParams.get('inline');
-  const dispositionParam = searchParams.get('disposition');
+    const inlineParam = searchParams.get('inline');
+    const dispositionParam = searchParams.get('disposition');
     const uid = uidParam ? parseInt(uidParam, 10) : NaN;
     const index = idxParam ? parseInt(idxParam, 10) : NaN;
+
+    console.log(`[Attachment] Request: mailbox=${mailbox}, uid=${uid}, index=${index}, disposition=${dispositionParam}`);
 
     if (!Number.isFinite(uid) || !Number.isFinite(index)) {
       return NextResponse.json({ success: false, error: 'Missing uid or index' }, { status: 400 });
@@ -68,14 +73,19 @@ export async function GET(request: NextRequest) {
       try { imap.connect(); } catch (e) { reject(e); }
     });
 
-  const headers = new Headers();
+    const headers = new Headers();
     headers.set('Content-Type', contentType);
-  const isInline = dispositionParam === 'inline' || inlineParam === '1' || (inlineParam || '').toLowerCase() === 'true';
-  headers.set('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
+    const isInline = dispositionParam === 'inline' || inlineParam === '1' || (inlineParam || '').toLowerCase() === 'true';
+    headers.set('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
+
+    // Add headers to allow iframe embedding
+    headers.set('X-Content-Type-Options', 'nosniff');
+
+    console.log(`[Attachment] Sending ${filename} (${contentType}) as ${isInline ? 'inline' : 'attachment'}, size: ${content?.length || 0} bytes`);
 
     return new NextResponse(content, { status: 200, headers });
   } catch (error: any) {
-    console.error('Error sending attachment:', error);
+    console.error('[Attachment] Error:', error);
     return NextResponse.json({ success: false, error: error?.message || 'Failed to download attachment' }, { status: 500 });
   }
 }

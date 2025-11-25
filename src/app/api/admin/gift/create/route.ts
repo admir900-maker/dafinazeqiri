@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { recipientEmail, customerName, ticketType, price, currency = 'EUR', eventDate } = body || {};
-    if (!recipientEmail || !customerName || !ticketType || typeof price !== 'number') {
+    const { recipientEmail, customerName, ticketType, price, currency = 'EUR', eventTitle, eventDate, eventTime, eventVenue, eventLocation } = body || {};
+    if (!recipientEmail || !customerName || !ticketType || typeof price !== 'number' || !eventTitle || !eventDate || !eventTime) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     const ticketId = `GFT-${randomId(10)}`;
     const bookingReference = `GIFT-${Date.now()}-${randomId(6)}`;
 
-    // Parse event date or use current date
-    const parsedEventDate = eventDate ? new Date(eventDate) : new Date();
+    // Parse event date
+    const parsedEventDate = new Date(eventDate);
 
     // Generate QR code data in the same format as normal tickets
     const QRCode = require('qrcode');
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       userId: 'gift',
       ticketType,
       price,
-      eventTitle: 'Gift Ticket',
+      eventTitle,
       timestamp: Date.now()
     };
     const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrData));
@@ -57,9 +57,11 @@ export async function POST(request: NextRequest) {
       },
     ],
       {
-        title: 'Gift Ticket',
+        title: eventTitle,
         date: parsedEventDate,
-        location: siteConfig.siteName,
+        time: eventTime,
+        venue: eventVenue || eventLocation || siteConfig.siteName,
+        location: eventLocation || eventVenue || siteConfig.siteName,
       },
       {
         bookingReference,
@@ -82,7 +84,11 @@ export async function POST(request: NextRequest) {
       currency,
       ticketId,
       bookingReference,
-      eventDate: eventDate ? parsedEventDate : undefined,
+      eventTitle,
+      eventDate: parsedEventDate,
+      eventTime,
+      eventVenue: eventVenue || undefined,
+      eventLocation: eventLocation || undefined,
       pdfBase64,
       status: 'pending',
       adminUserId: userId,
@@ -136,11 +142,14 @@ export async function POST(request: NextRequest) {
       <p>Dear ${customerName},</p>
       <p>A gift ticket has been generated for you.</p>
       <ul>
-        <li><strong>Type:</strong> ${ticketType}</li>
+        <li><strong>Event:</strong> ${eventTitle}</li>
+        <li><strong>Date:</strong> ${new Date(eventDate).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</li>
+        <li><strong>Time:</strong> ${eventTime}</li>
+        ${eventVenue ? `<li><strong>Venue:</strong> ${eventVenue}</li>` : ''}
+        ${eventLocation ? `<li><strong>Location:</strong> ${eventLocation}</li>` : ''}
+        <li><strong>Ticket Type:</strong> ${ticketType}</li>
         <li><strong>Price:</strong> ${price.toFixed(2)} ${currency}</li>
-        <li><strong>Reference:</strong> ${bookingReference}</li>
-        <li><strong>Ticket ID:</strong> ${ticketId}</li>
-        ${eventDate ? `<li><strong>Event Date:</strong> ${new Date(eventDate).toLocaleDateString()}</li>` : ''}
+        <li><strong>Booking Reference:</strong> ${bookingReference}</li>
       </ul>
       <p>The PDF ticket is attached to this email. Please present the QR code at the event entrance for validation.</p>
       <p style="margin-top:24px;font-size:12px;color:#666;">${siteConfig.siteName} – Gift Ticket Service</p>

@@ -8,7 +8,11 @@ const GiftTicketSchema = new mongoose.Schema({
   currency: { type: String, default: 'EUR' },
   ticketId: { type: String, required: true, unique: true, index: true }, // Used as QR code for validation
   bookingReference: { type: String, required: true },
-  eventDate: { type: Date }, // Optional event date
+  eventTitle: { type: String, required: true },
+  eventDate: { type: Date, required: true },
+  eventTime: { type: String, required: true },
+  eventVenue: { type: String },
+  eventLocation: { type: String },
   pdfBase64: { type: String }, // Store generated PDF (base64) for later resend if needed
   status: { type: String, enum: ['pending', 'sent', 'failed'], default: 'pending' }, // Email send status only
   adminUserId: { type: String, required: true }, // Clerk admin who generated it

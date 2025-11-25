@@ -29,9 +29,11 @@ export default function GiftTicketsPage() {
 
   // Form state
   const [recipientEmail, setRecipientEmail] = useState('');
+  const [customerName, setCustomerName] = useState('');
   const [ticketType, setTicketType] = useState('VIP Gift');
   const [price, setPrice] = useState('0');
   const [currency, setCurrency] = useState('EUR');
+  const [eventDate, setEventDate] = useState('');
 
   const fetchTickets = async () => {
     try {
@@ -53,7 +55,7 @@ export default function GiftTicketsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recipientEmail || !ticketType || !price) return;
+    if (!recipientEmail || !customerName || !ticketType || !price) return;
     try {
       setCreating(true);
       setError(null);
@@ -62,15 +64,19 @@ export default function GiftTicketsPage() {
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           recipientEmail,
+          customerName,
           ticketType,
           price: parseFloat(price),
           currency,
+          eventDate: eventDate || undefined,
         })
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || `Create failed ${res.status}`);
       setRecipientEmail('');
+      setCustomerName('');
       setPrice('0');
+      setEventDate('');
       await fetchTickets();
     } catch (e: any) {
       setError(e.message);
@@ -100,18 +106,31 @@ export default function GiftTicketsPage() {
         </AdminCardHeader>
         <AdminCardContent>
           <form onSubmit={handleCreate} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
-              <input
-                type="email"
-                required
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                placeholder="user@example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
+                <input
+                  type="email"
+                  required
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                <input
+                  type="text"
+                  required
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ticket Type</label>
                 <input
@@ -141,6 +160,15 @@ export default function GiftTicketsPage() {
                   required
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Date (Optional)</label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

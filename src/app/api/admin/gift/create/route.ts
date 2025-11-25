@@ -20,14 +20,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { recipientEmail, ticketType, price, currency = 'EUR' } = body || {};
-    if (!recipientEmail || !ticketType || typeof price !== 'number') {
+    const { recipientEmail, customerName, ticketType, price, currency = 'EUR', eventDate } = body || {};
+    if (!recipientEmail || !customerName || !ticketType || typeof price !== 'number') {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
     await connectToDatabase();
     const ticketId = `GFT-${randomId(10)}`;
     const bookingReference = `GIFT-${Date.now()}-${randomId(6)}`;
+
+    // Parse event date or use current date
+    const parsedEventDate = eventDate ? new Date(eventDate) : new Date();
+
+    // Generate QR code data in the same format as normal tickets
+    const QRCode = require('qrcode');
+    const qrData = {
+      eventId: 'gift-ticket',
+      ticketId,
+      userId: 'gift',
+      ticketType,
+      price,
+      eventTitle: 'Gift Ticket',
+      timestamp: Date.now()
+    };
+    const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrData));
 
     // Generate PDF (single ticket wrapped in array for existing generator)
     const siteConfig = await getSiteConfig();
@@ -37,17 +53,17 @@ export async function POST(request: NextRequest) {
         ticketName: ticketType,
         price,
         color: '#cd7f32',
-        qrCode: ticketId, // reuse ID as QR code content
+        qrCode: qrCodeDataUrl,
       },
     ],
       {
         title: 'Gift Ticket',
-        date: new Date(),
+        date: parsedEventDate,
         location: siteConfig.siteName,
       },
       {
         bookingReference,
-        customerName: recipientEmail,
+        customerName,
         customerEmail: recipientEmail,
         currency,
       },
@@ -60,11 +76,13 @@ export async function POST(request: NextRequest) {
     // Create DB record (pending until email sends)
     const giftDoc = await GiftTicket.create({
       recipientEmail,
+      customerName,
       ticketType,
       price,
       currency,
       ticketId,
       bookingReference,
+      eventDate: eventDate ? parsedEventDate : undefined,
       pdfBase64,
       status: 'pending',
       adminUserId: userId,
@@ -115,14 +133,16 @@ export async function POST(request: NextRequest) {
 
     const emailHtml = `<!DOCTYPE html><html><body style="font-family: Arial, sans-serif;">
       <h2 style="color:#cd7f32;">You received a gift ticket</h2>
+      <p>Dear ${customerName},</p>
       <p>A gift ticket has been generated for you.</p>
       <ul>
         <li><strong>Type:</strong> ${ticketType}</li>
         <li><strong>Price:</strong> ${price.toFixed(2)} ${currency}</li>
         <li><strong>Reference:</strong> ${bookingReference}</li>
         <li><strong>Ticket ID:</strong> ${ticketId}</li>
+        ${eventDate ? `<li><strong>Event Date:</strong> ${new Date(eventDate).toLocaleDateString()}</li>` : ''}
       </ul>
-      <p>The PDF ticket is attached to this email.</p>
+      <p>The PDF ticket is attached to this email. Please present the QR code at the event entrance for validation.</p>
       <p style="margin-top:24px;font-size:12px;color:#666;">${siteConfig.siteName} – Gift Ticket Service</p>
     </body></html>`;
 

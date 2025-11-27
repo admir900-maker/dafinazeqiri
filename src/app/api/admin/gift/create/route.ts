@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     const QRCode = require('qrcode');
 
     // Arrays to store all generated tickets and results
-    const createdTickets = [];
-    const ticketPDFData = [];
+    const createdTickets: any[] = [];
+    const ticketPDFData: any[] = [];
 
     // Generate multiple tickets
     for (let i = 0; i < ticketQuantity; i++) {

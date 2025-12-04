@@ -331,10 +331,8 @@ function CheckoutContent() {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}</p>
+                      day: 'numeric'
+                    })} at {event.time || 'Time TBA'}</p>
                     <p>📍 {event.venue ? `${event.venue}, ` : ''}{event.location}</p>
                   </div>
                 </div>

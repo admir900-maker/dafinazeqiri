@@ -30,6 +30,7 @@ export default function GiftTicketsPage() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({ total: 0, sent: 0, validated: 0 });
   const [filterEventDate, setFilterEventDate] = useState<string>('');
+  const [selectedTicket, setSelectedTicket] = useState<GiftTicket | null>(null);
 
   // Form state
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -121,6 +122,13 @@ export default function GiftTicketsPage() {
         return ticketDate === filterEventDate;
       })
     : tickets;
+
+  // Calculate filtered statistics
+  const filteredStats = {
+    total: filteredTickets.length,
+    sent: filteredTickets.filter(t => t.status === 'sent').length,
+    validated: filteredTickets.filter(t => t.isValidated).length
+  };
 
   return (
     <div className="space-y-6">
@@ -290,13 +298,13 @@ export default function GiftTicketsPage() {
             <AdminCardTitle>Recent Gift Tickets</AdminCardTitle>
             <div className="flex gap-4 text-sm">
               <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold">
-                Total: {stats.total}
+                Total: {filterEventDate ? filteredStats.total : stats.total}
               </div>
               <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg font-semibold">
-                Sent: {stats.sent}
+                Sent: {filterEventDate ? filteredStats.sent : stats.sent}
               </div>
               <div className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                Validated: {stats.validated}
+                Validated: {filterEventDate ? filteredStats.validated : stats.validated}
               </div>
             </div>
           </div>
@@ -355,7 +363,7 @@ export default function GiftTicketsPage() {
                 </thead>
                 <tbody>
                   {filteredTickets.map(t => (
-                    <tr key={t._id} className="border-t border-gray-200 hover:bg-gray-50">
+                    <tr key={t._id} className="border-t border-gray-200 hover:bg-gray-100 cursor-pointer" onClick={() => setSelectedTicket(t)}>
                       <td className="px-3 py-2 font-medium text-gray-900">{t.eventTitle || '-'}</td>
                       <td className="px-3 py-2 text-gray-700">{t.eventDate ? new Date(t.eventDate).toLocaleDateString('en-GB') : '-'}</td>
                       <td className="px-3 py-2 font-medium text-gray-900">{t.recipientEmail}</td>
@@ -382,6 +390,125 @@ export default function GiftTicketsPage() {
           )}
         </AdminCardContent>
       </AdminCard>
+
+      {/* Ticket Detail Modal */}
+      {selectedTicket && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gray-50 border-b border-gray-200 p-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Ticket Details</h2>
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Event Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Event Title</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.eventTitle || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Event Date</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.eventDate ? new Date(selectedTicket.eventDate).toLocaleDateString('en-GB') : '-'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recipient Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Recipient Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.recipientEmail}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ticket Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Ticket Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Ticket ID</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.ticketId}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Booking Reference</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.bookingReference}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Type</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.ticketType}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Price</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.price.toFixed(2)} {selectedTicket.currency}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Email Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${selectedTicket.status === 'sent' ? 'bg-green-100 text-green-700' : selectedTicket.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {selectedTicket.status}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Validation Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${selectedTicket.isValidated ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {selectedTicket.isValidated ? `✓ Validated (${new Date(selectedTicket.validatedAt || '').toLocaleDateString()})` : 'Not validated'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <div className="w-40 text-sm text-gray-600">Created</div>
+                    <p className="text-gray-900">{new Date(selectedTicket.createdAt).toLocaleString()}</p>
+                  </div>
+                  {selectedTicket.sentAt && (
+                    <div className="flex items-center">
+                      <div className="w-40 text-sm text-gray-600">Sent</div>
+                      <p className="text-gray-900">{new Date(selectedTicket.sentAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {selectedTicket.validatedAt && (
+                    <div className="flex items-center">
+                      <div className="w-40 text-sm text-gray-600">Validated</div>
+                      <p className="text-gray-900">{new Date(selectedTicket.validatedAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <Button
+                  onClick={() => setSelectedTicket(null)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-900"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

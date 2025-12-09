@@ -302,14 +302,24 @@ export default function GiftTicketsPage() {
             <AdminCardTitle>Recent Gift Tickets</AdminCardTitle>
             <div className="flex gap-4 text-sm">
               <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold">
-                Total: {filterEventDate ? filteredStats.total : stats.total}
+                Total: {stats.total}
               </div>
               <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg font-semibold">
-                Sent: {filterEventDate ? filteredStats.sent : stats.sent}
+                Sent: {stats.sent}
               </div>
               <div className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                Validated: {filterEventDate ? filteredStats.validated : stats.validated}
+                Validated: {stats.validated}
               </div>
+              {filterEventDate && (
+                <>
+                  <div className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg font-semibold">
+                    Filtered: {filteredStats.total}
+                  </div>
+                  <div className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg font-semibold">
+                    Filtered Sent: {filteredStats.sent}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </AdminCardHeader>

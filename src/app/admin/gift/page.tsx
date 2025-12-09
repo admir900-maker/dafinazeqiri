@@ -19,6 +19,8 @@ interface GiftTicket {
   validatedBy?: string;
   createdAt: string;
   sentAt?: string;
+  eventDate?: string;
+  eventTitle?: string;
 }
 
 export default function GiftTicketsPage() {
@@ -27,6 +29,7 @@ export default function GiftTicketsPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({ total: 0, sent: 0, validated: 0 });
+  const [filterEventDate, setFilterEventDate] = useState<string>('');
 
   // Form state
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -109,6 +112,15 @@ export default function GiftTicketsPage() {
       setCreating(false);
     }
   };
+
+  // Filter tickets by event date
+  const filteredTickets = filterEventDate
+    ? tickets.filter(t => {
+        if (!t.eventDate) return false;
+        const ticketDate = new Date(t.eventDate).toLocaleDateString('en-CA'); // YYYY-MM-DD format
+        return ticketDate === filterEventDate;
+      })
+    : tickets;
 
   return (
     <div className="space-y-6">
@@ -290,15 +302,45 @@ export default function GiftTicketsPage() {
           </div>
         </AdminCardHeader>
         <AdminCardContent>
+          {/* Filter Section */}
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <div className="flex items-end gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Event Date</label>
+                <input
+                  type="date"
+                  value={filterEventDate}
+                  onChange={(e) => setFilterEventDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {filterEventDate && (
+                <button
+                  onClick={() => setFilterEventDate('')}
+                  className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium"
+                >
+                  Clear Filter
+                </button>
+              )}
+              <div className="ml-auto text-sm text-gray-600">
+                Showing {filteredTickets.length} of {tickets.length} tickets
+              </div>
+            </div>
+          </div>
+
           {loading ? (
             <div className="p-8 text-center text-gray-600"><Loader2 className="w-6 h-6 mx-auto mb-3 animate-spin" />Loading...</div>
           ) : tickets.length === 0 ? (
             <div className="p-8 text-center text-gray-600">No gift tickets yet.</div>
+          ) : filteredTickets.length === 0 ? (
+            <div className="p-8 text-center text-gray-600">No gift tickets found for the selected event date.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
                 <thead className="bg-gray-50 text-gray-700">
                   <tr>
+                    <th className="px-3 py-2 text-left">Event Title</th>
+                    <th className="px-3 py-2 text-left">Event Date</th>
                     <th className="px-3 py-2 text-left">Recipient</th>
                     <th className="px-3 py-2 text-left">Type</th>
                     <th className="px-3 py-2 text-right">Price</th>
@@ -312,8 +354,10 @@ export default function GiftTicketsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tickets.map(t => (
+                  {filteredTickets.map(t => (
                     <tr key={t._id} className="border-t border-gray-200 hover:bg-gray-50">
+                      <td className="px-3 py-2 font-medium text-gray-900">{t.eventTitle || '-'}</td>
+                      <td className="px-3 py-2 text-gray-700">{t.eventDate ? new Date(t.eventDate).toLocaleDateString('en-GB') : '-'}</td>
                       <td className="px-3 py-2 font-medium text-gray-900">{t.recipientEmail}</td>
                       <td className="px-3 py-2 text-gray-700">{t.ticketType}</td>
                       <td className="px-3 py-2 text-right text-gray-700">{t.price.toFixed(2)}</td>

@@ -8,6 +8,7 @@ import { Loader2, Gift, RefreshCw, Send } from 'lucide-react';
 interface GiftTicket {
   _id: string;
   recipientEmail: string;
+  customerName?: string;
   ticketType: string;
   price: number;
   currency: string;
@@ -21,6 +22,9 @@ interface GiftTicket {
   sentAt?: string;
   eventDate?: string;
   eventTitle?: string;
+  eventTime?: string;
+  eventVenue?: string;
+  eventLocation?: string;
 }
 
 export default function GiftTicketsPage() {
@@ -417,6 +421,22 @@ export default function GiftTicketsPage() {
                     <p className="text-sm text-gray-600">Event Date</p>
                     <p className="text-lg font-medium text-gray-900">{selectedTicket.eventDate ? new Date(selectedTicket.eventDate).toLocaleDateString('en-GB') : '-'}</p>
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Event Time</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.eventTime || '-'}</p>
+                  </div>
+                  {selectedTicket.eventVenue && (
+                    <div>
+                      <p className="text-sm text-gray-600">Venue</p>
+                      <p className="text-lg font-medium text-gray-900">{selectedTicket.eventVenue}</p>
+                    </div>
+                  )}
+                  {selectedTicket.eventLocation && (
+                    <div>
+                      <p className="text-sm text-gray-600">Location</p>
+                      <p className="text-lg font-medium text-gray-900">{selectedTicket.eventLocation}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -424,6 +444,10 @@ export default function GiftTicketsPage() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Recipient Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Customer Name</p>
+                    <p className="text-lg font-medium text-gray-900">{selectedTicket.customerName || '-'}</p>
+                  </div>
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
                     <p className="text-lg font-medium text-gray-900">{selectedTicket.recipientEmail}</p>
@@ -437,14 +461,14 @@ export default function GiftTicketsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Ticket ID</p>
-                    <p className="text-lg font-medium text-gray-900">{selectedTicket.ticketId}</p>
+                    <p className="text-lg font-medium text-gray-900 font-mono">{selectedTicket.ticketId}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Booking Reference</p>
-                    <p className="text-lg font-medium text-gray-900">{selectedTicket.bookingReference}</p>
+                    <p className="text-lg font-medium text-gray-900 font-mono">{selectedTicket.bookingReference}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Type</p>
+                    <p className="text-sm text-gray-600">Ticket Type</p>
                     <p className="text-lg font-medium text-gray-900">{selectedTicket.ticketType}</p>
                   </div>
                   <div>

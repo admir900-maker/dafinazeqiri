@@ -26,6 +26,7 @@ export default function GiftTicketsPage() {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({ total: 0, sent: 0, validated: 0 });
 
   // Form state
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -49,6 +50,15 @@ export default function GiftTicketsPage() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed');
       setTickets(data.tickets || []);
+
+      // Fetch stats separately
+      const statsRes = await fetch('/api/admin/gift/stats', { headers: { 'Accept': 'application/json' } });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        if (statsData.success) {
+          setStats(statsData.stats);
+        }
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -268,13 +278,13 @@ export default function GiftTicketsPage() {
             <AdminCardTitle>Recent Gift Tickets</AdminCardTitle>
             <div className="flex gap-4 text-sm">
               <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold">
-                Total: {tickets.length}
+                Total: {stats.total}
               </div>
               <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg font-semibold">
-                Sent: {tickets.filter(t => t.status === 'sent').length}
+                Sent: {stats.sent}
               </div>
               <div className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                Validated: {tickets.filter(t => t.isValidated).length}
+                Validated: {stats.validated}
               </div>
             </div>
           </div>

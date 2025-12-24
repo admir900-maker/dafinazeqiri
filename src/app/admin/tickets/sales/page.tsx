@@ -64,7 +64,6 @@ export default function SoldTicketsPage() {
         params.append('endDate', end.toISOString());
       }
       params.append('includeDetails', 'true');
-      params.append('perGroupLimit', '50');
       const res = await fetch(`/api/admin/tickets/sales?${params.toString()}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load sold tickets');
@@ -410,9 +409,6 @@ export default function SoldTicketsPage() {
                               </tbody>
                             </table>
                           </div>
-                          {g.items && g.items.length >= 50 && (
-                            <div className="text-xs text-gray-500 pt-2">Showing first 50; refine filters to see more.</div>
-                          )}
                         </div>
                       )}
                     </div>

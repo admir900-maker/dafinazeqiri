@@ -214,11 +214,11 @@ export async function POST(req: NextRequest) {
       if (validationDate && giftTicket.eventDate) {
         const selectedDate = new Date(validationDate);
         const ticketEventDate = new Date(giftTicket.eventDate);
-        
+
         // Compare dates (YYYY-MM-DD format) - use UTC to avoid timezone issues
         const selectedDateStr = selectedDate.toISOString().split('T')[0];
         const ticketDateStr = ticketEventDate.toISOString().split('T')[0];
-        
+
         if (selectedDateStr !== ticketDateStr) {
           // Log failed validation due to date mismatch
           await logValidation(validationSettings, {
@@ -442,19 +442,19 @@ export async function POST(req: NextRequest) {
     if (validationDate) {
       const selectedDate = new Date(validationDate);
       const eventDate = new Date(booking.eventId.date);
-      
+
       // Compare dates (YYYY-MM-DD format) - use UTC to avoid timezone issues
       const selectedDateStr = selectedDate.toISOString().split('T')[0];
       const eventDateStr = eventDate.toISOString().split('T')[0];
-      
-      console.log('Date comparison:', { 
-        selectedDateStr, 
-        eventDateStr, 
+
+      console.log('Date comparison:', {
+        selectedDateStr,
+        eventDateStr,
         match: selectedDateStr === eventDateStr,
         selectedDate: selectedDate.toString(),
         eventDate: eventDate.toString()
       });
-      
+
       if (selectedDateStr !== eventDateStr) {
         // Log failed validation due to date mismatch
         await logValidation(validationSettings, {

@@ -175,7 +175,8 @@ class EmailService {
       qrCode: string;
       ticketId?: string;
       color?: string;
-    }[]
+    }[],
+    customMessage?: string
   ): Promise<{ html: string; attachments: any[] }> {
     const siteConfig = await getSiteConfig();
 
@@ -267,6 +268,14 @@ class EmailService {
               <h2 style="margin: 0 0 10px 0; font-size: 24px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700; color: #000;">✅ Booking Confirmed! | Rezervimi i Konfirmuar!</h2>
               <p style="margin: 0; font-size: 16px; font-weight: 500; letter-spacing: 0.5px; color: #fff;">Booking Reference: <strong style="font-size: 18px; color: #000;">${booking.bookingReference}</strong></p>
             </div>
+
+            ${customMessage ? `
+            <!-- Custom Message -->
+            <div style="background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2)); border-left: 5px solid #8a2be2; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(138, 43, 226, 0.25);">
+              <h3 style="margin: 0 0 15px 0; color: #8a2be2; font-size: 20px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">📢 Important Message</h3>
+              <p style="color: rgba(255, 255, 255, 0.95); margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap;">${customMessage}</p>
+            </div>
+            ` : ''}
 
             <!-- Event Details -->
             <div style="background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(180, 83, 10, 0.15)); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 2px solid rgba(205, 127, 50, 0.3);">
@@ -414,7 +423,7 @@ async function createEmailServiceWithDBSettings(): Promise<EmailService> {
 }
 
 // Helper function to send booking confirmation emails
-export async function sendBookingConfirmationEmail(booking: any): Promise<boolean> {
+export async function sendBookingConfirmationEmail(booking: any, customMessage?: string): Promise<boolean> {
   try {
     if (!booking.eventId) {
       logError('Booking missing event information', null, { action: 'email-validation' });
@@ -510,7 +519,8 @@ export async function sendBookingConfirmationEmail(booking: any): Promise<boolea
     const emailContent = await emailServiceInstance.generateBookingConfirmationEmail(
       bookingInfo,
       eventInfo,
-      ticketsInfo
+      ticketsInfo,
+      customMessage
     );
 
     // Send the email with database sender config and QR code attachments

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { connectDB } from '@/lib/mongodb';
+import { auth } from '@clerk/nextjs/server';
+import { isUserAdmin } from '@/lib/admin';
+import { connectToDatabase } from '@/lib/mongodb';
 import GiftTicket from '@/models/GiftTicket';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { userId } = await auth();
+    if (!userId || !(await isUserAdmin())) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
+    await connectToDatabase();
 
     const tickets = await GiftTicket.find({}).lean();
 

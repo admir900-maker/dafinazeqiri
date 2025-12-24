@@ -136,9 +136,17 @@ export default function GiftTicketsPage() {
 
   const handleExportCSV = async () => {
     try {
-      const res = await fetch('/api/admin/gift/export', { headers: { 'Accept': 'application/json' } });
-      if (!res.ok) throw new Error('Export failed');
+      setError(null);
+      const res = await fetch('/api/admin/gift/export');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Export failed with status ${res.status}`);
+      }
       const blob = await res.blob();
+      if (blob.type === 'application/json') {
+        const errorData = await blob.text().then(t => JSON.parse(t)).catch(() => ({}));
+        throw new Error(errorData.error || 'Export failed');
+      }
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -148,7 +156,7 @@ export default function GiftTicketsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (e: any) {
-      alert('Failed to export: ' + e.message);
+      setError('Failed to export: ' + e.message);
     }
   };
 

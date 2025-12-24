@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardContent } from '@/components/ui/admin-card';
-import { Loader2, Gift, RefreshCw, Send } from 'lucide-react';
+import { Loader2, Gift, RefreshCw, Send, Download } from 'lucide-react';
 
 interface GiftTicket {
   _id: string;
@@ -121,10 +121,10 @@ export default function GiftTicketsPage() {
   // Filter tickets by event date
   const filteredTickets = filterEventDate
     ? tickets.filter(t => {
-        if (!t.eventDate) return false;
-        const ticketDate = new Date(t.eventDate).toLocaleDateString('en-CA'); // YYYY-MM-DD format
-        return ticketDate === filterEventDate;
-      })
+      if (!t.eventDate) return false;
+      const ticketDate = new Date(t.eventDate).toLocaleDateString('en-CA'); // YYYY-MM-DD format
+      return ticketDate === filterEventDate;
+    })
     : tickets;
 
   // Calculate filtered statistics
@@ -132,6 +132,24 @@ export default function GiftTicketsPage() {
     total: filteredTickets.length,
     sent: filteredTickets.filter(t => t.status === 'sent').length,
     validated: filteredTickets.filter(t => t.isValidated).length
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const res = await fetch('/api/admin/gift/export', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gift-tickets-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e: any) {
+      alert('Failed to export: ' + e.message);
+    }
   };
 
   return (
@@ -142,6 +160,9 @@ export default function GiftTicketsPage() {
           <p className="text-gray-600">Generate and email standalone gift tickets (not part of normal bookings).</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV} className="border-gray-300 text-gray-700 hover:bg-gray-50">
+            <Download className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
           <Button variant="outline" onClick={fetchTickets} disabled={loading} className="border-gray-300 text-gray-700 hover:bg-gray-50">
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>

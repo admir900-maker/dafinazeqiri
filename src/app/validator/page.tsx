@@ -436,7 +436,7 @@ export default function ValidatorPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           qrCodeData: qrData,
           validationDate: selectedEventDate
         }),
@@ -802,11 +802,10 @@ Please try:
                   <button
                     key={date}
                     onClick={() => setSelectedEventDate(date)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                      selectedEventDate === date
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${selectedEventDate === date
                         ? 'bg-blue-600 text-white shadow-md'
                         : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:shadow-sm'
-                    }`}
+                      }`}
                   >
                     {new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
                       month: 'short',

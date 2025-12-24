@@ -210,6 +210,51 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
+      // Check if validation date matches the gift ticket event date (if validation date was provided)
+      if (validationDate && giftTicket.eventDate) {
+        const selectedDate = new Date(validationDate);
+        const ticketEventDate = new Date(giftTicket.eventDate);
+        
+        // Compare dates (YYYY-MM-DD format) - use UTC to avoid timezone issues
+        const selectedDateStr = selectedDate.toISOString().split('T')[0];
+        const ticketDateStr = ticketEventDate.toISOString().split('T')[0];
+        
+        if (selectedDateStr !== ticketDateStr) {
+          // Log failed validation due to date mismatch
+          await logValidation(validationSettings, {
+            success: false,
+            ticketId: giftTicket.ticketId,
+            eventId: 'gift-ticket',
+            eventTitle: giftTicket.eventTitle || giftTicket.ticketType,
+            userId: giftTicket.recipientEmail,
+            userName: giftTicket.recipientEmail,
+            validatorId: userId,
+            validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+            qrData: qrCodeData,
+            message: `Wrong event date. This ticket is for ${ticketDateStr} but you are validating for ${selectedDateStr}`,
+            timestamp: new Date(),
+            validationType: 'entry',
+            request: req
+          });
+
+          return NextResponse.json({
+            success: false,
+            error: 'Wrong event date',
+            message: `This ticket is for an event on ${ticketEventDate.toLocaleDateString()} but you are validating tickets for ${selectedDate.toLocaleDateString()}. The ticket cannot be validated.`,
+            event: {
+              title: giftTicket.eventTitle || giftTicket.ticketType,
+              date: giftTicket.eventDate,
+              location: giftTicket.eventLocation || 'N/A',
+            },
+            ticket: {
+              ticketId: giftTicket.ticketId,
+              ticketName: giftTicket.ticketType,
+              price: giftTicket.price
+            }
+          }, { status: 400 });
+        }
+      }
+
       // Check if ticket is already validated
       if (giftTicket.isValidated) {
         await logValidation(validationSettings, {
@@ -398,9 +443,17 @@ export async function POST(req: NextRequest) {
       const selectedDate = new Date(validationDate);
       const eventDate = new Date(booking.eventId.date);
       
-      // Compare dates (YYYY-MM-DD format)
+      // Compare dates (YYYY-MM-DD format) - use UTC to avoid timezone issues
       const selectedDateStr = selectedDate.toISOString().split('T')[0];
       const eventDateStr = eventDate.toISOString().split('T')[0];
+      
+      console.log('Date comparison:', { 
+        selectedDateStr, 
+        eventDateStr, 
+        match: selectedDateStr === eventDateStr,
+        selectedDate: selectedDate.toString(),
+        eventDate: eventDate.toString()
+      });
       
       if (selectedDateStr !== eventDateStr) {
         // Log failed validation due to date mismatch
@@ -436,9 +489,7 @@ export async function POST(req: NextRequest) {
           }
         }, { status: 400 });
       }
-    }
-
-    // Check if validation is allowed based on admin settings
+    }    // Check if validation is allowed based on admin settings
     const validationCheck = await isValidationAllowed(booking.eventId.date, validationSettings);
     if (!validationCheck.allowed) {
       // Log failed validation due to settings

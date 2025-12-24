@@ -548,6 +548,102 @@ export async function sendBookingConfirmationEmail(booking: any, customMessage?:
   }
 }
 
+// Send custom message email only (no tickets)
+export async function sendCustomMessageEmail(
+  customerEmail: string,
+  customerName: string,
+  customMessage: string,
+  eventTitle: string,
+  bookingReference: string
+): Promise<boolean> {
+  try {
+    // Create email service with database settings
+    const emailServiceInstance = await createEmailServiceWithDBSettings();
+    const smtpSettings = await loadSMTPSettings();
+    const siteConfig = await getSiteConfig();
+
+    // Generate custom message email HTML
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Important Message - ${siteConfig.siteName}</title>
+      </head>
+      <body style="font-family: 'Playfair Display', Georgia, serif; line-height: 1.6; color: #1a0a1e; margin: 0; padding: 0; background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a1a 100%);">
+        <div style="max-width: 600px; margin: 40px auto; background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(10, 10, 10, 0.95) 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(205, 127, 50, 0.4), 0 0 40px rgba(180, 83, 10, 0.3); border: 2px solid rgba(205, 127, 50, 0.3);">
+          
+          <!-- Header with Supernova Branding -->
+          <div style="background: linear-gradient(135deg, #cd7f32 0%, #b4530a 50%, #8b4513 100%); color: white; padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.2) 0%, transparent 60%); pointer-events: none;"></div>
+            <h1 style="margin: 0; font-size: 32px; font-weight: 900; font-family: 'Playfair Display', Georgia, serif; position: relative; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); color: #000;">✨ SUPERNOVA</h1>
+            <p style="margin: 12px 0 0 0; font-size: 18px; font-weight: 300; position: relative; letter-spacing: 1px; color: rgba(255, 255, 255, 0.95);">${siteConfig.siteName}</p>
+            <p style="margin: 8px 0 0 0; font-size: 16px; font-weight: 600; position: relative; letter-spacing: 0.5px; color: #fff;">Important Message</p>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 40px 30px; background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(26, 26, 26, 0.9));">
+            
+            <!-- Greeting -->
+            <div style="margin-bottom: 25px;">
+              <p style="color: rgba(255, 255, 255, 0.95); font-size: 16px; margin: 0;">Dear ${customerName},</p>
+            </div>
+
+            <!-- Custom Message -->
+            <div style="background: linear-gradient(135deg, rgba(138, 43, 226, 0.25), rgba(75, 0, 130, 0.25)); border-left: 5px solid #8a2be2; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);">
+              <h3 style="margin: 0 0 15px 0; color: #8a2be2; font-size: 20px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700;">📢 Message</h3>
+              <p style="color: rgba(255, 255, 255, 0.95); margin: 0; font-size: 15px; line-height: 1.8; white-space: pre-wrap;">${customMessage}</p>
+            </div>
+
+            <!-- Booking Reference -->
+            <div style="background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(180, 83, 10, 0.15)); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid rgba(205, 127, 50, 0.3);">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: 700; color: #cd7f32; font-size: 14px;">Event:</td>
+                  <td style="padding: 8px 0; color: #fff; font-size: 14px; font-weight: 600;">${eventTitle}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: 700; color: #cd7f32; font-size: 14px;">Booking Reference:</td>
+                  <td style="padding: 8px 0; color: #fff; font-size: 14px; font-weight: 600;">${bookingReference}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Footer Note -->
+            <div style="text-align: center; color: rgba(255, 255, 255, 0.7); font-size: 13px; margin-top: 30px; padding-top: 25px; border-top: 1px solid rgba(205, 127, 50, 0.3);">
+              <p style="margin: 0;">If you have any questions, please contact us.</p>
+              <p style="margin: 10px 0 0 0; color: #cd7f32; font-weight: 600;">${siteConfig.siteName}</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Send the email
+    const senderConfig = smtpSettings ? {
+      email: smtpSettings.senderEmail,
+      name: smtpSettings.senderName || siteConfig.siteName
+    } : undefined;
+
+    const success = await emailServiceInstance.sendEmail({
+      to: customerEmail,
+      subject: `Important Message - ${eventTitle} (#${bookingReference})`,
+      html: emailHtml,
+    }, senderConfig);
+
+    if (!success) {
+      logEmailError('sendCustomMessage', customerEmail, null, 'custom-message');
+    }
+
+    return success;
+  } catch (error) {
+    logEmailError('sendCustomMessageEmail', customerEmail, error, 'custom-message-process');
+    return false;
+  }
+}
+
 // Export the SMTPConfig type and EmailService
 export type { SMTPConfig };
 export { EmailService };

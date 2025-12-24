@@ -442,7 +442,7 @@ export default function SoldTicketsPage() {
                   </button>
                 </div>
                 <p className="text-gray-600 mb-4">
-                  Enter your custom message below. This will be sent along with the ticket information.
+                  Enter your custom message below. This will be sent as a standalone message (tickets will NOT be included).
                 </p>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">

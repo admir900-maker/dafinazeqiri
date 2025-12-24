@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import { sendBookingConfirmationEmail } from '@/lib/emailService';
+import { sendCustomMessageEmail } from '@/lib/emailService';
 
-// POST /api/admin/bookings/[id]/send-custom-email - Send custom email with booking tickets
+// POST /api/admin/bookings/[id]/send-custom-email - Send custom message only (no tickets)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -29,18 +29,18 @@ export async function POST(
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    if (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid') {
-      return NextResponse.json({
-        error: 'Booking must be confirmed and paid'
-      }, { status: 400 });
-    }
-
     if (!booking.customerEmail) {
       return NextResponse.json({ error: 'Booking has no customer email' }, { status: 400 });
     }
 
-    // Send email with custom message
-    const sent = await sendBookingConfirmationEmail(booking, customMessage);
+    // Send custom message email (no tickets)
+    const sent = await sendCustomMessageEmail(
+      booking.customerEmail,
+      booking.customerName || 'Customer',
+      customMessage,
+      booking.eventId?.title || 'Event',
+      booking.bookingReference
+    );
 
     if (!sent) {
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });

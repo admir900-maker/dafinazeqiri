@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Insufficient permissions. Validator or admin role required.' }, { status: 403 });
     }
 
-    const { qrCodeData } = await req.json();
+    const { qrCodeData, validationDate } = await req.json();
 
     if (!qrCodeData) {
       return NextResponse.json({ error: 'QR code data is required' }, { status: 400 });
@@ -391,6 +391,51 @@ export async function POST(req: NextRequest) {
     // Check if event exists and matches
     if (!booking.eventId || booking.eventId._id.toString() !== eventId) {
       return NextResponse.json({ error: 'Event mismatch' }, { status: 400 });
+    }
+
+    // Check if validation date matches the event date (if validation date was provided)
+    if (validationDate) {
+      const selectedDate = new Date(validationDate);
+      const eventDate = new Date(booking.eventId.date);
+      
+      // Compare dates (YYYY-MM-DD format)
+      const selectedDateStr = selectedDate.toISOString().split('T')[0];
+      const eventDateStr = eventDate.toISOString().split('T')[0];
+      
+      if (selectedDateStr !== eventDateStr) {
+        // Log failed validation due to date mismatch
+        await logValidation(validationSettings, {
+          success: false,
+          ticketId: ticket.ticketId,
+          eventId: booking.eventId._id.toString(),
+          eventTitle: booking.eventId.title,
+          userId: booking.userId,
+          userName: `User-${booking.userId}`,
+          validatorId: userId,
+          validatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || `Validator-${userId}`,
+          qrData: qrCodeData,
+          message: `Wrong event date. This ticket is for ${eventDateStr} but you are validating for ${selectedDateStr}`,
+          timestamp: new Date(),
+          validationType: 'entry',
+          request: req
+        });
+
+        return NextResponse.json({
+          success: false,
+          error: 'Wrong event date',
+          message: `This ticket is for an event on ${eventDate.toLocaleDateString()} but you are validating tickets for ${selectedDate.toLocaleDateString()}. The ticket cannot be validated.`,
+          event: {
+            title: booking.eventId.title || 'Unknown Event',
+            date: booking.eventId.date,
+            location: booking.eventId.location || 'N/A',
+          },
+          ticket: {
+            ticketId: ticket.ticketId,
+            ticketName: ticket.ticketName,
+            price: ticket.price
+          }
+        }, { status: 400 });
+      }
     }
 
     // Check if validation is allowed based on admin settings

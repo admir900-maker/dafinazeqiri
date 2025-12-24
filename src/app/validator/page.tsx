@@ -101,6 +101,11 @@ export default function ValidatorPage() {
   const [selectedLog, setSelectedLog] = useState<ValidationLog | null>(null);
   const [showLogDetails, setShowLogDetails] = useState(false);
 
+  // Event date selection state
+  const [eventDates, setEventDates] = useState<string[]>([]);
+  const [selectedEventDate, setSelectedEventDate] = useState<string | null>(null);
+  const [eventDatesLoading, setEventDatesLoading] = useState(true);
+
   // Fetch validation settings
   const fetchValidationSettings = async () => {
     try {
@@ -156,8 +161,43 @@ export default function ValidatorPage() {
     }
   };
 
+  // Fetch upcoming event dates for selection
+  const fetchEventDates = async () => {
+    try {
+      setEventDatesLoading(true);
+      const response = await fetch('/api/events');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.events && Array.isArray(result.events)) {
+          // Extract unique dates from events and sort them
+          const dates = new Set<string>();
+          result.events.forEach((event: any) => {
+            if (event.date) {
+              const dateStr = new Date(event.date).toISOString().split('T')[0];
+              dates.add(dateStr);
+            }
+          });
+          const sortedDates = Array.from(dates).sort();
+          setEventDates(sortedDates);
+          // Auto-select today's date if available, otherwise select first date
+          const today = new Date().toISOString().split('T')[0];
+          if (sortedDates.includes(today)) {
+            setSelectedEventDate(today);
+          } else if (sortedDates.length > 0) {
+            setSelectedEventDate(sortedDates[0]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching event dates:', error);
+    } finally {
+      setEventDatesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchValidationSettings();
+    fetchEventDates();
   }, []);
 
   useEffect(() => {
@@ -396,7 +436,10 @@ export default function ValidatorPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ qrCodeData: qrData }),
+        body: JSON.stringify({ 
+          qrCodeData: qrData,
+          validationDate: selectedEventDate
+        }),
         signal: controller.signal
       });
 
@@ -744,6 +787,44 @@ Please try:
               </div>
             </div>
           )}
+
+          {/* Event Date Selection */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-4 mb-6">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              Select Validation Date
+            </h3>
+            {eventDatesLoading ? (
+              <div className="text-sm text-gray-600">Loading event dates...</div>
+            ) : eventDates.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {eventDates.map((date) => (
+                  <button
+                    key={date}
+                    onClick={() => setSelectedEventDate(date)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                      selectedEventDate === date
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:shadow-sm'
+                    }`}
+                  >
+                    {new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-600">No upcoming events found</div>
+            )}
+            {selectedEventDate && (
+              <div className="mt-3 p-2 bg-blue-100 border border-blue-300 rounded text-sm text-blue-800">
+                ✓ Validating tickets for: <strong>{new Date(selectedEventDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+              </div>
+            )}
+          </div>
 
           {/* Scanner Section - Full Width */}
           <div className="bg-white rounded-2xl shadow-lg p-6">

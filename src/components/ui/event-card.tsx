@@ -227,7 +227,7 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
                 {/* Title - Supernova Image */}
                 <div className="mb-4">
                   <img
-                    src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
+                    src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1773337206/SUPERNOVA_TIRANA_WHITE_ifz460.png"
                     alt="Supernova"
                     className={`w-auto object-contain drop-shadow-2xl ${variant === 'featured' ? 'h-20' : 'h-16'}`}
                     style={{

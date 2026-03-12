@@ -363,7 +363,7 @@ export default function EventDetailPage() {
             {/* Massive Title */}
             <div className="mb-8">
               <img
-                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1762017859/Supernova_Title_prak5i.png"
+                src="https://res.cloudinary.com/dzwjhgycg/image/upload/v1773337206/SUPERNOVA_TIRANA_WHITE_ifz460.png"
                 alt="Supernova"
                 className="h-32 md:h-48 lg:h-56 w-auto object-contain"
                 style={{

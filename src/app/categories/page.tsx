@@ -97,7 +97,7 @@ export default function CategoriesPage() {
             Event Categories
           </h1>
           <p className="text-xl text-white/80 mb-6 max-w-2xl mx-auto">
-            Supernova 2025
+            Supernova 2026
           </p>
 
           {/* Stats */}
@@ -228,7 +228,7 @@ function CategoryCard({ category, viewMode }: CategoryCardProps) {
                   {category.name}
                 </h3>
                 <p className="text-white/70 text-sm mb-2 line-clamp-2">
-                  {category.description || 'Supernova 2025'}
+                  {category.description || 'Supernova 2026'}
                 </p>
                 <div className="flex items-center gap-4 text-sm text-white/60">
                   <div className="flex items-center gap-1">
@@ -264,7 +264,7 @@ function CategoryCard({ category, viewMode }: CategoryCardProps) {
         </CardHeader>
         <CardContent className="pt-0">
           <p className="text-white/70 text-sm mb-4 line-clamp-3">
-            {category.description || 'Supernova 2025'}
+            {category.description || 'Supernova 2026'}
           </p>
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1 text-white/60">

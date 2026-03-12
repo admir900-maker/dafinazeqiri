@@ -27,7 +27,7 @@ interface SiteConfig {
 
 export const SEO: React.FC<SEOProps> = ({
   title,
-  description = 'Supernova 2025',
+  description = 'Supernova 2026',
   keywords = [
     'concert tickets',
     'live events',

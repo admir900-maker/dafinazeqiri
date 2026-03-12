@@ -600,7 +600,7 @@ async function generateTicketPDF(options: TicketPDFOptions): Promise<Buffer> {
     color: supernovaOrange, // Orange color
   });
 
-  const branding = '© 2025 SUPERNOVA - DafinaZeqiri.tickets';
+  const branding = '© 2026 SUPERNOVA - DafinaZeqiri.tickets';
   page.drawText(branding, {
     x: width / 2 - helveticaBold.widthOfTextAtSize(branding, 7) / 2,
     y: footerY - 20,

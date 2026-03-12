@@ -393,7 +393,7 @@ class EmailService {
 
           <!-- Footer with Supernova Branding -->
           <div style="background: linear-gradient(135deg, #cd7f32, #b4530a); color: white; padding: 30px; text-align: center; border-top: 3px solid rgba(255, 255, 255, 0.2);">
-            <p style="margin: 0; font-size: 16px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif; color: #000;">✨ © 2025 SUPERNOVA - ${siteConfig.siteName}. All rights reserved.</p>
+            <p style="margin: 0; font-size: 16px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif; color: #000;">✨ © 2026 SUPERNOVA - ${siteConfig.siteName}. All rights reserved.</p>
             <p style="margin: 12px 0 0 0; font-size: 14px; opacity: 0.9;">You received this email because you booked tickets with ${siteConfig.siteName}.</p>
           </div>
 

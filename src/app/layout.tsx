@@ -26,26 +26,26 @@ export async function generateMetadata(): Promise<Metadata> {
     const siteConfig = await getSiteConfig();
 
     return {
-      title: `${siteConfig.siteName} - Supernova 2025`,
-      description: `Supernova 2025 ${siteConfig.siteName}.`,
+      title: `${siteConfig.siteName} - Supernova 2026`,
+      description: `Supernova 2026 ${siteConfig.siteName}.`,
       keywords: "concerts, tickets, music events, live performances, festivals",
       authors: [{ name: `${siteConfig.siteName} Team` }],
       openGraph: {
-        title: `${siteConfig.siteName} - Supernova 2025`,
-        description: `Supernova 2025 ${siteConfig.siteName}.`,
+        title: `${siteConfig.siteName} - Supernova 2026`,
+        description: `Supernova 2026 ${siteConfig.siteName}.`,
         type: "website",
       },
     };
   } catch (error) {
     // Fallback metadata
     return {
-      title: "Supernova 2025",
-      description: "Supernova 2025",
+      title: "Supernova 2026",
+      description: "Supernova 2026",
       keywords: "concerts, tickets, music events, live performances, festivals",
-      authors: [{ name: "Supernova 2025" }],
+      authors: [{ name: "Supernova 2026" }],
       openGraph: {
-        title: "Supernova 2025",
-        description: "Supernova 2025.",
+        title: "Supernova 2026",
+        description: "Supernova 2026.",
         type: "website",
       },
     };

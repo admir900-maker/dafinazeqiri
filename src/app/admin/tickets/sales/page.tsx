@@ -6,7 +6,7 @@ import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Search, Mail, ChevronDown, ChevronRight, X, Users, LayoutList } from 'lucide-react';
+import { RefreshCw, Search, Mail, ChevronDown, ChevronRight, X } from 'lucide-react';
 
 interface TicketItem {
   bookingId: string;
@@ -40,7 +40,7 @@ export default function SoldTicketsPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [includePastEvents, setIncludePastEvents] = useState(false);
-  const [viewMode, setViewMode] = useState<'tickets' | 'customers'>('tickets');
+  const [groupByEmail, setGroupByEmail] = useState(false);
 
   // Custom email states
   const [showCustomEmailDialog, setShowCustomEmailDialog] = useState(false);
@@ -237,41 +237,6 @@ export default function SoldTicketsPage() {
 
   const formatCurrency = (n: number) => `€${n.toFixed(2)}`;
 
-  // Compute customer-grouped view from existing data
-  interface CustomerGroup {
-    email: string;
-    name: string;
-    totalTickets: number;
-    totalSpent: number;
-    ticketTypes: { ticketName: string; eventTitle: string; count: number; spent: number }[];
-  }
-
-  const customerGroups: CustomerGroup[] = (() => {
-    const map = new Map<string, CustomerGroup>();
-    for (const g of groups) {
-      for (const item of g.items || []) {
-        const email = (item.customerEmail || 'unknown').toLowerCase();
-        let cg = map.get(email);
-        if (!cg) {
-          cg = { email, name: item.customerName || '—', totalTickets: 0, totalSpent: 0, ticketTypes: [] };
-          map.set(email, cg);
-        }
-        cg.totalTickets += 1;
-        cg.totalSpent += item.ticketPrice;
-        // Aggregate by ticket type within this customer
-        const typeKey = `${g.eventTitle}::${g.ticketName}`;
-        let tt = cg.ticketTypes.find((t) => `${t.eventTitle}::${t.ticketName}` === typeKey);
-        if (!tt) {
-          tt = { ticketName: g.ticketName, eventTitle: g.eventTitle, count: 0, spent: 0 };
-          cg.ticketTypes.push(tt);
-        }
-        tt.count += 1;
-        tt.spent += item.ticketPrice;
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => b.totalSpent - a.totalSpent);
-  })();
-
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -319,7 +284,7 @@ export default function SoldTicketsPage() {
                 <Button onClick={exportCSV}>Export CSV</Button>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-2 mt-3">
               <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -329,24 +294,15 @@ export default function SoldTicketsPage() {
                 />
                 Show past events
               </label>
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('tickets')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'tickets' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <LayoutList className="h-4 w-4" /> By Ticket
-                </button>
-                <button
-                  onClick={() => setViewMode('customers')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'customers' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Users className="h-4 w-4" /> By Customer
-                </button>
-              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none ml-4">
+                <input
+                  type="checkbox"
+                  checked={groupByEmail}
+                  onChange={(e) => setGroupByEmail(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                Group by email
+              </label>
             </div>
           </AdminCardContent>
         </AdminCard>
@@ -358,70 +314,13 @@ export default function SoldTicketsPage() {
         {/* Groups */}
         <AdminCard>
           <AdminCardHeader>
-            <AdminCardTitle>{viewMode === 'tickets' ? 'Ticket sales' : 'Sales by customer'}</AdminCardTitle>
+            <AdminCardTitle>Ticket sales</AdminCardTitle>
           </AdminCardHeader>
           <AdminCardContent>
             {loading ? (
               <div className="flex items-center justify-center py-10 text-gray-600">
                 <RefreshCw className="h-5 w-5 animate-spin mr-2 text-blue-600" /> Loading sold tickets...
               </div>
-            ) : viewMode === 'customers' ? (
-              customerGroups.length === 0 ? (
-                <div className="py-10 text-center text-gray-600">No customer data found.</div>
-              ) : (
-                <div className="space-y-2">
-                  {customerGroups.map((cg) => {
-                    const key = `cust:${cg.email}`;
-                    const isOpen = !!expanded[key];
-                    return (
-                      <div key={key} className="border rounded-md bg-white">
-                        <button
-                          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
-                          onClick={() => setExpanded((prev) => ({ ...prev, [key]: !isOpen }))}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                            <div>
-                              <div className="font-semibold text-gray-900">{cg.name}</div>
-                              <div className="text-sm text-gray-600">{cg.email}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <Badge className="bg-blue-100 text-blue-800 border-0">{cg.totalTickets} ticket{cg.totalTickets !== 1 ? 's' : ''}</Badge>
-                            <div className="font-semibold">{formatCurrency(cg.totalSpent)}</div>
-                          </div>
-                        </button>
-                        {isOpen && (
-                          <div className="px-4 pb-4">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="border-b">
-                                    <th className="text-left p-2">Event</th>
-                                    <th className="text-left p-2">Ticket Type</th>
-                                    <th className="text-left p-2">Qty</th>
-                                    <th className="text-left p-2">Total</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {cg.ticketTypes.map((tt, i) => (
-                                    <tr key={i} className="border-b hover:bg-gray-50">
-                                      <td className="p-2">{tt.eventTitle}</td>
-                                      <td className="p-2">{tt.ticketName}</td>
-                                      <td className="p-2">{tt.count}</td>
-                                      <td className="p-2">{formatCurrency(tt.spent)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )
             ) : groups.length === 0 ? (
               <div className="py-10 text-center text-gray-600">No sold tickets found.</div>
             ) : (
@@ -481,6 +380,46 @@ export default function SoldTicketsPage() {
                       {isOpen && (
                         <div className="px-4 pb-4">
                           <div className="overflow-x-auto">
+                            {groupByEmail ? (() => {
+                              // Group items by email
+                              const emailMap = new Map<string, { name: string; email: string; tickets: number; spent: number; items: TicketItem[] }>();
+                              for (const item of g.items || []) {
+                                const email = (item.customerEmail || 'unknown').toLowerCase();
+                                let entry = emailMap.get(email);
+                                if (!entry) {
+                                  entry = { name: item.customerName || '—', email, tickets: 0, spent: 0, items: [] };
+                                  emailMap.set(email, entry);
+                                }
+                                entry.tickets += 1;
+                                entry.spent += item.ticketPrice;
+                                entry.items.push(item);
+                              }
+                              const emailGroups = Array.from(emailMap.values()).sort((a, b) => b.spent - a.spent);
+                              return (
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b">
+                                      <th className="text-left p-2">Customer</th>
+                                      <th className="text-left p-2">Email</th>
+                                      <th className="text-left p-2">Tickets</th>
+                                      <th className="text-left p-2">Total Spent</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {emailGroups.map((eg) => (
+                                      <tr key={eg.email} className="border-b hover:bg-gray-50">
+                                        <td className="p-2 font-medium">{eg.name}</td>
+                                        <td className="p-2">{eg.email}</td>
+                                        <td className="p-2">
+                                          <Badge className="bg-blue-100 text-blue-800 border-0">{eg.tickets}</Badge>
+                                        </td>
+                                        <td className="p-2 font-semibold">{formatCurrency(eg.spent)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              );
+                            })() : (
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b">
@@ -532,6 +471,7 @@ export default function SoldTicketsPage() {
                                 ))}
                               </tbody>
                             </table>
+                            )}
                           </div>
                         </div>
                       )}

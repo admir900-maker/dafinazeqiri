@@ -64,8 +64,7 @@ export function Header({ }: HeaderProps) {
     fetchSiteConfig()
   }, [])
 
-  // Hide header on admin pages
-  if (pathname?.startsWith('/admin')) return null;
+  // Hide header on admin pages - REMOVED to keep navigation visible
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

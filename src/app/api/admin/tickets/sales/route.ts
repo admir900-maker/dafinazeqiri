@@ -101,14 +101,11 @@ export async function GET(request: NextRequest) {
       { $sort: { 'eventDate': -1, 'eventTitle': 1, '_id.ticketName': 1 } },
     ];
 
-    // Filter out past events by default unless explicitly requested or filtering by specific eventId
+    // Filter out past events and deleted/unknown events by default unless explicitly requested
     if (!includePastEvents && !eventId) {
       pipeline.push({
         $match: {
-          $or: [
-            { eventDate: { $gte: new Date() } },
-            { eventDate: null },
-          ],
+          eventDate: { $gte: new Date() },
         },
       });
     }

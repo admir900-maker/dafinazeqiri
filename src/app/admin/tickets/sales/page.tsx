@@ -79,6 +79,7 @@ export default function SoldTicketsPage() {
         params.append('endDate', end.toISOString());
       }
       params.append('includeDetails', 'true');
+      params.append('perGroupLimit', '10000');
       const res = await fetch(`/api/admin/tickets/sales?${params.toString()}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load sold tickets');

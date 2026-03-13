@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const endDate = search.get('endDate');
     const includeDetails = (search.get('includeDetails') || 'true') === 'true';
     const includePastEvents = search.get('includePastEvents') === 'true';
-    const perGroupLimit = Math.max(1, Math.min(parseInt(search.get('perGroupLimit') || '25', 10) || 25, 200));
+    const perGroupLimit = Math.max(1, parseInt(search.get('perGroupLimit') || '10000', 10) || 10000);
 
     const match: any = {
       status: 'confirmed',

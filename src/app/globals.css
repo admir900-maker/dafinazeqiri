@@ -95,6 +95,7 @@ html {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -105,24 +106,31 @@ html {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
 }
 
 @keyframes glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(168, 85, 247, 0.3);
   }
+
   50% {
     box-shadow: 0 0 30px rgba(236, 72, 153, 0.8), 0 0 60px rgba(168, 85, 247, 0.5);
   }
@@ -134,12 +142,15 @@ html {
     transform: translateY(0) translateX(0) rotate(0deg);
     opacity: 0;
   }
+
   10% {
     opacity: 0.6;
   }
+
   50% {
     transform: translateY(-60vh) translateX(-10px) rotate(10deg);
   }
+
   100% {
     transform: translateY(-120vh) translateX(10px) rotate(20deg);
     opacity: 0;
@@ -150,7 +161,7 @@ html {
   position: absolute;
   bottom: -2.5rem;
   color: rgba(255, 255, 255, 0.35);
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   animation-name: note-float-up;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
@@ -162,6 +173,7 @@ html {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -269,7 +281,7 @@ html {
 /* Main background with music notes */
 .main-background {
   position: relative;
-  background: linear-gradient(135deg, #78350f 0%, #92400e 40%, #b45309 70%, #d97706 100%);
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 40%, #111111 70%, #0d0d0d 100%);
 }
 
 .main-background::before {
@@ -279,7 +291,7 @@ html {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
+  background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 1920 1080' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg opacity='0.05'%3E%3Ctext x='120' y='300' fontSize='120' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AA%3C/text%3E%3Ctext x='800' y='200' fontSize='80' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AB%3C/text%3E%3Ctext x='1500' y='400' fontSize='100' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AA%3C/text%3E%3Ctext x='1700' y='180' fontSize='70' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AB%3C/text%3E%3Ctext x='300' y='600' fontSize='90' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AA%3C/text%3E%3Ctext x='1100' y='700' fontSize='60' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AB%3C/text%3E%3Ctext x='400' y='900' fontSize='110' fontFamily='sans-serif' fill='%23fff'%3E%E2%99%AA%3C/text%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 1920px 1080px;

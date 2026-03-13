@@ -352,7 +352,7 @@ export default function SoldTicketsPage() {
                     type="checkbox"
                     checked={includePastEvents}
                     onChange={(e) => setIncludePastEvents(e.target.checked)}
-                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                    className="rounded border-gray-300 text-neutral-900 focus:ring-neutral-500"
                   />
                   Show past events
                 </label>
@@ -361,7 +361,7 @@ export default function SoldTicketsPage() {
                     type="checkbox"
                     checked={groupByEmail}
                     onChange={(e) => setGroupByEmail(e.target.checked)}
-                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                    className="rounded border-gray-300 text-neutral-900 focus:ring-neutral-500"
                   />
                   Group by email
                 </label>
@@ -381,7 +381,7 @@ export default function SoldTicketsPage() {
             <AdminCardContent>
               {loading ? (
                 <div className="flex items-center justify-center py-10 text-gray-600">
-                  <RefreshCw className="h-5 w-5 animate-spin mr-2 text-amber-700" /> Loading sold tickets...
+                  <RefreshCw className="h-5 w-5 animate-spin mr-2 text-gray-700" /> Loading sold tickets...
                 </div>
               ) : eventSummaries.length === 0 ? (
                 <div className="py-10 text-center text-gray-600">No sold tickets found.</div>
@@ -393,43 +393,43 @@ export default function SoldTicketsPage() {
                     const totalCapacity = ev.ticketTypes.reduce((sum, tt) => sum + (tt.capacity || 0), 0);
                     const totalAvailable = ev.ticketTypes.reduce((sum, tt) => sum + (tt.available ?? 0), 0);
                     return (
-                      <div key={evKey} className="border border-amber-200 rounded-lg overflow-hidden">
+                      <div key={evKey} className="border border-gray-200 rounded-lg overflow-hidden">
                         {/* Event Master Header */}
                         <button
-                          className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-5 py-3 md:py-4 text-left bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors gap-2"
+                          className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-5 py-3 md:py-4 text-left bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 transition-colors gap-2"
                           onClick={() => setExpanded((prev) => ({ ...prev, [evKey]: !evOpen }))}
                         >
                           <div className="flex items-center gap-2 md:gap-3">
-                            {evOpen ? <ChevronDown className="h-5 w-5 text-amber-700 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 text-amber-700 flex-shrink-0" />}
+                            {evOpen ? <ChevronDown className="h-5 w-5 text-amber-400 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 text-amber-400 flex-shrink-0" />}
                             <div className="min-w-0">
-                              <div className="text-base md:text-lg font-bold text-gray-900 truncate">{ev.eventTitle}</div>
-                              <div className="text-xs md:text-sm text-gray-600">{formatDateTime(ev.eventDate)}</div>
+                              <div className="text-base md:text-lg font-bold text-white truncate">{ev.eventTitle}</div>
+                              <div className="text-xs md:text-sm text-gray-400">{formatDateTime(ev.eventDate)}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-4 md:gap-6 ml-7 sm:ml-0">
                             <div className="text-left sm:text-right">
-                              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">Sold</div>
-                              <div className="text-sm md:text-base font-bold text-amber-800">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
+                              <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Sold</div>
+                              <div className="text-sm md:text-base font-bold text-amber-400">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
                             </div>
                             {totalCapacity > 0 && (
                               <div className="text-left sm:text-right">
-                                <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">Available</div>
-                                <div className="text-sm md:text-base font-bold text-green-700">{totalAvailable}</div>
+                                <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Available</div>
+                                <div className="text-sm md:text-base font-bold text-green-400">{totalAvailable}</div>
                               </div>
                             )}
                             <div className="text-left sm:text-right">
-                              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider">Revenue</div>
-                              <div className="text-sm md:text-base font-bold text-gray-900">{formatCurrency(ev.totalRevenue)}</div>
+                              <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Revenue</div>
+                              <div className="text-sm md:text-base font-bold text-white">{formatCurrency(ev.totalRevenue)}</div>
                             </div>
                           </div>
                         </button>
 
                         {/* Ticket Type Summary Bar */}
-                        <div className="px-3 md:px-5 py-2 bg-white border-t border-amber-100 flex flex-wrap gap-2 md:gap-3">
+                        <div className="px-3 md:px-5 py-2 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 md:gap-3">
                           {ev.ticketTypes.map((tt) => (
                             <div key={tt.name} className="flex items-center gap-1.5 text-sm">
                               <span className="font-medium text-gray-700">{tt.name}:</span>
-                              <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
+                              <span className="bg-gray-900 text-amber-400 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
                               {tt.capacity != null && (
                                 <span className="text-gray-400 text-xs">/ {tt.capacity}</span>
                               )}
@@ -445,7 +445,7 @@ export default function SoldTicketsPage() {
 
                         {/* Expanded: Individual Ticket Type Groups */}
                         {evOpen && (
-                          <div className="border-t border-amber-100 bg-white">
+                          <div className="border-t border-gray-200 bg-white">
                             <div className="space-y-2 p-2 md:p-4">
                               {ev.groups.map((g) => {
                                 const key = `${g.eventId}:${g.ticketName}`;
@@ -457,7 +457,7 @@ export default function SoldTicketsPage() {
                                       onClick={() => setExpanded((prev) => ({ ...prev, [key]: !isOpen }))}
                                     >
                                       <div className="flex items-center gap-2">
-                                        {isOpen ? <ChevronDown className="h-4 w-4 text-amber-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-amber-600 flex-shrink-0" />}
+                                        {isOpen ? <ChevronDown className="h-4 w-4 text-gray-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-gray-600 flex-shrink-0" />}
                                         <div className="min-w-0">
                                           <div className="font-semibold text-gray-900 text-sm md:text-base">{g.ticketName}</div>
                                           <div className="text-xs md:text-sm text-gray-500">
@@ -467,14 +467,14 @@ export default function SoldTicketsPage() {
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2 md:gap-4 ml-6 sm:ml-0 flex-wrap">
-                                        <Badge className="bg-amber-100 text-amber-800 border-0 text-xs">{g.count} sold</Badge>
+                                        <Badge className="bg-gray-900 text-amber-400 border-0 text-xs">{g.count} sold</Badge>
                                         <div className="font-semibold text-sm md:text-base">{formatCurrency(g.revenue)}</div>
                                         {g.items && g.items.length > 0 && (
                                           <div className="flex gap-1 md:gap-2 flex-wrap">
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className="text-amber-700 border-amber-700 hover:bg-amber-50 text-xs md:text-sm"
+                                              className="text-gray-900 border-gray-900 hover:bg-gray-100 text-xs md:text-sm"
                                               onClick={(e) => { e.stopPropagation(); resendGroup(g); }}
                                               disabled={!!resendingId}
                                             >
@@ -533,7 +533,7 @@ export default function SoldTicketsPage() {
                                                   {emailGroups.map((eg) => (
                                                     <tr
                                                       key={eg.email}
-                                                      className="border-b hover:bg-amber-50 cursor-pointer transition-colors"
+                                                      className="border-b hover:bg-gray-100 cursor-pointer transition-colors"
                                                       onClick={() => setCustomerDetailPopup({
                                                         ...eg,
                                                         eventTitle: g.eventTitle,
@@ -544,7 +544,7 @@ export default function SoldTicketsPage() {
                                                       <td className="p-2 font-medium">{eg.name}</td>
                                                       <td className="p-2">{eg.email}</td>
                                                       <td className="p-2">
-                                                        <Badge className="bg-amber-100 text-amber-800 border-0">{eg.tickets}</Badge>
+                                                        <Badge className="bg-gray-900 text-amber-400 border-0">{eg.tickets}</Badge>
                                                       </td>
                                                       <td className="p-2 font-semibold">{formatCurrency(eg.spent)}</td>
                                                     </tr>
@@ -578,7 +578,7 @@ export default function SoldTicketsPage() {
                                                           onClick={() => resend(t.bookingId)}
                                                           size="sm"
                                                           variant="outline"
-                                                          className="text-amber-700 border-amber-700 hover:bg-amber-50"
+                                                          className="text-gray-900 border-gray-900 hover:bg-gray-100"
                                                           disabled={resendingId === t.bookingId}
                                                         >
                                                           {resendingId === t.bookingId ? (
@@ -728,9 +728,9 @@ export default function SoldTicketsPage() {
 
               {/* Summary */}
               <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 md:p-3 text-center">
-                  <div className="text-xl md:text-2xl font-bold text-amber-800">{customerDetailPopup.tickets}</div>
-                  <div className="text-xs md:text-sm text-amber-600">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''}</div>
+                <div className="bg-gray-900 border border-gray-700 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-xl md:text-2xl font-bold text-amber-400">{customerDetailPopup.tickets}</div>
+                  <div className="text-xs md:text-sm text-gray-400">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''}</div>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 md:p-3 text-center">
                   <div className="text-xl md:text-2xl font-bold text-green-800">{formatCurrency(customerDetailPopup.spent)}</div>
@@ -782,7 +782,7 @@ export default function SoldTicketsPage() {
                     setCustomerDetailPopup(null);
                   }}
                   disabled={!!resendingId}
-                  className="bg-amber-600 hover:bg-amber-700 text-white order-1 sm:order-2"
+                  className="bg-gray-900 hover:bg-gray-800 text-white order-1 sm:order-2"
                 >
                   {resendingId ? (
                     <>
@@ -821,9 +821,9 @@ export default function SoldTicketsPage() {
               <p className="text-gray-600 mb-2">
                 This will send a custom email to <strong>{customEmailGroup.items?.length || 0}</strong> booking(s) for:
               </p>
-              <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4">
-                <div className="font-semibold text-amber-900">{customEmailGroup.ticketName}</div>
-                <div className="text-sm text-amber-700">{customEmailGroup.eventTitle}</div>
+              <div className="bg-gray-100 border border-gray-300 rounded p-3 mb-4">
+                <div className="font-semibold text-gray-900">{customEmailGroup.ticketName}</div>
+                <div className="text-sm text-gray-600">{customEmailGroup.eventTitle}</div>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">

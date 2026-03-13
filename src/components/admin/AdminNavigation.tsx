@@ -148,10 +148,10 @@ export function AdminNavigation() {
               onClick={() => setMobileOpen(false)}
               className={cn(
                 'group flex items-center gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-lg transition-all duration-200',
-                'hover:bg-white/30 hover:text-white hover:shadow-lg backdrop-blur-sm',
+                'hover:bg-white/10 hover:text-white hover:shadow-lg',
                 isActive
-                  ? 'bg-white/30 text-white border border-white/40 shadow-lg backdrop-blur-sm'
-                  : 'text-white/90 hover:text-white'
+                  ? 'bg-white/10 text-amber-400 border border-amber-500/30 shadow-lg'
+                  : 'text-white/80 hover:text-white'
               )}
             >
               <Icon className="w-5 h-5 drop-shadow-sm flex-shrink-0" />
@@ -172,7 +172,7 @@ export function AdminNavigation() {
     <>
       {/* Mobile hamburger button */}
       <button
-        className="md:hidden fixed top-3 left-3 z-[60] bg-amber-800/90 backdrop-blur-sm text-white p-2 rounded-lg shadow-lg"
+        className="md:hidden fixed top-3 left-3 z-[60] bg-black/90 backdrop-blur-sm text-white p-2 rounded-lg shadow-lg border border-white/10"
         onClick={() => setMobileOpen(true)}
       >
         <Menu className="w-6 h-6" />
@@ -189,7 +189,7 @@ export function AdminNavigation() {
       {/* Mobile sliding sidebar */}
       <nav
         className={cn(
-          'md:hidden fixed top-0 left-0 h-full w-72 z-[80] bg-gradient-to-b from-amber-900 to-amber-700 backdrop-blur-xl shadow-2xl overflow-y-auto transition-transform duration-300',
+          'md:hidden fixed top-0 left-0 h-full w-72 z-[80] bg-gradient-to-b from-black to-neutral-900 backdrop-blur-xl shadow-2xl overflow-y-auto transition-transform duration-300 border-r border-white/10',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -197,7 +197,7 @@ export function AdminNavigation() {
       </nav>
 
       {/* Desktop sidebar */}
-      <nav className="hidden md:block w-64 min-h-screen bg-white/20 backdrop-blur-xl border-r border-white/30 shadow-2xl flex-shrink-0">
+      <nav className="hidden md:block w-64 min-h-screen bg-black/40 backdrop-blur-xl border-r border-white/10 shadow-2xl flex-shrink-0">
         {navContent}
       </nav>
     </>

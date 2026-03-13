@@ -269,7 +269,7 @@ html {
 /* Main background with music notes */
 .main-background {
   position: relative;
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #60a5fa 100%);
+  background: linear-gradient(135deg, #78350f 0%, #92400e 40%, #b45309 70%, #d97706 100%);
 }
 
 .main-background::before {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Search, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -37,6 +37,7 @@ export function Header({ }: HeaderProps) {
     faviconUrl: ''
   })
   const router = useRouter()
+  const pathname = usePathname()
   const { isSignedIn } = useAuth()
   const { user } = useUser()
 
@@ -62,6 +63,9 @@ export function Header({ }: HeaderProps) {
 
     fetchSiteConfig()
   }, [])
+
+  // Hide header on admin pages
+  if (pathname?.startsWith('/admin')) return null;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

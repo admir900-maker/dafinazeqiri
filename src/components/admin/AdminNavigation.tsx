@@ -128,7 +128,7 @@ export function AdminNavigation() {
   const navContent = (
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-6 md:mb-8">
-        <h1 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg">Admin Panel</h1>
+        <h1 className="text-xl md:text-2xl font-bold drop-shadow-lg" style={{ background: 'linear-gradient(135deg, #cd7f32, #b4530a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Admin Panel</h1>
         <button
           className="md:hidden text-white/90 hover:text-white"
           onClick={() => setMobileOpen(false)}
@@ -148,10 +148,10 @@ export function AdminNavigation() {
               onClick={() => setMobileOpen(false)}
               className={cn(
                 'group flex items-center gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-lg transition-all duration-200',
-                'hover:bg-white/10 hover:text-white hover:shadow-lg',
+                'hover:bg-white/10 hover:text-orange-200 hover:shadow-lg',
                 isActive
-                  ? 'bg-white/10 text-amber-400 border border-amber-500/30 shadow-lg'
-                  : 'text-white/80 hover:text-white'
+                  ? 'bg-white/10 text-orange-300 border border-orange-500/30 shadow-lg'
+                  : 'text-white/80 hover:text-orange-200'
               )}
             >
               <Icon className="w-5 h-5 drop-shadow-sm flex-shrink-0" />
@@ -172,7 +172,8 @@ export function AdminNavigation() {
     <>
       {/* Mobile hamburger button */}
       <button
-        className="md:hidden fixed top-3 left-3 z-[60] bg-black/90 backdrop-blur-sm text-white p-2 rounded-lg shadow-lg border border-white/10"
+        className="md:hidden fixed top-3 left-3 z-[60] backdrop-blur-sm text-white p-2 rounded-lg shadow-lg border-2 border-orange-500/60"
+        style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,15,0,0.95))' }}
         onClick={() => setMobileOpen(true)}
       >
         <Menu className="w-6 h-6" />
@@ -189,15 +190,16 @@ export function AdminNavigation() {
       {/* Mobile sliding sidebar */}
       <nav
         className={cn(
-          'md:hidden fixed top-0 left-0 h-full w-72 z-[80] bg-gradient-to-b from-black to-neutral-900 backdrop-blur-xl shadow-2xl overflow-y-auto transition-transform duration-300 border-r border-white/10',
+          'md:hidden fixed top-0 left-0 h-full w-72 z-[80] backdrop-blur-xl shadow-2xl overflow-y-auto transition-transform duration-300 border-r border-orange-700/20',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
+        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(10,10,10,0.98) 50%, rgba(20,15,0,0.98) 100%)' }}
       >
         {navContent}
       </nav>
 
       {/* Desktop sidebar */}
-      <nav className="hidden md:block w-64 min-h-screen bg-black/40 backdrop-blur-xl border-r border-white/10 shadow-2xl flex-shrink-0">
+      <nav className="hidden md:block w-64 min-h-screen backdrop-blur-xl border-r border-orange-700/20 shadow-2xl flex-shrink-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(10,10,10,0.6) 50%, rgba(20,15,0,0.5) 100%)' }}>
         {navContent}
       </nav>
     </>

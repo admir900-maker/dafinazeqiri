@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Mail, Phone, MapPin, Instagram, Twitter, Facebook, Ticket } from 'lucide-react'
 
 interface SiteConfig {
@@ -15,6 +16,7 @@ interface SiteConfig {
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
+  const pathname = usePathname()
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
     siteName: 'SUPERNOVA', // fallback
     siteDescription: '',
@@ -41,6 +43,9 @@ export function Footer() {
 
     fetchSiteConfig()
   }, [])
+
+  // Hide footer on admin pages
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <footer className="mt-20 border-t-2 border-orange-700/30 shadow-2xl relative overflow-hidden backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(10, 10, 10, 0.95) 50%, rgba(20, 15, 0, 0.95) 100%)' }}>

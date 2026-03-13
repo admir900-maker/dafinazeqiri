@@ -393,14 +393,15 @@ export default function SoldTicketsPage() {
                     const totalCapacity = ev.ticketTypes.reduce((sum, tt) => sum + (tt.capacity || 0), 0);
                     const totalAvailable = ev.ticketTypes.reduce((sum, tt) => sum + (tt.available ?? 0), 0);
                     return (
-                      <div key={evKey} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div key={evKey} className="border border-orange-700/20 rounded-lg overflow-hidden">
                         {/* Event Master Header */}
                         <button
-                          className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-5 py-3 md:py-4 text-left bg-gradient-to-r from-neutral-900 to-neutral-800 hover:from-neutral-800 hover:to-neutral-700 transition-colors gap-2"
+                          className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-5 py-3 md:py-4 text-left transition-colors gap-2"
+                          style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(10,10,10,0.95) 50%, rgba(20,15,0,0.95) 100%)' }}
                           onClick={() => setExpanded((prev) => ({ ...prev, [evKey]: !evOpen }))}
                         >
                           <div className="flex items-center gap-2 md:gap-3">
-                            {evOpen ? <ChevronDown className="h-5 w-5 text-amber-400 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 text-amber-400 flex-shrink-0" />}
+                            {evOpen ? <ChevronDown className="h-5 w-5 text-orange-400 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 text-orange-400 flex-shrink-0" />}
                             <div className="min-w-0">
                               <div className="text-base md:text-lg font-bold text-white truncate">{ev.eventTitle}</div>
                               <div className="text-xs md:text-sm text-gray-400">{formatDateTime(ev.eventDate)}</div>
@@ -409,7 +410,7 @@ export default function SoldTicketsPage() {
                           <div className="flex items-center gap-4 md:gap-6 ml-7 sm:ml-0">
                             <div className="text-left sm:text-right">
                               <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Sold</div>
-                              <div className="text-sm md:text-base font-bold text-amber-400">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
+                              <div className="text-sm md:text-base font-bold text-orange-300">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
                             </div>
                             {totalCapacity > 0 && (
                               <div className="text-left sm:text-right">
@@ -429,7 +430,7 @@ export default function SoldTicketsPage() {
                           {ev.ticketTypes.map((tt) => (
                             <div key={tt.name} className="flex items-center gap-1.5 text-sm">
                               <span className="font-medium text-gray-700">{tt.name}:</span>
-                              <span className="bg-gray-900 text-amber-400 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
+                              <span className="bg-gray-900 text-orange-300 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
                               {tt.capacity != null && (
                                 <span className="text-gray-400 text-xs">/ {tt.capacity}</span>
                               )}
@@ -467,7 +468,7 @@ export default function SoldTicketsPage() {
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2 md:gap-4 ml-6 sm:ml-0 flex-wrap">
-                                        <Badge className="bg-gray-900 text-amber-400 border-0 text-xs">{g.count} sold</Badge>
+                                        <Badge className="bg-gray-900 text-orange-300 border-0 text-xs">{g.count} sold</Badge>
                                         <div className="font-semibold text-sm md:text-base">{formatCurrency(g.revenue)}</div>
                                         {g.items && g.items.length > 0 && (
                                           <div className="flex gap-1 md:gap-2 flex-wrap">
@@ -544,7 +545,7 @@ export default function SoldTicketsPage() {
                                                       <td className="p-2 font-medium">{eg.name}</td>
                                                       <td className="p-2">{eg.email}</td>
                                                       <td className="p-2">
-                                                        <Badge className="bg-gray-900 text-amber-400 border-0">{eg.tickets}</Badge>
+                                                        <Badge className="bg-gray-900 text-orange-300 border-0">{eg.tickets}</Badge>
                                                       </td>
                                                       <td className="p-2 font-semibold">{formatCurrency(eg.spent)}</td>
                                                     </tr>
@@ -728,9 +729,9 @@ export default function SoldTicketsPage() {
 
               {/* Summary */}
               <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
-                <div className="bg-gray-900 border border-gray-700 rounded-lg p-2 md:p-3 text-center">
-                  <div className="text-xl md:text-2xl font-bold text-amber-400">{customerDetailPopup.tickets}</div>
-                  <div className="text-xs md:text-sm text-gray-400">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''}</div>
+                <div className="bg-gray-900 border border-orange-700/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-xl md:text-2xl font-bold text-orange-300">{customerDetailPopup.tickets}</div>
+                  <div className="text-xs md:text-sm text-orange-200/60">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''}</div>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 md:p-3 text-center">
                   <div className="text-xl md:text-2xl font-bold text-green-800">{formatCurrency(customerDetailPopup.spent)}</div>

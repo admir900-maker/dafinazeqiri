@@ -140,7 +140,7 @@ export default function ReconcileRaiAcceptPage() {
 
         <Card className="bg-black/60 border-2 border-orange-500/30">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm text-orange-100/70 mb-1">Booking ID</label>
                 <Input value={bookingId} onChange={(e) => setBookingId(e.target.value)} placeholder="Mongo _id" />
@@ -153,7 +153,8 @@ export default function ReconcileRaiAcceptPage() {
                 <label className="block text-sm text-orange-100/70 mb-1">Customer Name</label>
                 <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Name Surname" />
               </div>
-              <div className="flex items-end gap-2">
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-4">
                 <Button onClick={check} disabled={loading} className="min-w-[140px]">
                   {loading ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Checking...</>) : (<><Search className="h-4 w-4 mr-2" />Check</>)}
                 </Button>
@@ -161,7 +162,6 @@ export default function ReconcileRaiAcceptPage() {
                 <Button variant="outline" onClick={scanPending} disabled={scanning}>
                   {scanning ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>) : 'Scan recent pending'}
                 </Button>
-              </div>
             </div>
           </CardContent>
         </Card>

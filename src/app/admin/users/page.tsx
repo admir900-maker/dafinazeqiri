@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
@@ -336,7 +336,7 @@ export default function UsersManagementPage() {
   if (!isLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="flex items-center gap-2 text-white">
+        <div className="flex items-center gap-2 text-orange-100">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
           Loading users...
         </div>
@@ -345,17 +345,17 @@ export default function UsersManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Users Management</h1>
+        <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Users Management</h1>
         <div className="flex items-center gap-2">
-          <Badge className="bg-white/20 text-white">
+          <Badge className="bg-orange-500/20 text-orange-100">
             {totalCount} Total Users
           </Badge>
           <Button
             onClick={() => exportUsers('csv')}
             disabled={exporting}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-black font-bold"
           >
             <Download className="w-4 h-4 mr-2" />
             {exporting ? 'Exporting...' : 'Export CSV'}
@@ -364,22 +364,22 @@ export default function UsersManagementPage() {
       </div>
 
       {/* Search and Filters */}
-      <AdminCard className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <AdminCardContent className="p-4">
+      <Card className="bg-black/60 border-2 border-orange-500/30">
+        <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <Label className="text-white/70 text-sm">Search</Label>
+              <Label className="text-orange-100/70 text-sm">Search</Label>
               <Input
                 placeholder="Search users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                className="bg-orange-500/20 border-orange-500/30 text-orange-100 placeholder:text-orange-100/40"
               />
             </div>
             <div>
-              <Label className="text-white/70 text-sm">Role Filter</Label>
+              <Label className="text-orange-100/70 text-sm">Role Filter</Label>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                <SelectTrigger className="bg-orange-500/20 border-orange-500/30 text-orange-100">
                   <SelectValue placeholder="All roles" />
                 </SelectTrigger>
                 <SelectContent>
@@ -393,9 +393,9 @@ export default function UsersManagementPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-white/70 text-sm">Sort By</Label>
+              <Label className="text-orange-100/70 text-sm">Sort By</Label>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                <SelectTrigger className="bg-orange-500/20 border-orange-500/30 text-orange-100">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -407,9 +407,9 @@ export default function UsersManagementPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-white/70 text-sm">Order</Label>
+              <Label className="text-orange-100/70 text-sm">Order</Label>
               <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                <SelectTrigger className="bg-orange-500/20 border-orange-500/30 text-orange-100">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -419,20 +419,20 @@ export default function UsersManagementPage() {
               </Select>
             </div>
           </div>
-        </AdminCardContent>
-      </AdminCard>
+        </CardContent>
+      </Card>
 
       {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
-        <AdminCard className="bg-[#cd7f32]/20 border-[#cd7f32]/30 backdrop-blur-sm">
-          <AdminCardContent className="p-4">
+        <Card className="bg-orange-500/10 border-2 border-orange-500/30">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <span className="text-white font-medium">
+              <span className="text-orange-100 font-medium">
                 {selectedUsers.length} user(s) selected
               </span>
               <div className="flex items-center gap-2">
                 <Select value={bulkAction} onValueChange={setBulkAction}>
-                  <SelectTrigger className="bg-white/20 border-white/30 text-white w-48">
+                  <SelectTrigger className="bg-orange-500/20 border-orange-500/30 text-orange-100 w-48">
                     <SelectValue placeholder="Select action" />
                   </SelectTrigger>
                   <SelectContent>
@@ -444,21 +444,21 @@ export default function UsersManagementPage() {
                 <Button
                   onClick={performBulkAction}
                   disabled={!bulkAction}
-                  className="bg-[#cd7f32] hover:bg-[#b4530a] text-white"
+                  className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                 >
                   Apply
                 </Button>
                 <Button
                   onClick={() => setSelectedUsers([])}
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10"
+                  className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   Clear
                 </Button>
               </div>
             </div>
-          </AdminCardContent>
-        </AdminCard>
+          </CardContent>
+        </Card>
       )}
 
       {/* User Stats */}
@@ -472,30 +472,30 @@ export default function UsersManagementPage() {
         ].map((stat) => {
           const Icon = stat.icon;
           return (
-            <AdminCard key={stat.label} className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <AdminCardContent className="p-4 flex items-center gap-3">
-                <Icon className="w-8 h-8 text-white/70" />
+            <Card key={stat.label} className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Icon className="w-8 h-8 text-orange-100/70" />
                 <div>
-                  <p className="text-white/70 text-sm">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-orange-100/70 text-sm">{stat.label}</p>
+                  <p className="text-2xl font-black text-orange-500">{stat.value}</p>
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
       {/* Users List */}
-      <AdminCard className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <AdminCardHeader className="pb-4">
+      <Card className="bg-black/60 border-2 border-orange-500/30">
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <AdminCardTitle className="text-white">Users List</AdminCardTitle>
+            <CardTitle className="text-white">Users List</CardTitle>
             <div className="flex items-center gap-2">
               <Button
                 onClick={toggleAllUsers}
                 variant="outline"
                 size="sm"
-                className="border-white/30 text-white hover:bg-white/10"
+                className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
               >
                 {selectedUsers.length === users.length ? (
                   <CheckSquare className="w-4 h-4" />
@@ -506,8 +506,8 @@ export default function UsersManagementPage() {
               </Button>
             </div>
           </div>
-        </AdminCardHeader>
-        <AdminCardContent className="p-4 pt-0">
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
           <div className="space-y-4">
             {filteredUsers.map((userData) => {
               const RoleIcon = getRoleIcon(userData.publicMetadata.role);
@@ -517,8 +517,8 @@ export default function UsersManagementPage() {
                 <div
                   key={userData.id}
                   className={`p-4 rounded-lg border transition-all ${isSelected
-                    ? 'bg-blue-600/20 border-blue-400/50'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-orange-500/20 border-orange-500/50'
+                    : 'bg-black/40 border-orange-500/10 hover:bg-orange-500/10'
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -527,10 +527,10 @@ export default function UsersManagementPage() {
                         onClick={() => toggleUserSelection(userData.id)}
                         variant="ghost"
                         size="sm"
-                        className="p-0 h-auto text-white hover:bg-transparent"
+                        className="p-0 h-auto text-orange-100 hover:bg-transparent"
                       >
                         {isSelected ? (
-                          <CheckSquare className="w-5 h-5 text-[#cd7f32]" />
+                          <CheckSquare className="w-5 h-5 text-orange-500" />
                         ) : (
                           <Square className="w-5 h-5" />
                         )}
@@ -543,19 +543,19 @@ export default function UsersManagementPage() {
                       />
 
                       <div>
-                        <h3 className="text-white font-semibold">
+                        <h3 className="text-orange-100 font-semibold">
                           {userData.firstName} {userData.lastName}
                         </h3>
-                        <p className="text-white/70 text-sm">{userData.emailAddress}</p>
+                        <p className="text-orange-100/70 text-sm">{userData.emailAddress}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Calendar className="w-3 h-3 text-white/50" />
-                          <span className="text-white/50 text-xs">
+                          <Calendar className="w-3 h-3 text-orange-100/40" />
+                          <span className="text-orange-100/40 text-xs">
                             Joined {new Date(userData.createdAt).toLocaleDateString()}
                           </span>
                           {userData.lastSignInAt && (
                             <>
-                              <span className="text-white/50 text-xs">•</span>
-                              <span className="text-white/50 text-xs">
+                              <span className="text-orange-100/40 text-xs">•</span>
+                              <span className="text-orange-100/40 text-xs">
                                 Last active {new Date(userData.lastSignInAt).toLocaleDateString()}
                               </span>
                             </>
@@ -564,7 +564,7 @@ export default function UsersManagementPage() {
 
                         {/* Booking Stats */}
                         {userData.bookingStats && (
-                          <div className="flex items-center gap-4 mt-2 text-xs text-white/60">
+                          <div className="flex items-center gap-4 mt-2 text-xs text-orange-100/50">
                             <div className="flex items-center gap-1">
                               <Activity className="w-3 h-3" />
                               {userData.bookingStats.totalBookings} bookings
@@ -588,7 +588,7 @@ export default function UsersManagementPage() {
                         <Button
                           onClick={() => fetchUserDetails(userData.id)}
                           size="sm"
-                          className="bg-[#cd7f32] hover:bg-[#b4530a] text-white"
+                          className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                         >
                           <Eye className="w-3 h-3 mr-1" />
                           Details
@@ -601,7 +601,7 @@ export default function UsersManagementPage() {
                                 <Button
                                   onClick={() => promoteUser(userData.id, 'staff')}
                                   size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-black font-bold"
                                 >
                                   <UserPlus className="w-3 h-3 mr-1" />
                                   Make Staff
@@ -609,7 +609,7 @@ export default function UsersManagementPage() {
                                 <Button
                                   onClick={() => promoteUser(userData.id, 'validator')}
                                   size="sm"
-                                  className="bg-[#b4530a] hover:bg-[#8b3c07] text-white"
+                                  className="bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-black font-bold"
                                 >
                                   <CheckCircle className="w-3 h-3 mr-1" />
                                   Make Validator
@@ -620,7 +620,7 @@ export default function UsersManagementPage() {
                               <Button
                                 onClick={() => promoteUser(userData.id, 'manager')}
                                 size="sm"
-                                className="bg-[#cd7f32] hover:bg-[#b4530a] text-white"
+                                className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                               >
                                 <Shield className="w-3 h-3 mr-1" />
                                 Make Manager
@@ -630,7 +630,7 @@ export default function UsersManagementPage() {
                               <Button
                                 onClick={() => promoteUser(userData.id, 'validator')}
                                 size="sm"
-                                className="bg-[#b4530a] hover:bg-[#8b3c07] text-white"
+                                className="bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-black font-bold"
                               >
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Make Validator
@@ -640,7 +640,7 @@ export default function UsersManagementPage() {
                               <Button
                                 onClick={() => promoteUser(userData.id, '')}
                                 size="sm"
-                                className="bg-gray-600 hover:bg-gray-700 text-white"
+                                className="bg-black/40 border border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                               >
                                 Remove Role
                               </Button>
@@ -667,8 +667,8 @@ export default function UsersManagementPage() {
 
           {/* Pagination */}
           {totalCount > limit && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
-              <div className="text-sm text-white/70">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-orange-500/10">
+              <div className="text-sm text-orange-100/70">
                 Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalCount)} of {totalCount} users
               </div>
               <div className="flex items-center gap-2">
@@ -680,7 +680,7 @@ export default function UsersManagementPage() {
                   disabled={currentPage === 1}
                   variant="outline"
                   size="sm"
-                  className="border-white/30 text-white hover:bg-white/10"
+                  className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -695,39 +695,39 @@ export default function UsersManagementPage() {
                   disabled={!hasMore}
                   variant="outline"
                   size="sm"
-                  className="border-white/30 text-white hover:bg-white/10"
+                  className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           )}
-        </AdminCardContent>
-      </AdminCard>
+        </CardContent>
+      </Card>
 
       {filteredUsers.length === 0 && !loading && (
-        <AdminCard className="bg-white/10 border-white/20 backdrop-blur-sm">
-          <AdminCardContent className="p-8 text-center">
-            <Users className="w-12 h-12 text-white/50 mx-auto mb-4" />
-            <p className="text-white/70">No users found matching your criteria.</p>
-          </AdminCardContent>
-        </AdminCard>
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardContent className="p-8 text-center">
+            <Users className="w-12 h-12 text-orange-100/40 mx-auto mb-4" />
+            <p className="text-orange-100/70">No users found matching your criteria.</p>
+          </CardContent>
+        </Card>
       )}
 
       {/* User Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-zinc-950 border-2 border-orange-500/50">
           <DialogHeader>
             <DialogTitle className="text-white">
               User Details: {userDetails?.firstName} {userDetails?.lastName}
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-orange-100/40">
               Comprehensive user information and activity history
             </DialogDescription>
           </DialogHeader>
 
           {userDetails && (
-            <div className="space-y-6">
+            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
               {/* User Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -738,15 +738,15 @@ export default function UsersManagementPage() {
                       className="w-16 h-16 rounded-full object-cover"
                     />
                     <div>
-                      <h3 className="text-xl font-semibold text-white">
+                      <h3 className="text-xl font-semibold text-orange-100">
                         {userDetails.firstName} {userDetails.lastName}
                       </h3>
-                      <p className="text-gray-400">{userDetails.emailAddress}</p>
-                      <Badge className={`${getRoleColor(userDetails.publicMetadata.role)} text-white mt-2`}>
+                      <p className="text-orange-100/40">{userDetails.emailAddress}</p>
+                      <Badge className={`${getRoleColor(userDetails.publicMetadata.role)} text-orange-100 mt-2`}>
                         {userDetails.publicMetadata.role || 'User'}
                       </Badge>
                       {userDetails.banned && (
-                        <Badge className="bg-red-600 text-white ml-2 mt-2">
+                        <Badge className="bg-red-600 text-orange-100 ml-2 mt-2">
                           Banned
                         </Badge>
                       )}
@@ -755,11 +755,11 @@ export default function UsersManagementPage() {
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-400">Joined:</span>
+                      <span className="text-orange-100/40">Joined:</span>
                       <p className="text-white">{new Date(userDetails.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400">Last Sign In:</span>
+                      <span className="text-orange-100/40">Last Sign In:</span>
                       <p className="text-white">
                         {userDetails.lastSignInAt
                           ? new Date(userDetails.lastSignInAt).toLocaleDateString()
@@ -772,34 +772,34 @@ export default function UsersManagementPage() {
 
                 {/* Statistics */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-white">Statistics</h4>
+                  <h4 className="text-lg font-semibold text-orange-500">Statistics</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-white">
+                    <div className="bg-black/40 p-4 rounded-lg">
+                      <div className="text-2xl font-black text-orange-500">
                         {userDetails.statistics.total.totalBookings}
                       </div>
-                      <div className="text-sm text-gray-400">Total Bookings</div>
+                      <div className="text-sm text-orange-100/40">Total Bookings</div>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-white">
+                    <div className="bg-black/40 p-4 rounded-lg">
+                      <div className="text-2xl font-black text-orange-500">
                         {formatCurrency(userDetails.statistics.total.totalSpent)}
                       </div>
-                      <div className="text-sm text-gray-400">Total Spent</div>
+                      <div className="text-sm text-orange-100/40">Total Spent</div>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-white">
+                    <div className="bg-black/40 p-4 rounded-lg">
+                      <div className="text-2xl font-black text-orange-500">
                         {formatCurrency(userDetails.statistics.total.avgBookingValue)}
                       </div>
-                      <div className="text-sm text-gray-400">Avg. Booking</div>
+                      <div className="text-sm text-orange-100/40">Avg. Booking</div>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-white">
+                    <div className="bg-black/40 p-4 rounded-lg">
+                      <div className="text-2xl font-black text-orange-500">
                         {userDetails.statistics.total.lastBooking
                           ? new Date(userDetails.statistics.total.lastBooking).toLocaleDateString()
                           : 'None'
                         }
                       </div>
-                      <div className="text-sm text-gray-400">Last Booking</div>
+                      <div className="text-sm text-orange-100/40">Last Booking</div>
                     </div>
                   </div>
                 </div>
@@ -807,21 +807,21 @@ export default function UsersManagementPage() {
 
               {/* Booking History */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-4">Recent Booking History</h4>
+                <h4 className="text-lg font-semibold text-orange-500 mb-4">Recent Booking History</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {userDetails.bookings.length > 0 ? (
                     userDetails.bookings.map((booking) => (
-                      <div key={booking.id} className="bg-white/5 p-3 rounded-lg flex items-center justify-between">
+                      <div key={booking.id} className="bg-black/40 p-3 rounded-lg flex items-center justify-between">
                         <div>
-                          <div className="text-white font-medium">{booking.eventTitle}</div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-orange-100 font-medium">{booking.eventTitle}</div>
+                          <div className="text-sm text-orange-100/40">
                             {new Date(booking.createdAt).toLocaleDateString()} •
                             {booking.quantity} ticket(s) •
                             {booking.paymentMethod}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-white font-medium">
+                          <div className="text-orange-100 font-medium">
                             {formatCurrency(booking.totalAmount)}
                           </div>
                           <Badge className={`text-xs ${booking.status === 'confirmed' ? 'bg-green-600' :
@@ -834,7 +834,7 @@ export default function UsersManagementPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-400 text-center py-4">No bookings found</p>
+                    <p className="text-orange-100/40 text-center py-4">No bookings found</p>
                   )}
                 </div>
               </div>
@@ -842,13 +842,13 @@ export default function UsersManagementPage() {
               {/* Status by Booking */}
               {userDetails.statistics.byStatus.length > 0 && (
                 <div>
-                  <h4 className="text-lg font-semibold text-white mb-4">Booking Status Breakdown</h4>
+                  <h4 className="text-lg font-semibold text-orange-500 mb-4">Booking Status Breakdown</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {userDetails.statistics.byStatus.map((stat) => (
-                      <div key={stat._id} className="bg-white/5 p-4 rounded-lg text-center">
-                        <div className="text-xl font-bold text-white">{stat.count}</div>
-                        <div className="text-sm text-gray-400 capitalize">{stat._id}</div>
-                        <div className="text-xs text-gray-500">
+                      <div key={stat._id} className="bg-black/40 p-4 rounded-lg text-center">
+                        <div className="text-xl font-bold text-orange-500">{stat.count}</div>
+                        <div className="text-sm text-orange-100/40 capitalize">{stat._id}</div>
+                        <div className="text-xs text-orange-100/40">
                           {formatCurrency(stat.totalAmount)}
                         </div>
                       </div>
@@ -858,7 +858,7 @@ export default function UsersManagementPage() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 border-t border-gray-700">
+              <div className="flex gap-2 pt-4 border-t border-orange-500/30">
                 {!userDetails.banned ? (
                   <Button
                     onClick={() => {
@@ -877,7 +877,7 @@ export default function UsersManagementPage() {
                       banUser(userDetails.id, false);
                       setIsDetailsOpen(false);
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-black font-bold"
                   >
                     <UserCheck className="w-4 h-4 mr-2" />
                     Unban User
@@ -887,7 +887,7 @@ export default function UsersManagementPage() {
                 <Button
                   onClick={() => setIsDetailsOpen(false)}
                   variant="outline"
-                  className="border-gray-600 text-white hover:bg-gray-800"
+                  className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   Close
                 </Button>
@@ -896,6 +896,7 @@ export default function UsersManagementPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

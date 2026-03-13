@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -243,30 +243,31 @@ export default function PaymentsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="flex items-center gap-2 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="flex items-center justify-center min-h-96">
+        <div className="flex items-center gap-2 text-orange-100">
           <RefreshCw className="w-5 h-5 animate-spin" />
           Loading payments...
         </div>
+      </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Payments & Transactions</h1>
+        <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Payments & Transactions</h1>
         <div className="flex gap-2">
           <Button
             onClick={fetchPayments}
-            className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+            className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20 border border-orange-500/30"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
           <Button
             onClick={exportPayments}
-            className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+            className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20 border border-orange-500/30"
           >
             <Download className="w-4 h-4 mr-2" />
             Export
@@ -311,43 +312,43 @@ export default function PaymentsPage() {
             title: 'Refunded',
             value: formatCurrency(stats.refundedAmount),
             icon: RefreshCw,
-            color: 'text-blue-400'
+            color: 'text-orange-500'
           }
         ].map((stat) => {
           const Icon = stat.icon;
           return (
-            <AdminCard key={stat.title} className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <AdminCardContent className="p-4">
+            <Card key={stat.title} className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/70 text-sm">{stat.title}</p>
-                    <p className="text-xl font-bold text-white">{stat.value}</p>
+                    <p className="text-orange-100/70 text-sm">{stat.title}</p>
+                    <p className="text-xl font-bold text-orange-500">{stat.value}</p>
                   </div>
                   <Icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
       {/* Filters */}
-      <AdminCard className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <AdminCardContent className="p-4">
+      <Card className="bg-black/60 border-2 border-orange-500/30">
+        <CardContent className="p-4">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
               <Input
                 placeholder="Search by customer name, email, event, or booking ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                className="bg-orange-500/20 border-orange-500/30 text-orange-100 placeholder:text-orange-100/40"
               />
             </div>
             <div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="p-2 bg-white/20 border border-white/30 rounded-md text-white"
+                className="p-2 bg-orange-500/20 border border-orange-500/30 rounded-md text-orange-100"
               >
                 <option value="all" className="text-black">All Status</option>
                 <option value="paid" className="text-black">Paid</option>
@@ -360,7 +361,7 @@ export default function PaymentsPage() {
               <select
                 value={methodFilter}
                 onChange={(e) => setMethodFilter(e.target.value)}
-                className="p-2 bg-white/20 border border-white/30 rounded-md text-white"
+                className="p-2 bg-orange-500/20 border border-orange-500/30 rounded-md text-orange-100"
               >
                 <option value="all" className="text-black">All Methods</option>
                 <option value="stripe" className="text-black">Stripe</option>
@@ -368,12 +369,12 @@ export default function PaymentsPage() {
                 <option value="direct" className="text-black">Direct</option>
               </select>
             </div>
-            <Button className="bg-white/20 text-white hover:bg-white/30 border border-white/30">
+            <Button className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20 border border-orange-500/30">
               <Search className="w-4 h-4" />
             </Button>
           </div>
-        </AdminCardContent>
-      </AdminCard>
+        </CardContent>
+      </Card>
 
       {/* Payments List */}
       <div className="space-y-4">
@@ -381,22 +382,22 @@ export default function PaymentsPage() {
           const StatusIcon = getStatusIcon(payment.status);
 
           return (
-            <AdminCard key={payment.id} className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <AdminCardContent className="p-4">
+            <Card key={payment.id} className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <StatusIcon className="w-5 h-5 text-white/70" />
+                      <StatusIcon className="w-5 h-5 text-orange-100/70" />
                       <div>
-                        <h3 className="text-white font-semibold">{payment.eventTitle}</h3>
-                        <p className="text-white/70 text-sm">
+                        <h3 className="text-orange-100 font-semibold">{payment.eventTitle}</h3>
+                        <p className="text-orange-100/70 text-sm">
                           {payment.customerName} • {payment.customerEmail}
                         </p>
-                        <p className="text-white/50 text-xs">
+                        <p className="text-orange-100/40 text-xs">
                           Booking: {payment.bookingId} • {new Date(payment.createdAt).toLocaleString()}
                         </p>
                         {payment.venue && (
-                          <p className="text-white/40 text-xs">
+                          <p className="text-orange-100/30 text-xs">
                             📍 {payment.venue}
                           </p>
                         )}
@@ -406,7 +407,7 @@ export default function PaymentsPage() {
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-white font-semibold">
+                      <p className="text-orange-100 font-semibold">
                         {formatCurrency(payment.amount, payment.currency)}
                       </p>
                       {payment.status === 'refunded' && (
@@ -414,7 +415,7 @@ export default function PaymentsPage() {
                           Refunded: {formatCurrency(payment.amount)}
                         </p>
                       )}
-                      <p className="text-white/50 text-xs">
+                      <p className="text-orange-100/40 text-xs">
                         {payment.ticketsCount} ticket{payment.ticketsCount !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -423,7 +424,7 @@ export default function PaymentsPage() {
                       <Badge className={`${getStatusColor(payment.status)} text-white`}>
                         {payment.status}
                       </Badge>
-                      <Badge className="bg-white/20 text-white">
+                      <Badge className="bg-orange-500/20 text-orange-100">
                         {getMethodBadge(payment.method)}
                       </Badge>
                     </div>
@@ -433,7 +434,7 @@ export default function PaymentsPage() {
                         setSelectedPayment(payment);
                         setShowPaymentModal(true);
                       }}
-                      className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                      className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20 border border-orange-500/30"
                       size="sm"
                     >
                       <Eye className="w-4 h-4" />
@@ -442,14 +443,14 @@ export default function PaymentsPage() {
                 </div>
 
                 {(payment.stripePaymentIntentId || payment.raiffeisenPaymentId) && (
-                  <div className="mt-2 pt-2 border-t border-white/20">
-                    <p className="text-white/50 text-xs">
+                  <div className="mt-2 pt-2 border-t border-orange-500/20">
+                    <p className="text-orange-100/40 text-xs">
                       Transaction ID: {payment.stripePaymentIntentId || payment.raiffeisenPaymentId}
                     </p>
                   </div>
                 )}
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
@@ -457,25 +458,25 @@ export default function PaymentsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-white/70 text-sm">
+          <p className="text-orange-100/70 text-sm">
             Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredPayments.length)} of {filteredPayments.length} payments
           </p>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="bg-white/20 text-white hover:bg-white/30 border border-white/30 disabled:opacity-50"
+              className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20 border border-orange-500/30 disabled:opacity-50"
               size="sm"
             >
               Previous
             </Button>
-            <span className="text-white/70 text-sm">
+            <span className="text-orange-100/70 text-sm">
               Page {currentPage} of {totalPages}
             </span>
             <Button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="bg-white/20 text-white hover:bg-white/30 border border-white/30 disabled:opacity-50"
+              className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20 border border-orange-500/30 disabled:opacity-50"
               size="sm"
             >
               Next
@@ -485,71 +486,71 @@ export default function PaymentsPage() {
       )}
 
       {filteredPayments.length === 0 && (
-        <AdminCard className="bg-white/10 border-white/20 backdrop-blur-sm">
-          <AdminCardContent className="p-8 text-center">
-            <CreditCard className="w-12 h-12 text-white/50 mx-auto mb-4" />
-            <p className="text-white/70">No payments found matching your criteria.</p>
-          </AdminCardContent>
-        </AdminCard>
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardContent className="p-8 text-center">
+            <CreditCard className="w-12 h-12 text-orange-100/40 mx-auto mb-4" />
+            <p className="text-orange-100/70">No payments found matching your criteria.</p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Payment Details Modal */}
       {showPaymentModal && selectedPayment && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-zinc-950 border-2 border-orange-500/50 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Payment Details</h2>
+              <h2 className="text-xl font-bold text-orange-500">Payment Details</h2>
               <Button
                 onClick={() => setShowPaymentModal(false)}
-                className="bg-white/20 text-white hover:bg-white/30"
+                className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/20"
                 size="sm"
               >
                 ×
               </Button>
             </div>
 
-            <div className="space-y-6">
+            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
               {/* Payment Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-white font-semibold mb-3">Payment Information</h3>
+                  <h3 className="text-orange-100 font-semibold mb-3">Payment Information</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-white/70">Booking ID:</span>
+                      <span className="text-orange-100/70">Booking ID:</span>
                       <span className="text-white">{selectedPayment.bookingId}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-white/70">Amount:</span>
-                      <span className="text-white font-semibold">
+                      <span className="text-orange-100/70">Amount:</span>
+                      <span className="text-orange-100 font-semibold">
                         {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-white/70">Status:</span>
+                      <span className="text-orange-100/70">Status:</span>
                       <Badge className={`${getStatusColor(selectedPayment.status)} text-white`}>
                         {selectedPayment.status}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-white/70">Method:</span>
+                      <span className="text-orange-100/70">Method:</span>
                       <span className="text-white">{getMethodBadge(selectedPayment.method)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-white/70">Tickets:</span>
+                      <span className="text-orange-100/70">Tickets:</span>
                       <span className="text-white">{selectedPayment.ticketsCount}</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-white font-semibold mb-3">Customer Information</h3>
+                  <h3 className="text-orange-100 font-semibold mb-3">Customer Information</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-white/70">Name:</span>
+                      <span className="text-orange-100/70">Name:</span>
                       <span className="text-white">{selectedPayment.customerName}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-white/70">Email:</span>
+                      <span className="text-orange-100/70">Email:</span>
                       <span className="text-white">{selectedPayment.customerEmail}</span>
                     </div>
                   </div>
@@ -558,21 +559,21 @@ export default function PaymentsPage() {
 
               {/* Event Info */}
               <div>
-                <h3 className="text-white font-semibold mb-3">Event Information</h3>
+                <h3 className="text-orange-100 font-semibold mb-3">Event Information</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/70">Event:</span>
+                    <span className="text-orange-100/70">Event:</span>
                     <span className="text-white">{selectedPayment.eventTitle}</span>
                   </div>
                   {selectedPayment.venue && (
                     <div className="flex justify-between">
-                      <span className="text-white/70">Venue:</span>
+                      <span className="text-orange-100/70">Venue:</span>
                       <span className="text-white">{selectedPayment.venue}</span>
                     </div>
                   )}
                   {selectedPayment.eventDate && (
                     <div className="flex justify-between">
-                      <span className="text-white/70">Date:</span>
+                      <span className="text-orange-100/70">Date:</span>
                       <span className="text-white">
                         {new Date(selectedPayment.eventDate).toLocaleDateString()}
                       </span>
@@ -583,17 +584,17 @@ export default function PaymentsPage() {
 
               {/* Transaction Details */}
               <div>
-                <h3 className="text-white font-semibold mb-3">Transaction Details</h3>
+                <h3 className="text-orange-100 font-semibold mb-3">Transaction Details</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/70">Created:</span>
+                    <span className="text-orange-100/70">Created:</span>
                     <span className="text-white">
                       {new Date(selectedPayment.createdAt).toLocaleString()}
                     </span>
                   </div>
                   {selectedPayment.paymentDate && (
                     <div className="flex justify-between">
-                      <span className="text-white/70">Payment Date:</span>
+                      <span className="text-orange-100/70">Payment Date:</span>
                       <span className="text-white">
                         {new Date(selectedPayment.paymentDate).toLocaleString()}
                       </span>
@@ -601,16 +602,16 @@ export default function PaymentsPage() {
                   )}
                   {(selectedPayment.stripePaymentIntentId || selectedPayment.raiffeisenPaymentId) && (
                     <div className="flex justify-between">
-                      <span className="text-white/70">Transaction ID:</span>
-                      <span className="text-white font-mono text-xs">
+                      <span className="text-orange-100/70">Transaction ID:</span>
+                      <span className="text-orange-100 font-mono text-xs">
                         {selectedPayment.stripePaymentIntentId || selectedPayment.raiffeisenPaymentId}
                       </span>
                     </div>
                   )}
                   {selectedPayment.notes && (
                     <div>
-                      <span className="text-white/70">Notes:</span>
-                      <p className="text-white mt-1">{selectedPayment.notes}</p>
+                      <span className="text-orange-100/70">Notes:</span>
+                      <p className="text-orange-100 mt-1">{selectedPayment.notes}</p>
                     </div>
                   )}
                 </div>
@@ -619,6 +620,7 @@ export default function PaymentsPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

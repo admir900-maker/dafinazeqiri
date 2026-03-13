@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import {
@@ -176,14 +176,14 @@ export default function UserActivityPage() {
       case 'failed': return <XCircle className="w-4 h-4 text-red-400" />;
       case 'pending': return <Clock className="w-4 h-4 text-orange-500" />;
       case 'cancelled': return <AlertCircle className="w-4 h-4 text-gray-400" />;
-      default: return <Activity className="w-4 h-4 text-[#cd7f32]" />;
+      default: return <Activity className="w-4 h-4 text-orange-500" />;
     }
   };
 
   const getDeviceIcon = (device: string) => {
     switch (device) {
-      case 'mobile': return <Smartphone className="w-4 h-4 text-[#cd7f32]" />;
-      case 'tablet': return <Tablet className="w-4 h-4 text-[#b4530a]" />;
+      case 'mobile': return <Smartphone className="w-4 h-4 text-orange-500" />;
+      case 'tablet': return <Tablet className="w-4 h-4 text-amber-700" />;
       case 'desktop': return <Monitor className="w-4 h-4 text-green-400" />;
       default: return <Monitor className="w-4 h-4 text-gray-400" />;
     }
@@ -193,7 +193,7 @@ export default function UserActivityPage() {
     switch (browser) {
       case 'Chrome': return <Chrome className="w-4 h-4 text-orange-500" />;
       case 'Firefox': return <Globe className="w-4 h-4 text-orange-400" />;
-      case 'Safari': return <Globe className="w-4 h-4 text-[#cd7f32]" />;
+      case 'Safari': return <Globe className="w-4 h-4 text-orange-500" />;
       default: return <Activity className="w-4 h-4 text-gray-400" />;
     }
   };
@@ -212,7 +212,7 @@ export default function UserActivityPage() {
         return 'text-orange-500';
       case 'page_view':
       case 'event_view':
-        return 'text-blue-400';
+        return 'text-orange-500';
       default:
         return 'text-white';
     }
@@ -231,62 +231,64 @@ export default function UserActivityPage() {
 
   if (loading && !data) {
     return (
-      <div className="space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-white">User Activity Logs</h1>
+          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">User Activity Logs</h1>
         </div>
-        <div className="flex items-center justify-center min-h-96 text-white">
+        <div className="flex items-center justify-center min-h-96 text-orange-100">
           <div className="text-center">
-            <Activity className="w-12 h-12 mx-auto mb-4 text-[#cd7f32] animate-pulse" />
+            <Activity className="w-12 h-12 mx-auto mb-4 text-orange-500 animate-pulse" />
             <p className="text-lg">Loading user activities...</p>
           </div>
         </div>
+      </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-white">User Activity Logs</h1>
-        <AdminCard>
-          <AdminCardContent className="p-8 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+        <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">User Activity Logs</h1>
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardContent className="p-8 text-center">
             <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">Error Loading Activities</h2>
+            <h2 className="text-xl font-semibold text-orange-100 mb-2">Error Loading Activities</h2>
             <p className="text-red-400 mb-6">{error}</p>
-            <Button onClick={() => fetchActivities()} className="bg-[#cd7f32] hover:bg-[#b4530a]">
+            <Button onClick={() => fetchActivities()} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-          </AdminCardContent>
-        </AdminCard>
+          </CardContent>
+        </Card>
+      </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">User Activity Logs</h1>
-          <p className="text-white/60">
+          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">User Activity Logs</h1>
+          <p className="text-orange-100/50">
             Monitor user behavior and track ticket purchasing activities
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-[#cd7f32] hover:bg-[#b4530a]"
+            className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
           >
             <Filter className="w-4 h-4 mr-2" />
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </Button>
-          <Button onClick={exportActivities} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={exportActivities} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button onClick={() => fetchActivities(currentPage)} className="bg-[#cd7f32] hover:bg-[#b4530a]">
+          <Button onClick={() => fetchActivities(currentPage)} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
@@ -297,89 +299,89 @@ export default function UserActivityPage() {
       {data && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <AdminCard>
-              <AdminCardContent className="p-6">
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/70 text-sm font-medium">Total Activities</p>
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-orange-100/70 text-sm font-medium">Total Activities</p>
+                    <p className="text-2xl font-bold text-orange-100">
                       {data.pagination.totalCount.toLocaleString()}
                     </p>
                   </div>
-                  <Activity className="w-8 h-8 text-[#cd7f32]" />
+                  <Activity className="w-8 h-8 text-orange-500" />
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
 
-            <AdminCard>
-              <AdminCardContent className="p-6">
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/70 text-sm font-medium">Revenue from Activities</p>
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-orange-100/70 text-sm font-medium">Revenue from Activities</p>
+                    <p className="text-2xl font-bold text-orange-100">
                       {formatPrice(data.statistics.totalRevenue)}
                     </p>
                   </div>
                   <CreditCard className="w-8 h-8 text-green-400" />
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
 
-            <AdminCard>
-              <AdminCardContent className="p-6">
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/70 text-sm font-medium">Success Rate</p>
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-orange-100/70 text-sm font-medium">Success Rate</p>
+                    <p className="text-2xl font-bold text-orange-100">
                       {data.statistics.byStatus.find(s => s._id === 'success')?.count ?
                         Math.round((data.statistics.byStatus.find(s => s._id === 'success')!.count / data.pagination.totalCount) * 100) : 0}%
                     </p>
                   </div>
                   <CheckCircle className="w-8 h-8 text-green-400" />
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
 
-            <AdminCard>
-              <AdminCardContent className="p-6">
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white/70 text-sm font-medium">Top Device</p>
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-orange-100/70 text-sm font-medium">Top Device</p>
+                    <p className="text-2xl font-bold text-orange-100">
                       {data.statistics.byDevice[0]?._id || 'N/A'}
                     </p>
                   </div>
                   {getDeviceIcon(data.statistics.byDevice[0]?._id || 'unknown')}
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Filters */}
           {showFilters && (
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitle>Filters</AdminCardTitle>
-              </AdminCardHeader>
-              <AdminCardContent className="p-6">
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardHeader>
+                <CardTitle>Filters</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Search</label>
+                    <label className="block text-orange-100/70 text-sm mb-2">Search</label>
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Search users, events..."
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Action</label>
+                    <label className="block text-orange-100/70 text-sm mb-2">Action</label>
                     <select
                       value={actionFilter}
                       onChange={(e) => setActionFilter(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="">All Actions</option>
                       <option value="page_view">Page View</option>
@@ -393,11 +395,11 @@ export default function UserActivityPage() {
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Status</label>
+                    <label className="block text-orange-100/70 text-sm mb-2">Status</label>
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="">All Status</option>
                       <option value="success">Success</option>
@@ -408,39 +410,39 @@ export default function UserActivityPage() {
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">User ID</label>
+                    <label className="block text-orange-100/70 text-sm mb-2">User ID</label>
                     <input
                       type="text"
                       value={userIdFilter}
                       onChange={(e) => setUserIdFilter(e.target.value)}
                       placeholder="Filter by user ID"
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Start Date</label>
+                    <label className="block text-orange-100/70 text-sm mb-2">Start Date</label>
                     <input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">End Date</label>
+                    <label className="block text-orange-100/70 text-sm mb-2">End Date</label>
                     <input
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={() => fetchActivities(1)} className="bg-[#cd7f32] hover:bg-[#b4530a]">
+                  <Button onClick={() => fetchActivities(1)} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
                     <Search className="w-4 h-4 mr-2" />
                     Apply Filters
                   </Button>
@@ -454,43 +456,43 @@ export default function UserActivityPage() {
                       setEndDate('');
                       fetchActivities(1);
                     }}
-                    className="bg-gray-600 hover:bg-gray-700"
+                    className="bg-black/40 border border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                   >
                     Clear All
                   </Button>
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
           )}
 
           {/* Activities List */}
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitle className="flex items-center justify-between">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
                 <span>User Activities</span>
                 <div className="flex gap-2">
                   <Button
                     onClick={() => clearOldActivities(30)}
-                    className="bg-red-600 hover:bg-red-700 text-sm"
+                    className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 text-sm"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
                     Clear 30d+
                   </Button>
                   <Button
                     onClick={() => clearOldActivities(90)}
-                    className="bg-red-600 hover:bg-red-700 text-sm"
+                    className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 text-sm"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
                     Clear 90d+
                   </Button>
                 </div>
-              </AdminCardTitle>
-            </AdminCardHeader>
-            <AdminCardContent className="p-0">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
               {data.activities.length > 0 ? (
-                <div className="divide-y divide-white/10">
+                <div className="divide-y divide-orange-500/10">
                   {data.activities.map((activity) => (
-                    <div key={activity._id} className="p-4 hover:bg-white/5 transition-colors">
+                    <div key={activity._id} className="p-4 hover:bg-black/40 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -498,19 +500,19 @@ export default function UserActivityPage() {
                             <span className={`font-medium ${getActionColor(activity.action)}`}>
                               {activity.action.replace(/_/g, ' ').toUpperCase()}
                             </span>
-                            <span className="text-white/50 text-sm">
+                            <span className="text-orange-100/40 text-sm">
                               {formatDate(activity.createdAt)}
                             </span>
                             {activity.duration && (
-                              <span className="text-white/50 text-sm">
+                              <span className="text-orange-100/40 text-sm">
                                 ({formatDuration(activity.duration)})
                               </span>
                             )}
                           </div>
 
-                          <p className="text-white mb-2">{activity.description}</p>
+                          <p className="text-orange-100 mb-2">{activity.description}</p>
 
-                          <div className="flex flex-wrap gap-4 text-sm text-white/70">
+                          <div className="flex flex-wrap gap-4 text-sm text-orange-100/70">
                             {activity.userEmail && (
                               <span className="flex items-center gap-1">
                                 <User className="w-3 h-3" />
@@ -554,7 +556,7 @@ export default function UserActivityPage() {
                           onClick={() => setExpandedActivity(
                             expandedActivity === activity._id ? null : activity._id
                           )}
-                          className="bg-white/10 hover:bg-white/20 text-white/70 p-2"
+                          className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-100/70 p-2"
                         >
                           {expandedActivity === activity._id ? (
                             <ChevronUp className="w-4 h-4" />
@@ -565,49 +567,49 @@ export default function UserActivityPage() {
                       </div>
 
                       {expandedActivity === activity._id && (
-                        <div className="mt-4 p-4 bg-white/5 rounded-lg">
+                        <div className="mt-4 p-4 bg-black/40 rounded-lg">
                           <h4 className="text-white font-medium mb-3">Detailed Information</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
-                              <strong className="text-white/80">Session ID:</strong>
-                              <span className="text-white/60 ml-2">{activity.sessionId || 'N/A'}</span>
+                              <strong className="text-orange-100/80">Session ID:</strong>
+                              <span className="text-orange-100/50 ml-2">{activity.sessionId || 'N/A'}</span>
                             </div>
                             <div>
-                              <strong className="text-white/80">IP Address:</strong>
-                              <span className="text-white/60 ml-2">{activity.ipAddress || 'N/A'}</span>
+                              <strong className="text-orange-100/80">IP Address:</strong>
+                              <span className="text-orange-100/50 ml-2">{activity.ipAddress || 'N/A'}</span>
                             </div>
                             <div>
-                              <strong className="text-white/80">Location:</strong>
-                              <span className="text-white/60 ml-2">{activity.location || 'N/A'}</span>
+                              <strong className="text-orange-100/80">Location:</strong>
+                              <span className="text-orange-100/50 ml-2">{activity.location || 'N/A'}</span>
                             </div>
                             <div>
-                              <strong className="text-white/80">Referrer:</strong>
-                              <span className="text-white/60 ml-2">{activity.referrer || 'N/A'}</span>
+                              <strong className="text-orange-100/80">Referrer:</strong>
+                              <span className="text-orange-100/50 ml-2">{activity.referrer || 'N/A'}</span>
                             </div>
                             {activity.paymentMethod && (
                               <div>
-                                <strong className="text-white/80">Payment Method:</strong>
-                                <span className="text-white/60 ml-2">{activity.paymentMethod}</span>
+                                <strong className="text-orange-100/80">Payment Method:</strong>
+                                <span className="text-orange-100/50 ml-2">{activity.paymentMethod}</span>
                               </div>
                             )}
                             {activity.ticketType && (
                               <div>
-                                <strong className="text-white/80">Ticket Type:</strong>
-                                <span className="text-white/60 ml-2">{activity.ticketType}</span>
+                                <strong className="text-orange-100/80">Ticket Type:</strong>
+                                <span className="text-orange-100/50 ml-2">{activity.ticketType}</span>
                               </div>
                             )}
                             {activity.quantity && (
                               <div>
-                                <strong className="text-white/80">Quantity:</strong>
-                                <span className="text-white/60 ml-2">{activity.quantity}</span>
+                                <strong className="text-orange-100/80">Quantity:</strong>
+                                <span className="text-orange-100/50 ml-2">{activity.quantity}</span>
                               </div>
                             )}
                           </div>
 
                           {activity.metadata && Object.keys(activity.metadata).length > 0 && (
                             <div className="mt-4">
-                              <strong className="text-white/80">Metadata:</strong>
-                              <pre className="mt-2 p-3 bg-black/30 rounded text-white/70 text-xs overflow-auto">
+                              <strong className="text-orange-100/80">Metadata:</strong>
+                              <pre className="mt-2 p-3 bg-black/30 rounded text-orange-100/70 text-xs overflow-auto">
                                 {JSON.stringify(activity.metadata, null, 2)}
                               </pre>
                             </div>
@@ -618,19 +620,19 @@ export default function UserActivityPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-white/60">
-                  <Activity className="w-12 h-12 mx-auto mb-4 text-white/40" />
+                <div className="text-center py-12 text-orange-100/50">
+                  <Activity className="w-12 h-12 mx-auto mb-4 text-orange-100/30" />
                   <p>No user activities found</p>
                   <p className="text-sm mt-2">Activities will appear here as users interact with the platform</p>
                 </div>
               )}
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
 
           {/* Pagination */}
           {data.pagination.totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <div className="text-white/60 text-sm">
+              <div className="text-orange-100/50 text-sm">
                 Showing {((data.pagination.currentPage - 1) * data.pagination.limit) + 1} to {Math.min(data.pagination.currentPage * data.pagination.limit, data.pagination.totalCount)} of {data.pagination.totalCount} activities
               </div>
 
@@ -638,19 +640,19 @@ export default function UserActivityPage() {
                 <Button
                   onClick={() => fetchActivities(data.pagination.currentPage - 1)}
                   disabled={!data.pagination.hasPrevPage}
-                  className="bg-white/10 hover:bg-white/20 disabled:opacity-50"
+                  className="bg-orange-500/10 hover:bg-orange-500/20 disabled:opacity-50"
                 >
                   Previous
                 </Button>
 
-                <span className="flex items-center px-4 py-2 text-white">
+                <span className="flex items-center px-4 py-2 text-orange-100">
                   Page {data.pagination.currentPage} of {data.pagination.totalPages}
                 </span>
 
                 <Button
                   onClick={() => fetchActivities(data.pagination.currentPage + 1)}
                   disabled={!data.pagination.hasNextPage}
-                  className="bg-white/10 hover:bg-white/20 disabled:opacity-50"
+                  className="bg-orange-500/10 hover:bg-orange-500/20 disabled:opacity-50"
                 >
                   Next
                 </Button>
@@ -659,6 +661,5 @@ export default function UserActivityPage() {
           )}
         </>
       )}
-    </div>
-  );
+    </div>    </div>  );
 }

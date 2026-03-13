@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useUser } from '@clerk/nextjs';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -300,91 +300,91 @@ export default function SoldTicketsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-2 md:p-4">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sold Tickets</h1>
-            <p className="text-sm md:text-base text-gray-600">All confirmed and paid tickets grouped by ticket type</p>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Sold Tickets</h1>
+            <p className="text-sm md:text-base text-orange-100/70">All confirmed and paid tickets grouped by ticket type</p>
           </div>
 
           {/* Filters */}
-          <AdminCard>
-            <AdminCardContent className="p-3 md:p-6">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardContent className="p-3 md:p-6">
               <div className="flex flex-col gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-500/50 h-4 w-4" />
                   <Input
                     placeholder="Search by event or ticket name..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 md:flex md:items-center gap-2">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Start date</label>
-                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <label className="block text-xs text-orange-100/70 mb-1">Start date</label>
+                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border-2 border-orange-500/30 bg-black/60 text-orange-100 focus:border-orange-500" />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">End date</label>
-                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    <label className="block text-xs text-orange-100/70 mb-1">End date</label>
+                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border-2 border-orange-500/30 bg-black/60 text-orange-100 focus:border-orange-500" />
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={fetchSales} className="flex-1 md:flex-none">
+                  <Button variant="outline" size="sm" onClick={fetchSales} className="flex-1 md:flex-none border-orange-500/30 text-orange-100 hover:bg-orange-500/10">
                     {loading ? (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Refreshing...
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin text-orange-500" /> Refreshing...
                       </>
                     ) : (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+                        <RefreshCw className="h-4 w-4 mr-2 text-orange-500" /> Refresh
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => { setSearch(''); setEventId(''); setStartDate(''); setEndDate(''); setIncludePastEvents(false); fetchSales(); }} className="flex-1 md:flex-none">Clear</Button>
-                  <Button size="sm" onClick={exportCSV} className="flex-1 md:flex-none">Export CSV</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setSearch(''); setEventId(''); setStartDate(''); setEndDate(''); setIncludePastEvents(false); fetchSales(); }} className="flex-1 md:flex-none border-orange-500/30 text-orange-100 hover:bg-orange-500/10">Clear</Button>
+                  <Button size="sm" onClick={exportCSV} className="flex-1 md:flex-none bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">Export CSV</Button>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-3">
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-sm text-orange-100/70 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={includePastEvents}
                     onChange={(e) => setIncludePastEvents(e.target.checked)}
-                    className="rounded border-gray-300 text-neutral-900 focus:ring-neutral-500"
+                    className="rounded border-orange-500/30 text-orange-500 focus:ring-orange-500 bg-black/60"
                   />
                   Show past events
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none ml-4">
+                <label className="flex items-center gap-2 text-sm text-orange-100/70 cursor-pointer select-none ml-4">
                   <input
                     type="checkbox"
                     checked={groupByEmail}
                     onChange={(e) => setGroupByEmail(e.target.checked)}
-                    className="rounded border-gray-300 text-neutral-900 focus:ring-neutral-500"
+                    className="rounded border-orange-500/30 text-orange-500 focus:ring-orange-500 bg-black/60"
                   />
                   Group by email
                 </label>
               </div>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
 
           {message && (
-            <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800">{message}</div>
+            <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded text-orange-100">{message}</div>
           )}
 
           {/* Event Summaries & Groups */}
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitle>Ticket sales</AdminCardTitle>
-            </AdminCardHeader>
-            <AdminCardContent>
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="text-2xl font-black text-orange-500">Ticket sales</CardTitle>
+            </CardHeader>
+            <CardContent>
               {loading ? (
-                <div className="flex items-center justify-center py-10 text-gray-600">
-                  <RefreshCw className="h-5 w-5 animate-spin mr-2 text-gray-700" /> Loading sold tickets...
+                <div className="flex items-center justify-center py-10 text-orange-100/70">
+                  <RefreshCw className="h-5 w-5 animate-spin mr-2 text-orange-500" /> Loading sold tickets...
                 </div>
               ) : eventSummaries.length === 0 ? (
-                <div className="py-10 text-center text-gray-600">No sold tickets found.</div>
+                <div className="py-10 text-center text-orange-100/50">No sold tickets found.</div>
               ) : (
                 <div className="space-y-4">
                   {eventSummaries.map((ev) => {
@@ -393,7 +393,7 @@ export default function SoldTicketsPage() {
                     const totalCapacity = ev.ticketTypes.reduce((sum, tt) => sum + (tt.capacity || 0), 0);
                     const totalAvailable = ev.ticketTypes.reduce((sum, tt) => sum + (tt.available ?? 0), 0);
                     return (
-                      <div key={evKey} className="border border-orange-700/20 rounded-lg overflow-hidden">
+                      <div key={evKey} className="border border-orange-500/30 rounded-lg overflow-hidden">
                         {/* Event Master Header */}
                         <button
                           className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-5 py-3 md:py-4 text-left transition-colors gap-2"
@@ -401,44 +401,44 @@ export default function SoldTicketsPage() {
                           onClick={() => setExpanded((prev) => ({ ...prev, [evKey]: !evOpen }))}
                         >
                           <div className="flex items-center gap-2 md:gap-3">
-                            {evOpen ? <ChevronDown className="h-5 w-5 text-orange-400 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 text-orange-400 flex-shrink-0" />}
+                            {evOpen ? <ChevronDown className="h-5 w-5 text-orange-500 flex-shrink-0" /> : <ChevronRight className="h-5 w-5 text-orange-500 flex-shrink-0" />}
                             <div className="min-w-0">
-                              <div className="text-base md:text-lg font-bold text-white truncate">{ev.eventTitle}</div>
-                              <div className="text-xs md:text-sm text-gray-400">{formatDateTime(ev.eventDate)}</div>
+                              <div className="text-base md:text-lg font-bold text-orange-100 truncate">{ev.eventTitle}</div>
+                              <div className="text-xs md:text-sm text-orange-100/50">{formatDateTime(ev.eventDate)}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-4 md:gap-6 ml-7 sm:ml-0">
                             <div className="text-left sm:text-right">
-                              <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Sold</div>
-                              <div className="text-sm md:text-base font-bold text-orange-300">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
+                              <div className="text-[10px] md:text-xs text-orange-100/50 uppercase tracking-wider">Sold</div>
+                              <div className="text-sm md:text-base font-bold text-orange-500">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
                             </div>
                             {totalCapacity > 0 && (
                               <div className="text-left sm:text-right">
-                                <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Available</div>
+                                <div className="text-[10px] md:text-xs text-orange-100/50 uppercase tracking-wider">Available</div>
                                 <div className="text-sm md:text-base font-bold text-green-400">{totalAvailable}</div>
                               </div>
                             )}
                             <div className="text-left sm:text-right">
-                              <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Revenue</div>
-                              <div className="text-sm md:text-base font-bold text-white">{formatCurrency(ev.totalRevenue)}</div>
+                              <div className="text-[10px] md:text-xs text-orange-100/50 uppercase tracking-wider">Revenue</div>
+                              <div className="text-sm md:text-base font-bold text-orange-100">{formatCurrency(ev.totalRevenue)}</div>
                             </div>
                           </div>
                         </button>
 
                         {/* Ticket Type Summary Bar */}
-                        <div className="px-3 md:px-5 py-2 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 md:gap-3">
+                        <div className="px-3 md:px-5 py-2 bg-black/40 border-t border-orange-500/20 flex flex-wrap gap-2 md:gap-3">
                           {ev.ticketTypes.map((tt) => (
                             <div key={tt.name} className="flex items-center gap-1.5 text-sm">
-                              <span className="font-medium text-gray-700">{tt.name}:</span>
-                              <span className="bg-gray-900 text-orange-300 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
+                              <span className="font-medium text-orange-100/70">{tt.name}:</span>
+                              <span className="bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
                               {tt.capacity != null && (
-                                <span className="text-gray-400 text-xs">/ {tt.capacity}</span>
+                                <span className="text-orange-100/50 text-xs">/ {tt.capacity}</span>
                               )}
                               {tt.available != null && tt.available > 0 && (
-                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.available} left</span>
+                                <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.available} left</span>
                               )}
                               {tt.available != null && tt.available === 0 && (
-                                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Sold out</span>
+                                <span className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full text-xs font-semibold">Sold out</span>
                               )}
                             </div>
                           ))}
@@ -446,57 +446,57 @@ export default function SoldTicketsPage() {
 
                         {/* Expanded: Individual Ticket Type Groups */}
                         {evOpen && (
-                          <div className="border-t border-gray-200 bg-white">
+                          <div className="border-t border-orange-500/20 bg-black/30">
                             <div className="space-y-2 p-2 md:p-4">
                               {ev.groups.map((g) => {
                                 const key = `${g.eventId}:${g.ticketName}`;
                                 const isOpen = !!expanded[key];
                                 return (
-                                  <div key={key} className="border border-gray-200 rounded-md bg-white">
+                                  <div key={key} className="border border-orange-500/20 rounded-md bg-black/40">
                                     <button
-                                      className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-4 py-3 text-left hover:bg-gray-50 transition-colors gap-2"
+                                      className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 md:px-4 py-3 text-left hover:bg-orange-500/10 transition-colors gap-2"
                                       onClick={() => setExpanded((prev) => ({ ...prev, [key]: !isOpen }))}
                                     >
                                       <div className="flex items-center gap-2">
-                                        {isOpen ? <ChevronDown className="h-4 w-4 text-gray-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-gray-600 flex-shrink-0" />}
+                                        {isOpen ? <ChevronDown className="h-4 w-4 text-orange-500 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-orange-500 flex-shrink-0" />}
                                         <div className="min-w-0">
-                                          <div className="font-semibold text-gray-900 text-sm md:text-base">{g.ticketName}</div>
-                                          <div className="text-xs md:text-sm text-gray-500">
+                                          <div className="font-semibold text-orange-100 text-sm md:text-base">{g.ticketName}</div>
+                                          <div className="text-xs md:text-sm text-orange-100/50">
                                             {g.capacity != null && <span>{g.count} / {g.capacity} sold</span>}
                                             {g.availableTickets != null && <span> &middot; {g.availableTickets} remaining</span>}
                                           </div>
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2 md:gap-4 ml-6 sm:ml-0 flex-wrap">
-                                        <Badge className="bg-gray-900 text-orange-300 border-0 text-xs">{g.count} sold</Badge>
-                                        <div className="font-semibold text-sm md:text-base">{formatCurrency(g.revenue)}</div>
+                                        <Badge className="bg-orange-500/20 text-orange-500 border-0 text-xs">{g.count} sold</Badge>
+                                        <div className="font-semibold text-sm md:text-base text-orange-100">{formatCurrency(g.revenue)}</div>
                                         {g.items && g.items.length > 0 && (
                                           <div className="flex gap-1 md:gap-2 flex-wrap">
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className="text-gray-900 border-gray-900 hover:bg-gray-100 text-xs md:text-sm"
+                                              className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10 text-xs md:text-sm"
                                               onClick={(e) => { e.stopPropagation(); resendGroup(g); }}
                                               disabled={!!resendingId}
                                             >
                                               {resendingId ? (
                                                 <>
-                                                  <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1" /> Resending
+                                                  <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 text-orange-500" /> Resending
                                                 </>
                                               ) : (
                                                 <>
-                                                  <Mail className="h-3 w-3 md:h-4 md:w-4 mr-1" /> Resend all
+                                                  <Mail className="h-3 w-3 md:h-4 md:w-4 mr-1 text-orange-500" /> Resend all
                                                 </>
                                               )}
                                             </Button>
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className="text-purple-700 border-purple-700 hover:bg-purple-50 text-xs md:text-sm"
+                                              className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10 text-xs md:text-sm"
                                               onClick={(e) => { e.stopPropagation(); openCustomEmailGroupDialog(g); }}
                                               disabled={!!resendingId || sendingCustomEmail}
                                             >
-                                              <Mail className="h-3 w-3 md:h-4 md:w-4 mr-1" /> Custom Email
+                                              <Mail className="h-3 w-3 md:h-4 md:w-4 mr-1 text-orange-500" /> Custom Email
                                             </Button>
                                           </div>
                                         )}
@@ -523,18 +523,18 @@ export default function SoldTicketsPage() {
                                             return (
                                               <table className="w-full text-sm">
                                                 <thead>
-                                                  <tr className="border-b">
-                                                    <th className="text-left p-2">Customer</th>
-                                                    <th className="text-left p-2">Email</th>
-                                                    <th className="text-left p-2">Tickets</th>
-                                                    <th className="text-left p-2">Total Spent</th>
+                                                  <tr className="border-b border-orange-500/30">
+                                                    <th className="text-left p-2 text-orange-500 font-bold">Customer</th>
+                                                    <th className="text-left p-2 text-orange-500 font-bold">Email</th>
+                                                    <th className="text-left p-2 text-orange-500 font-bold">Tickets</th>
+                                                    <th className="text-left p-2 text-orange-500 font-bold">Total Spent</th>
                                                   </tr>
                                                 </thead>
                                                 <tbody>
                                                   {emailGroups.map((eg) => (
                                                     <tr
                                                       key={eg.email}
-                                                      className="border-b hover:bg-gray-100 cursor-pointer transition-colors"
+                                                      className="border-b border-orange-500/20 hover:bg-orange-500/10 cursor-pointer transition-colors"
                                                       onClick={() => setCustomerDetailPopup({
                                                         ...eg,
                                                         eventTitle: g.eventTitle,
@@ -542,12 +542,12 @@ export default function SoldTicketsPage() {
                                                         ticketName: g.ticketName,
                                                       })}
                                                     >
-                                                      <td className="p-2 font-medium">{eg.name}</td>
-                                                      <td className="p-2">{eg.email}</td>
+                                                      <td className="p-2 font-medium text-orange-100">{eg.name}</td>
+                                                      <td className="p-2 text-orange-100/70">{eg.email}</td>
                                                       <td className="p-2">
-                                                        <Badge className="bg-gray-900 text-orange-300 border-0">{eg.tickets}</Badge>
+                                                        <Badge className="bg-orange-500/20 text-orange-500 border-0">{eg.tickets}</Badge>
                                                       </td>
-                                                      <td className="p-2 font-semibold">{formatCurrency(eg.spent)}</td>
+                                                      <td className="p-2 font-semibold text-orange-100">{formatCurrency(eg.spent)}</td>
                                                     </tr>
                                                   ))}
                                                 </tbody>
@@ -556,37 +556,37 @@ export default function SoldTicketsPage() {
                                           })() : (
                                             <table className="w-full text-sm">
                                               <thead>
-                                                <tr className="border-b">
-                                                  <th className="text-left p-2">Booking Ref</th>
-                                                  <th className="text-left p-2">Customer</th>
-                                                  <th className="text-left p-2">Email</th>
-                                                  <th className="text-left p-2">Price</th>
-                                                  <th className="text-left p-2">Sold at</th>
-                                                  <th className="text-left p-2">Actions</th>
+                                                <tr className="border-b border-orange-500/30">
+                                                  <th className="text-left p-2 text-orange-500 font-bold">Booking Ref</th>
+                                                  <th className="text-left p-2 text-orange-500 font-bold">Customer</th>
+                                                  <th className="text-left p-2 text-orange-500 font-bold">Email</th>
+                                                  <th className="text-left p-2 text-orange-500 font-bold">Price</th>
+                                                  <th className="text-left p-2 text-orange-500 font-bold">Sold at</th>
+                                                  <th className="text-left p-2 text-orange-500 font-bold">Actions</th>
                                                 </tr>
                                               </thead>
                                               <tbody>
                                                 {(g.items || []).map((t) => (
-                                                  <tr key={`${t.bookingId}:${t.ticketId}`} className="border-b hover:bg-gray-50">
-                                                    <td className="p-2">{t.bookingReference}</td>
-                                                    <td className="p-2">{t.customerName || '\u2014'}</td>
-                                                    <td className="p-2">{t.customerEmail || '\u2014'}</td>
-                                                    <td className="p-2">{formatCurrency(t.ticketPrice)}</td>
-                                                    <td className="p-2">{formatDateTime(t.createdAt)}</td>
+                                                  <tr key={`${t.bookingId}:${t.ticketId}`} className="border-b border-orange-500/20 hover:bg-orange-500/10">
+                                                    <td className="p-2 text-orange-100">{t.bookingReference}</td>
+                                                    <td className="p-2 text-orange-100">{t.customerName || '\u2014'}</td>
+                                                    <td className="p-2 text-orange-100/70">{t.customerEmail || '\u2014'}</td>
+                                                    <td className="p-2 text-orange-100">{formatCurrency(t.ticketPrice)}</td>
+                                                    <td className="p-2 text-orange-100/70">{formatDateTime(t.createdAt)}</td>
                                                     <td className="p-2">
                                                       <div className="flex gap-2">
                                                         <Button
                                                           onClick={() => resend(t.bookingId)}
                                                           size="sm"
                                                           variant="outline"
-                                                          className="text-gray-900 border-gray-900 hover:bg-gray-100"
+                                                          className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                                                           disabled={resendingId === t.bookingId}
                                                         >
                                                           {resendingId === t.bookingId ? (
-                                                            <RefreshCw className="h-4 w-4 animate-spin" />
+                                                            <RefreshCw className="h-4 w-4 animate-spin text-orange-500" />
                                                           ) : (
                                                             <>
-                                                              <Mail className="h-4 w-4 mr-1" /> Resend
+                                                              <Mail className="h-4 w-4 mr-1 text-orange-500" /> Resend
                                                             </>
                                                           )}
                                                         </Button>
@@ -594,10 +594,10 @@ export default function SoldTicketsPage() {
                                                           onClick={() => openCustomEmailDialog(t.bookingId)}
                                                           size="sm"
                                                           variant="outline"
-                                                          className="text-purple-700 border-purple-700 hover:bg-purple-50"
+                                                          className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                                                           disabled={!!resendingId || sendingCustomEmail}
                                                         >
-                                                          <Mail className="h-4 w-4 mr-1" /> Send Custom
+                                                          <Mail className="h-4 w-4 mr-1 text-orange-500" /> Send Custom
                                                         </Button>
                                                       </div>
                                                     </td>
@@ -620,40 +620,40 @@ export default function SoldTicketsPage() {
                   })}
                 </div>
               )}
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Custom Email Dialog (Single Booking) */}
       {showCustomEmailDialog && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-zinc-950 border-2 border-orange-500/50 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Send Custom Email</h2>
+                <h2 className="text-2xl font-black text-orange-500">Send Custom Email</h2>
                 <button
                   onClick={() => {
                     setShowCustomEmailDialog(false);
                     setCustomEmailText('');
                     setCustomEmailBookingId(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-orange-100/50 hover:text-orange-500"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <p className="text-gray-600 mb-4">
+              <p className="text-orange-100/70 mb-4">
                 Enter your custom message below. This will be sent as a standalone message (tickets will NOT be included).
               </p>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-orange-100/70 mb-2">
                   Custom Message
                 </label>
                 <textarea
                   value={customEmailText}
                   onChange={(e) => setCustomEmailText(e.target.value)}
-                  className="w-full h-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full h-40 px-3 py-2 border-2 border-orange-500/30 bg-black/60 text-orange-100 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder:text-orange-100/40"
                   placeholder="Enter your custom message here..."
                 />
               </div>
@@ -666,13 +666,14 @@ export default function SoldTicketsPage() {
                     setCustomEmailBookingId(null);
                   }}
                   disabled={sendingCustomEmail}
+                  className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={sendCustomEmail}
                   disabled={!customEmailText.trim() || sendingCustomEmail}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                 >
                   {sendingCustomEmail ? (
                     <>
@@ -692,75 +693,75 @@ export default function SoldTicketsPage() {
 
       {/* Customer Detail Popup */}
       {customerDetailPopup && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-zinc-950 border-2 border-orange-500/50 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Customer Booking Details</h2>
+                <h2 className="text-xl md:text-2xl font-black text-orange-500">Customer Booking Details</h2>
                 <button
                   onClick={() => setCustomerDetailPopup(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-orange-100/50 hover:text-orange-500"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
               {/* Customer Info */}
-              <div className="bg-gray-50 rounded-lg p-3 md:p-4 mb-4">
+              <div className="bg-black/60 border border-orange-500/30 rounded-lg p-3 md:p-4 mb-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Customer</div>
-                    <div className="font-semibold text-gray-900 text-sm md:text-base">{customerDetailPopup.name}</div>
+                    <div className="text-xs text-orange-100/50 uppercase tracking-wider">Customer</div>
+                    <div className="font-semibold text-orange-100 text-sm md:text-base">{customerDetailPopup.name}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Email</div>
-                    <div className="font-semibold text-gray-900 text-sm md:text-base break-all">{customerDetailPopup.email}</div>
+                    <div className="text-xs text-orange-100/50 uppercase tracking-wider">Email</div>
+                    <div className="font-semibold text-orange-100 text-sm md:text-base break-all">{customerDetailPopup.email}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Event</div>
-                    <div className="font-semibold text-gray-900 text-sm md:text-base">{customerDetailPopup.eventTitle}</div>
+                    <div className="text-xs text-orange-100/50 uppercase tracking-wider">Event</div>
+                    <div className="font-semibold text-orange-100 text-sm md:text-base">{customerDetailPopup.eventTitle}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Event Date</div>
-                    <div className="font-semibold text-gray-900 text-sm md:text-base">{formatDateTime(customerDetailPopup.eventDate)}</div>
+                    <div className="text-xs text-orange-100/50 uppercase tracking-wider">Event Date</div>
+                    <div className="font-semibold text-orange-100 text-sm md:text-base">{formatDateTime(customerDetailPopup.eventDate)}</div>
                   </div>
                 </div>
               </div>
 
               {/* Summary */}
               <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
-                <div className="bg-gray-900 border border-orange-700/30 rounded-lg p-2 md:p-3 text-center">
-                  <div className="text-xl md:text-2xl font-bold text-orange-300">{customerDetailPopup.tickets}</div>
-                  <div className="text-xs md:text-sm text-orange-200/60">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''}</div>
+                <div className="bg-black/60 border border-orange-500/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-xl md:text-2xl font-bold text-orange-500">{customerDetailPopup.tickets}</div>
+                  <div className="text-xs md:text-sm text-orange-100/50">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''}</div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-2 md:p-3 text-center">
-                  <div className="text-xl md:text-2xl font-bold text-green-800">{formatCurrency(customerDetailPopup.spent)}</div>
-                  <div className="text-xs md:text-sm text-green-600">Spent</div>
+                <div className="bg-black/60 border border-green-500/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-xl md:text-2xl font-bold text-green-400">{formatCurrency(customerDetailPopup.spent)}</div>
+                  <div className="text-xs md:text-sm text-green-400/60">Spent</div>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 md:p-3 text-center">
-                  <div className="text-sm md:text-2xl font-bold text-purple-800 truncate">{customerDetailPopup.ticketName}</div>
-                  <div className="text-xs md:text-sm text-purple-600">Type</div>
+                <div className="bg-black/60 border border-orange-500/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-sm md:text-2xl font-bold text-orange-500 truncate">{customerDetailPopup.ticketName}</div>
+                  <div className="text-xs md:text-sm text-orange-100/50">Type</div>
                 </div>
               </div>
 
               {/* Individual Tickets */}
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Booking Details</h3>
+                <h3 className="text-sm font-bold text-orange-500 mb-2 uppercase tracking-wider">Booking Details</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b bg-gray-50">
-                        <th className="text-left p-2">Booking Ref</th>
-                        <th className="text-left p-2">Price</th>
-                        <th className="text-left p-2">Purchased At</th>
+                      <tr className="border-b border-orange-500/30">
+                        <th className="text-left p-2 text-orange-500 font-bold">Booking Ref</th>
+                        <th className="text-left p-2 text-orange-500 font-bold">Price</th>
+                        <th className="text-left p-2 text-orange-500 font-bold">Purchased At</th>
                       </tr>
                     </thead>
                     <tbody>
                       {customerDetailPopup.items.map((item, i) => (
-                        <tr key={i} className="border-b hover:bg-gray-50">
-                          <td className="p-2 font-mono text-xs">{item.bookingReference}</td>
-                          <td className="p-2">{formatCurrency(item.ticketPrice)}</td>
-                          <td className="p-2">{formatDateTime(item.createdAt)}</td>
+                        <tr key={i} className="border-b border-orange-500/20 hover:bg-orange-500/10">
+                          <td className="p-2 font-mono text-xs text-orange-100">{item.bookingReference}</td>
+                          <td className="p-2 text-orange-100">{formatCurrency(item.ticketPrice)}</td>
+                          <td className="p-2 text-orange-100/70">{formatDateTime(item.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -769,11 +770,11 @@ export default function SoldTicketsPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-2 border-t">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-2 border-t border-orange-500/20">
                 <Button
                   variant="outline"
                   onClick={() => setCustomerDetailPopup(null)}
-                  className="order-2 sm:order-1"
+                  className="order-2 sm:order-1 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   Close
                 </Button>
@@ -783,7 +784,7 @@ export default function SoldTicketsPage() {
                     setCustomerDetailPopup(null);
                   }}
                   disabled={!!resendingId}
-                  className="bg-gray-900 hover:bg-gray-800 text-white order-1 sm:order-2"
+                  className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold order-1 sm:order-2"
                 >
                   {resendingId ? (
                     <>
@@ -803,37 +804,37 @@ export default function SoldTicketsPage() {
 
       {/* Custom Email Dialog (Group) */}
       {showCustomEmailGroupDialog && customEmailGroup && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-zinc-950 border-2 border-orange-500/50 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Send Custom Email to All</h2>
+                <h2 className="text-2xl font-black text-orange-500">Send Custom Email to All</h2>
                 <button
                   onClick={() => {
                     setShowCustomEmailGroupDialog(false);
                     setCustomEmailText('');
                     setCustomEmailGroup(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-orange-100/50 hover:text-orange-500"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <p className="text-gray-600 mb-2">
-                This will send a custom email to <strong>{customEmailGroup.items?.length || 0}</strong> booking(s) for:
+              <p className="text-orange-100/70 mb-2">
+                This will send a custom email to <strong className="text-orange-500">{customEmailGroup.items?.length || 0}</strong> booking(s) for:
               </p>
-              <div className="bg-gray-100 border border-gray-300 rounded p-3 mb-4">
-                <div className="font-semibold text-gray-900">{customEmailGroup.ticketName}</div>
-                <div className="text-sm text-gray-600">{customEmailGroup.eventTitle}</div>
+              <div className="bg-black/60 border border-orange-500/30 rounded p-3 mb-4">
+                <div className="font-semibold text-orange-100">{customEmailGroup.ticketName}</div>
+                <div className="text-sm text-orange-100/70">{customEmailGroup.eventTitle}</div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-orange-100/70 mb-2">
                   Custom Message
                 </label>
                 <textarea
                   value={customEmailText}
                   onChange={(e) => setCustomEmailText(e.target.value)}
-                  className="w-full h-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full h-40 px-3 py-2 border-2 border-orange-500/30 bg-black/60 text-orange-100 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder:text-orange-100/40"
                   placeholder="Enter your custom message here..."
                 />
               </div>
@@ -846,13 +847,14 @@ export default function SoldTicketsPage() {
                     setCustomEmailGroup(null);
                   }}
                   disabled={sendingCustomEmail}
+                  className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={sendCustomEmailToGroup}
                   disabled={!customEmailText.trim() || sendingCustomEmail}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                 >
                   {sendingCustomEmail ? (
                     <>

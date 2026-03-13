@@ -40,7 +40,7 @@ export default function SoldTicketsPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [includePastEvents, setIncludePastEvents] = useState(false);
-  const [groupByEmail, setGroupByEmail] = useState(false);
+  const [groupByEmail, setGroupByEmail] = useState(true);
 
   // Custom email states
   const [showCustomEmailDialog, setShowCustomEmailDialog] = useState(false);
@@ -49,6 +49,18 @@ export default function SoldTicketsPage() {
   const [customEmailBookingId, setCustomEmailBookingId] = useState<string | null>(null);
   const [customEmailGroup, setCustomEmailGroup] = useState<TicketGroup | null>(null);
   const [sendingCustomEmail, setSendingCustomEmail] = useState(false);
+
+  // Customer detail popup state
+  const [customerDetailPopup, setCustomerDetailPopup] = useState<{
+    name: string;
+    email: string;
+    tickets: number;
+    spent: number;
+    items: TicketItem[];
+    eventTitle: string;
+    eventDate: string | null;
+    ticketName: string;
+  } | null>(null);
 
   const fetchSales = async () => {
     try {
@@ -98,6 +110,23 @@ export default function SoldTicketsPage() {
       return () => clearTimeout(t);
     }
   }, [message]);
+
+  const resendForCustomer = async (items: TicketItem[]) => {
+    try {
+      const ids = Array.from(new Set(items.map((t) => t.bookingId)));
+      setMessage(`Resending tickets for ${ids.length} booking(s)...`);
+      for (const id of ids) {
+        setResendingId(id);
+        const res = await fetch(`/api/admin/bookings/${id}/resend`, { method: 'POST' });
+        try { await res.json(); } catch { }
+      }
+      setMessage(`Resend complete for ${ids.length} booking(s).`);
+    } catch (e: any) {
+      setMessage(e.message || 'Resend failed');
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   const resend = async (bookingId: string) => {
     try {
@@ -407,7 +436,16 @@ export default function SoldTicketsPage() {
                                   </thead>
                                   <tbody>
                                     {emailGroups.map((eg) => (
-                                      <tr key={eg.email} className="border-b hover:bg-gray-50">
+                                      <tr
+                                        key={eg.email}
+                                        className="border-b hover:bg-blue-50 cursor-pointer transition-colors"
+                                        onClick={() => setCustomerDetailPopup({
+                                          ...eg,
+                                          eventTitle: g.eventTitle,
+                                          eventDate: g.eventDate,
+                                          ticketName: g.ticketName,
+                                        })}
+                                      >
                                         <td className="p-2 font-medium">{eg.name}</td>
                                         <td className="p-2">{eg.email}</td>
                                         <td className="p-2">
@@ -420,57 +458,57 @@ export default function SoldTicketsPage() {
                                 </table>
                               );
                             })() : (
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b">
-                                  <th className="text-left p-2">Booking Ref</th>
-                                  <th className="text-left p-2">Customer</th>
-                                  <th className="text-left p-2">Email</th>
-                                  <th className="text-left p-2">Price</th>
-                                  <th className="text-left p-2">Sold at</th>
-                                  <th className="text-left p-2">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {(g.items || []).map((t) => (
-                                  <tr key={`${t.bookingId}:${t.ticketId}`} className="border-b hover:bg-gray-50">
-                                    <td className="p-2">{t.bookingReference}</td>
-                                    <td className="p-2">{t.customerName || '—'}</td>
-                                    <td className="p-2">{t.customerEmail || '—'}</td>
-                                    <td className="p-2">{formatCurrency(t.ticketPrice)}</td>
-                                    <td className="p-2">{formatDateTime(t.createdAt)}</td>
-                                    <td className="p-2">
-                                      <div className="flex gap-2">
-                                        <Button
-                                          onClick={() => resend(t.bookingId)}
-                                          size="sm"
-                                          variant="outline"
-                                          className="text-blue-700 border-blue-700 hover:bg-blue-50"
-                                          disabled={resendingId === t.bookingId}
-                                        >
-                                          {resendingId === t.bookingId ? (
-                                            <RefreshCw className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <>
-                                              <Mail className="h-4 w-4 mr-1" /> Resend
-                                            </>
-                                          )}
-                                        </Button>
-                                        <Button
-                                          onClick={() => openCustomEmailDialog(t.bookingId)}
-                                          size="sm"
-                                          variant="outline"
-                                          className="text-purple-700 border-purple-700 hover:bg-purple-50"
-                                          disabled={!!resendingId || sendingCustomEmail}
-                                        >
-                                          <Mail className="h-4 w-4 mr-1" /> Send Custom
-                                        </Button>
-                                      </div>
-                                    </td>
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b">
+                                    <th className="text-left p-2">Booking Ref</th>
+                                    <th className="text-left p-2">Customer</th>
+                                    <th className="text-left p-2">Email</th>
+                                    <th className="text-left p-2">Price</th>
+                                    <th className="text-left p-2">Sold at</th>
+                                    <th className="text-left p-2">Actions</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {(g.items || []).map((t) => (
+                                    <tr key={`${t.bookingId}:${t.ticketId}`} className="border-b hover:bg-gray-50">
+                                      <td className="p-2">{t.bookingReference}</td>
+                                      <td className="p-2">{t.customerName || '—'}</td>
+                                      <td className="p-2">{t.customerEmail || '—'}</td>
+                                      <td className="p-2">{formatCurrency(t.ticketPrice)}</td>
+                                      <td className="p-2">{formatDateTime(t.createdAt)}</td>
+                                      <td className="p-2">
+                                        <div className="flex gap-2">
+                                          <Button
+                                            onClick={() => resend(t.bookingId)}
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-blue-700 border-blue-700 hover:bg-blue-50"
+                                            disabled={resendingId === t.bookingId}
+                                          >
+                                            {resendingId === t.bookingId ? (
+                                              <RefreshCw className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                              <>
+                                                <Mail className="h-4 w-4 mr-1" /> Resend
+                                              </>
+                                            )}
+                                          </Button>
+                                          <Button
+                                            onClick={() => openCustomEmailDialog(t.bookingId)}
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-purple-700 border-purple-700 hover:bg-purple-50"
+                                            disabled={!!resendingId || sendingCustomEmail}
+                                          >
+                                            <Mail className="h-4 w-4 mr-1" /> Send Custom
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             )}
                           </div>
                         </div>
@@ -539,6 +577,116 @@ export default function SoldTicketsPage() {
                     ) : (
                       <>
                         <Mail className="h-4 w-4 mr-2" /> Send Email
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Customer Detail Popup */}
+        {customerDetailPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">Customer Booking Details</h2>
+                  <button
+                    onClick={() => setCustomerDetailPopup(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+
+                {/* Customer Info */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Customer</div>
+                      <div className="font-semibold text-gray-900">{customerDetailPopup.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Email</div>
+                      <div className="font-semibold text-gray-900">{customerDetailPopup.email}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Event</div>
+                      <div className="font-semibold text-gray-900">{customerDetailPopup.eventTitle}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Event Date</div>
+                      <div className="font-semibold text-gray-900">{formatDateTime(customerDetailPopup.eventDate)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="flex gap-4 mb-4">
+                  <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-blue-800">{customerDetailPopup.tickets}</div>
+                    <div className="text-sm text-blue-600">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''} Purchased</div>
+                  </div>
+                  <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-green-800">{formatCurrency(customerDetailPopup.spent)}</div>
+                    <div className="text-sm text-green-600">Total Spent</div>
+                  </div>
+                  <div className="flex-1 bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-purple-800">{customerDetailPopup.ticketName}</div>
+                    <div className="text-sm text-purple-600">Ticket Type</div>
+                  </div>
+                </div>
+
+                {/* Individual Tickets */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Booking Details</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-gray-50">
+                          <th className="text-left p-2">Booking Ref</th>
+                          <th className="text-left p-2">Price</th>
+                          <th className="text-left p-2">Purchased At</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customerDetailPopup.items.map((item, i) => (
+                          <tr key={i} className="border-b hover:bg-gray-50">
+                            <td className="p-2 font-mono text-xs">{item.bookingReference}</td>
+                            <td className="p-2">{formatCurrency(item.ticketPrice)}</td>
+                            <td className="p-2">{formatDateTime(item.createdAt)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3 pt-2 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCustomerDetailPopup(null)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      resendForCustomer(customerDetailPopup.items);
+                      setCustomerDetailPopup(null);
+                    }}
+                    disabled={!!resendingId}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {resendingId ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Resending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4 mr-2" /> Resend Tickets to {customerDetailPopup.email}
                       </>
                     )}
                   </Button>

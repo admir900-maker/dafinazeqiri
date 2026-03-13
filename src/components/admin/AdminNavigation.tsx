@@ -128,9 +128,9 @@ export function AdminNavigation() {
   const navContent = (
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-6 md:mb-8">
-        <h1 className="text-xl md:text-2xl font-bold drop-shadow-lg" style={{ background: 'linear-gradient(135deg, #cd7f32, #b4530a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Admin Panel</h1>
+        <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Admin Panel</h1>
         <button
-          className="md:hidden text-white/90 hover:text-white"
+          className="md:hidden text-orange-100/90 hover:text-orange-100"
           onClick={() => setMobileOpen(false)}
         >
           <X className="w-6 h-6" />
@@ -148,16 +148,16 @@ export function AdminNavigation() {
               onClick={() => setMobileOpen(false)}
               className={cn(
                 'group flex items-center gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-lg transition-all duration-200',
-                'hover:bg-white/10 hover:text-orange-200 hover:shadow-lg',
+                'hover:bg-orange-500/10 hover:text-orange-400',
                 isActive
-                  ? 'bg-white/10 text-orange-300 border border-orange-500/30 shadow-lg'
-                  : 'text-white/80 hover:text-orange-200'
+                  ? 'bg-orange-500/15 text-orange-500 border border-orange-500/40 shadow-lg shadow-orange-500/5'
+                  : 'text-orange-100/70 hover:text-orange-400'
               )}
             >
-              <Icon className="w-5 h-5 drop-shadow-sm flex-shrink-0" />
+              <Icon className="w-5 h-5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="font-medium drop-shadow-sm text-sm md:text-base">{item.label}</div>
-                <div className="text-xs text-white/70 group-hover:text-white/90 drop-shadow-sm hidden md:block">
+                <div className="font-medium text-sm md:text-base">{item.label}</div>
+                <div className="text-xs text-orange-100/40 group-hover:text-orange-100/60 hidden md:block">
                   {item.description}
                 </div>
               </div>
@@ -172,8 +172,7 @@ export function AdminNavigation() {
     <>
       {/* Mobile hamburger button */}
       <button
-        className="md:hidden fixed top-3 left-3 z-[60] backdrop-blur-sm text-white p-2 rounded-lg shadow-lg border-2 border-orange-500/60"
-        style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,15,0,0.95))' }}
+        className="md:hidden fixed top-3 left-3 z-[60] bg-black/90 border-2 border-orange-500/50 text-orange-500 p-2 rounded-lg shadow-lg"
         onClick={() => setMobileOpen(true)}
       >
         <Menu className="w-6 h-6" />
@@ -190,16 +189,15 @@ export function AdminNavigation() {
       {/* Mobile sliding sidebar */}
       <nav
         className={cn(
-          'md:hidden fixed top-0 left-0 h-full w-72 z-[80] backdrop-blur-xl shadow-2xl overflow-y-auto transition-transform duration-300 border-r border-orange-700/20',
+          'md:hidden fixed top-0 left-0 h-full w-72 z-[80] shadow-2xl overflow-y-auto transition-transform duration-300 border-r border-orange-500/20 bg-gradient-to-b from-black via-zinc-950 to-black',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
-        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(10,10,10,0.98) 50%, rgba(20,15,0,0.98) 100%)' }}
       >
         {navContent}
       </nav>
 
       {/* Desktop sidebar */}
-      <nav className="hidden md:block w-64 min-h-screen backdrop-blur-xl border-r border-orange-700/20 shadow-2xl flex-shrink-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(10,10,10,0.6) 50%, rgba(20,15,0,0.5) 100%)' }}>
+      <nav className="hidden md:block w-64 min-h-screen border-r border-orange-500/20 shadow-2xl flex-shrink-0 bg-gradient-to-b from-black via-zinc-950 to-black">
         {navContent}
       </nav>
     </>

@@ -231,7 +231,8 @@ export default function UserActivityPage() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">User Activity Logs</h1>
         </div>
@@ -248,7 +249,8 @@ export default function UserActivityPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">User Activity Logs</h1>
         <Card className="bg-black/60 border-2 border-orange-500/30">
           <CardContent className="p-8 text-center">
@@ -267,7 +269,8 @@ export default function UserActivityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>

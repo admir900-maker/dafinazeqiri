@@ -268,7 +268,8 @@ export default function EmailClientPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

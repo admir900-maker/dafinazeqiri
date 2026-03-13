@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -257,7 +257,8 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Analytics & Reports</h1>
           <div className="flex gap-2">
@@ -281,7 +282,8 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Analytics & Reports</h1>
         <Card className="bg-black/60 border-2 border-orange-500/30">
           <CardContent className="p-8 text-center">
@@ -300,7 +302,8 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -503,7 +506,7 @@ export default function AnalyticsPage() {
 
           {/* Tab Content */}
           {activeTab === 'overview' && (
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* Revenue & Bookings Trend Chart */}
               <Card className="bg-black/60 border-2 border-orange-500/30">
                 <CardHeader>
@@ -645,7 +648,7 @@ export default function AnalyticsPage() {
           )}
 
           {activeTab === 'revenue' && (
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* Revenue Analytics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-black/60 border-2 border-orange-500/30">
@@ -801,7 +804,7 @@ export default function AnalyticsPage() {
           )}
 
           {activeTab === 'events' && (
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* Event KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-black/60 border-2 border-orange-500/30">
@@ -913,7 +916,7 @@ export default function AnalyticsPage() {
           )}
 
           {activeTab === 'users' && (
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* User KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-black/60 border-2 border-orange-500/30">
@@ -1067,7 +1070,7 @@ export default function AnalyticsPage() {
           )}
 
           {activeTab === 'performance' && (
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* Performance Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-black/60 border-2 border-orange-500/30">
@@ -1269,7 +1272,7 @@ export default function AnalyticsPage() {
           )}
 
           {activeTab === 'trends' && (
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* Trend Analysis */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-black/60 border-2 border-orange-500/30">

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -243,7 +243,8 @@ export default function PaymentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="flex items-center justify-center min-h-96">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+      <div className="flex items-center justify-center min-h-96">
         <div className="flex items-center gap-2 text-orange-100">
           <RefreshCw className="w-5 h-5 animate-spin" />
           Loading payments...
@@ -254,7 +255,8 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Payments & Transactions</h1>
         <div className="flex gap-2">
@@ -509,7 +511,7 @@ export default function PaymentsPage() {
               </Button>
             </div>
 
-            <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
+            <div className="space-y-6">
               {/* Payment Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

@@ -297,6 +297,7 @@ export default function SoldTicketsPage() {
   })();
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
@@ -349,7 +350,7 @@ export default function SoldTicketsPage() {
                   type="checkbox"
                   checked={includePastEvents}
                   onChange={(e) => setIncludePastEvents(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                 />
                 Show past events
               </label>
@@ -358,7 +359,7 @@ export default function SoldTicketsPage() {
                   type="checkbox"
                   checked={groupByEmail}
                   onChange={(e) => setGroupByEmail(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                 />
                 Group by email
               </label>
@@ -618,6 +619,8 @@ export default function SoldTicketsPage() {
             )}
           </AdminCardContent>
         </AdminCard>
+      </div>
+    </div>
 
         {/* Custom Email Dialog (Single Booking) */}
         {showCustomEmailDialog && (
@@ -815,9 +818,9 @@ export default function SoldTicketsPage() {
                 <p className="text-gray-600 mb-2">
                   This will send a custom email to <strong>{customEmailGroup.items?.length || 0}</strong> booking(s) for:
                 </p>
-                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
-                  <div className="font-semibold text-blue-900">{customEmailGroup.ticketName}</div>
-                  <div className="text-sm text-blue-700">{customEmailGroup.eventTitle}</div>
+                <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+                  <div className="font-semibold text-amber-900">{customEmailGroup.ticketName}</div>
+                  <div className="text-sm text-amber-700">{customEmailGroup.eventTitle}</div>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -862,7 +865,6 @@ export default function SoldTicketsPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 }

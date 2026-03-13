@@ -25,6 +25,8 @@ interface TicketGroup {
   ticketName: string;
   count: number;
   revenue: number;
+  capacity: number | null;
+  availableTickets: number | null;
   items?: TicketItem[];
 }
 
@@ -267,6 +269,33 @@ export default function SoldTicketsPage() {
 
   const formatCurrency = (n: number) => `€${n.toFixed(2)}`;
 
+  // Compute event-level summary groups
+  interface EventSummary {
+    eventId: string;
+    eventTitle: string;
+    eventDate: string | null;
+    totalSold: number;
+    totalRevenue: number;
+    ticketTypes: { name: string; sold: number; capacity: number | null; available: number | null; revenue: number }[];
+    groups: TicketGroup[];
+  }
+
+  const eventSummaries: EventSummary[] = (() => {
+    const map = new Map<string, EventSummary>();
+    for (const g of groups) {
+      let ev = map.get(g.eventId);
+      if (!ev) {
+        ev = { eventId: g.eventId, eventTitle: g.eventTitle, eventDate: g.eventDate, totalSold: 0, totalRevenue: 0, ticketTypes: [], groups: [] };
+        map.set(g.eventId, ev);
+      }
+      ev.totalSold += g.count;
+      ev.totalRevenue += g.revenue;
+      ev.ticketTypes.push({ name: g.ticketName, sold: g.count, capacity: g.capacity, available: g.availableTickets, revenue: g.revenue });
+      ev.groups.push(g);
+    }
+    return Array.from(map.values());
+  })();
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -341,7 +370,7 @@ export default function SoldTicketsPage() {
           <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800">{message}</div>
         )}
 
-        {/* Groups */}
+        {/* Event Summaries & Groups */}
         <AdminCard>
           <AdminCardHeader>
             <AdminCardTitle>Ticket sales</AdminCardTitle>
@@ -349,168 +378,236 @@ export default function SoldTicketsPage() {
           <AdminCardContent>
             {loading ? (
               <div className="flex items-center justify-center py-10 text-gray-600">
-                <RefreshCw className="h-5 w-5 animate-spin mr-2 text-blue-600" /> Loading sold tickets...
+                <RefreshCw className="h-5 w-5 animate-spin mr-2 text-amber-700" /> Loading sold tickets...
               </div>
-            ) : groups.length === 0 ? (
+            ) : eventSummaries.length === 0 ? (
               <div className="py-10 text-center text-gray-600">No sold tickets found.</div>
             ) : (
-              <div className="space-y-2">
-                {groups.map((g) => {
-                  const key = `${g.eventId}:${g.ticketName}`;
-                  const isOpen = !!expanded[key];
+              <div className="space-y-4">
+                {eventSummaries.map((ev) => {
+                  const evKey = `event:${ev.eventId}`;
+                  const evOpen = !!expanded[evKey];
+                  const totalCapacity = ev.ticketTypes.reduce((sum, tt) => sum + (tt.capacity || 0), 0);
+                  const totalAvailable = ev.ticketTypes.reduce((sum, tt) => sum + (tt.available ?? 0), 0);
                   return (
-                    <div key={key} className="border rounded-md bg-white">
+                    <div key={evKey} className="border border-amber-200 rounded-lg overflow-hidden">
+                      {/* Event Master Header */}
                       <button
-                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
-                        onClick={() => setExpanded((prev) => ({ ...prev, [key]: !isOpen }))}
+                        className="w-full flex items-center justify-between px-5 py-4 text-left bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors"
+                        onClick={() => setExpanded((prev) => ({ ...prev, [evKey]: !evOpen }))}
                       >
-                        <div className="flex items-center gap-2">
-                          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        <div className="flex items-center gap-3">
+                          {evOpen ? <ChevronDown className="h-5 w-5 text-amber-700" /> : <ChevronRight className="h-5 w-5 text-amber-700" />}
                           <div>
-                            <div className="font-semibold text-gray-900">{g.ticketName}</div>
-                            <div className="text-sm text-gray-600">{g.eventTitle} · {formatDateTime(g.eventDate)}</div>
+                            <div className="text-lg font-bold text-gray-900">{ev.eventTitle}</div>
+                            <div className="text-sm text-gray-600">{formatDateTime(ev.eventDate)}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Badge className="bg-blue-100 text-blue-800 border-0">{g.count} sold</Badge>
-                          <div className="font-semibold">{formatCurrency(g.revenue)}</div>
-                          {g.items && g.items.length > 0 && (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-blue-700 border-blue-700 hover:bg-blue-50"
-                                onClick={(e) => { e.stopPropagation(); resendGroup(g); }}
-                                disabled={!!resendingId}
-                              >
-                                {resendingId ? (
-                                  <>
-                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Resending all
-                                  </>
-                                ) : (
-                                  <>
-                                    <Mail className="h-4 w-4 mr-2" /> Resend all
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-purple-700 border-purple-700 hover:bg-purple-50"
-                                onClick={(e) => { e.stopPropagation(); openCustomEmailGroupDialog(g); }}
-                                disabled={!!resendingId || sendingCustomEmail}
-                              >
-                                <Mail className="h-4 w-4 mr-2" /> Send Custom to All
-                              </Button>
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider">Sold</div>
+                            <div className="font-bold text-amber-800">{ev.totalSold}{totalCapacity > 0 ? ` / ${totalCapacity}` : ''}</div>
+                          </div>
+                          {totalCapacity > 0 && (
+                            <div className="text-right">
+                              <div className="text-xs text-gray-500 uppercase tracking-wider">Available</div>
+                              <div className="font-bold text-green-700">{totalAvailable}</div>
                             </div>
                           )}
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider">Revenue</div>
+                            <div className="font-bold text-gray-900">{formatCurrency(ev.totalRevenue)}</div>
+                          </div>
                         </div>
                       </button>
 
-                      {isOpen && (
-                        <div className="px-4 pb-4">
-                          <div className="overflow-x-auto">
-                            {groupByEmail ? (() => {
-                              // Group items by email
-                              const emailMap = new Map<string, { name: string; email: string; tickets: number; spent: number; items: TicketItem[] }>();
-                              for (const item of g.items || []) {
-                                const email = (item.customerEmail || 'unknown').toLowerCase();
-                                let entry = emailMap.get(email);
-                                if (!entry) {
-                                  entry = { name: item.customerName || '—', email, tickets: 0, spent: 0, items: [] };
-                                  emailMap.set(email, entry);
-                                }
-                                entry.tickets += 1;
-                                entry.spent += item.ticketPrice;
-                                entry.items.push(item);
-                              }
-                              const emailGroups = Array.from(emailMap.values()).sort((a, b) => b.spent - a.spent);
+                      {/* Ticket Type Summary Bar */}
+                      <div className="px-5 py-2 bg-white border-t border-amber-100 flex flex-wrap gap-3">
+                        {ev.ticketTypes.map((tt) => (
+                          <div key={tt.name} className="flex items-center gap-1.5 text-sm">
+                            <span className="font-medium text-gray-700">{tt.name}:</span>
+                            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.sold} sold</span>
+                            {tt.capacity != null && (
+                              <span className="text-gray-400 text-xs">/ {tt.capacity}</span>
+                            )}
+                            {tt.available != null && tt.available > 0 && (
+                              <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">{tt.available} left</span>
+                            )}
+                            {tt.available != null && tt.available === 0 && (
+                              <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Sold out</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Expanded: Individual Ticket Type Groups */}
+                      {evOpen && (
+                        <div className="border-t border-amber-100 bg-white">
+                          <div className="space-y-2 p-4">
+                            {ev.groups.map((g) => {
+                              const key = `${g.eventId}:${g.ticketName}`;
+                              const isOpen = !!expanded[key];
                               return (
-                                <table className="w-full text-sm">
-                                  <thead>
-                                    <tr className="border-b">
-                                      <th className="text-left p-2">Customer</th>
-                                      <th className="text-left p-2">Email</th>
-                                      <th className="text-left p-2">Tickets</th>
-                                      <th className="text-left p-2">Total Spent</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {emailGroups.map((eg) => (
-                                      <tr
-                                        key={eg.email}
-                                        className="border-b hover:bg-blue-50 cursor-pointer transition-colors"
-                                        onClick={() => setCustomerDetailPopup({
-                                          ...eg,
-                                          eventTitle: g.eventTitle,
-                                          eventDate: g.eventDate,
-                                          ticketName: g.ticketName,
-                                        })}
-                                      >
-                                        <td className="p-2 font-medium">{eg.name}</td>
-                                        <td className="p-2">{eg.email}</td>
-                                        <td className="p-2">
-                                          <Badge className="bg-blue-100 text-blue-800 border-0">{eg.tickets}</Badge>
-                                        </td>
-                                        <td className="p-2 font-semibold">{formatCurrency(eg.spent)}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              );
-                            })() : (
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="border-b">
-                                    <th className="text-left p-2">Booking Ref</th>
-                                    <th className="text-left p-2">Customer</th>
-                                    <th className="text-left p-2">Email</th>
-                                    <th className="text-left p-2">Price</th>
-                                    <th className="text-left p-2">Sold at</th>
-                                    <th className="text-left p-2">Actions</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {(g.items || []).map((t) => (
-                                    <tr key={`${t.bookingId}:${t.ticketId}`} className="border-b hover:bg-gray-50">
-                                      <td className="p-2">{t.bookingReference}</td>
-                                      <td className="p-2">{t.customerName || '—'}</td>
-                                      <td className="p-2">{t.customerEmail || '—'}</td>
-                                      <td className="p-2">{formatCurrency(t.ticketPrice)}</td>
-                                      <td className="p-2">{formatDateTime(t.createdAt)}</td>
-                                      <td className="p-2">
+                                <div key={key} className="border border-gray-200 rounded-md bg-white">
+                                  <button
+                                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                                    onClick={() => setExpanded((prev) => ({ ...prev, [key]: !isOpen }))}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {isOpen ? <ChevronDown className="h-4 w-4 text-amber-600" /> : <ChevronRight className="h-4 w-4 text-amber-600" />}
+                                      <div>
+                                        <div className="font-semibold text-gray-900">{g.ticketName}</div>
+                                        <div className="text-sm text-gray-500">
+                                          {g.capacity != null && <span>{g.count} / {g.capacity} sold</span>}
+                                          {g.availableTickets != null && <span> &middot; {g.availableTickets} remaining</span>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <Badge className="bg-amber-100 text-amber-800 border-0">{g.count} sold</Badge>
+                                      <div className="font-semibold">{formatCurrency(g.revenue)}</div>
+                                      {g.items && g.items.length > 0 && (
                                         <div className="flex gap-2">
                                           <Button
-                                            onClick={() => resend(t.bookingId)}
                                             size="sm"
                                             variant="outline"
-                                            className="text-blue-700 border-blue-700 hover:bg-blue-50"
-                                            disabled={resendingId === t.bookingId}
+                                            className="text-amber-700 border-amber-700 hover:bg-amber-50"
+                                            onClick={(e) => { e.stopPropagation(); resendGroup(g); }}
+                                            disabled={!!resendingId}
                                           >
-                                            {resendingId === t.bookingId ? (
-                                              <RefreshCw className="h-4 w-4 animate-spin" />
+                                            {resendingId ? (
+                                              <>
+                                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Resending all
+                                              </>
                                             ) : (
                                               <>
-                                                <Mail className="h-4 w-4 mr-1" /> Resend
+                                                <Mail className="h-4 w-4 mr-2" /> Resend all
                                               </>
                                             )}
                                           </Button>
                                           <Button
-                                            onClick={() => openCustomEmailDialog(t.bookingId)}
                                             size="sm"
                                             variant="outline"
                                             className="text-purple-700 border-purple-700 hover:bg-purple-50"
+                                            onClick={(e) => { e.stopPropagation(); openCustomEmailGroupDialog(g); }}
                                             disabled={!!resendingId || sendingCustomEmail}
                                           >
-                                            <Mail className="h-4 w-4 mr-1" /> Send Custom
+                                            <Mail className="h-4 w-4 mr-2" /> Send Custom to All
                                           </Button>
                                         </div>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            )}
+                                      )}
+                                    </div>
+                                  </button>
+
+                                  {isOpen && (
+                                    <div className="px-4 pb-4">
+                                      <div className="overflow-x-auto">
+                                        {groupByEmail ? (() => {
+                                          const emailMap = new Map<string, { name: string; email: string; tickets: number; spent: number; items: TicketItem[] }>();
+                                          for (const item of g.items || []) {
+                                            const email = (item.customerEmail || 'unknown').toLowerCase();
+                                            let entry = emailMap.get(email);
+                                            if (!entry) {
+                                              entry = { name: item.customerName || '\u2014', email, tickets: 0, spent: 0, items: [] };
+                                              emailMap.set(email, entry);
+                                            }
+                                            entry.tickets += 1;
+                                            entry.spent += item.ticketPrice;
+                                            entry.items.push(item);
+                                          }
+                                          const emailGroups = Array.from(emailMap.values()).sort((a, b) => b.spent - a.spent);
+                                          return (
+                                            <table className="w-full text-sm">
+                                              <thead>
+                                                <tr className="border-b">
+                                                  <th className="text-left p-2">Customer</th>
+                                                  <th className="text-left p-2">Email</th>
+                                                  <th className="text-left p-2">Tickets</th>
+                                                  <th className="text-left p-2">Total Spent</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {emailGroups.map((eg) => (
+                                                  <tr
+                                                    key={eg.email}
+                                                    className="border-b hover:bg-amber-50 cursor-pointer transition-colors"
+                                                    onClick={() => setCustomerDetailPopup({
+                                                      ...eg,
+                                                      eventTitle: g.eventTitle,
+                                                      eventDate: g.eventDate,
+                                                      ticketName: g.ticketName,
+                                                    })}
+                                                  >
+                                                    <td className="p-2 font-medium">{eg.name}</td>
+                                                    <td className="p-2">{eg.email}</td>
+                                                    <td className="p-2">
+                                                      <Badge className="bg-amber-100 text-amber-800 border-0">{eg.tickets}</Badge>
+                                                    </td>
+                                                    <td className="p-2 font-semibold">{formatCurrency(eg.spent)}</td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          );
+                                        })() : (
+                                          <table className="w-full text-sm">
+                                            <thead>
+                                              <tr className="border-b">
+                                                <th className="text-left p-2">Booking Ref</th>
+                                                <th className="text-left p-2">Customer</th>
+                                                <th className="text-left p-2">Email</th>
+                                                <th className="text-left p-2">Price</th>
+                                                <th className="text-left p-2">Sold at</th>
+                                                <th className="text-left p-2">Actions</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {(g.items || []).map((t) => (
+                                                <tr key={`${t.bookingId}:${t.ticketId}`} className="border-b hover:bg-gray-50">
+                                                  <td className="p-2">{t.bookingReference}</td>
+                                                  <td className="p-2">{t.customerName || '\u2014'}</td>
+                                                  <td className="p-2">{t.customerEmail || '\u2014'}</td>
+                                                  <td className="p-2">{formatCurrency(t.ticketPrice)}</td>
+                                                  <td className="p-2">{formatDateTime(t.createdAt)}</td>
+                                                  <td className="p-2">
+                                                    <div className="flex gap-2">
+                                                      <Button
+                                                        onClick={() => resend(t.bookingId)}
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="text-amber-700 border-amber-700 hover:bg-amber-50"
+                                                        disabled={resendingId === t.bookingId}
+                                                      >
+                                                        {resendingId === t.bookingId ? (
+                                                          <RefreshCw className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                          <>
+                                                            <Mail className="h-4 w-4 mr-1" /> Resend
+                                                          </>
+                                                        )}
+                                                      </Button>
+                                                      <Button
+                                                        onClick={() => openCustomEmailDialog(t.bookingId)}
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="text-purple-700 border-purple-700 hover:bg-purple-50"
+                                                        disabled={!!resendingId || sendingCustomEmail}
+                                                      >
+                                                        <Mail className="h-4 w-4 mr-1" /> Send Custom
+                                                      </Button>
+                                                    </div>
+                                                  </td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -626,9 +723,9 @@ export default function SoldTicketsPage() {
 
                 {/* Summary */}
                 <div className="flex gap-4 mb-4">
-                  <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold text-blue-800">{customerDetailPopup.tickets}</div>
-                    <div className="text-sm text-blue-600">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''} Purchased</div>
+                  <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-amber-800">{customerDetailPopup.tickets}</div>
+                    <div className="text-sm text-amber-600">Ticket{customerDetailPopup.tickets !== 1 ? 's' : ''} Purchased</div>
                   </div>
                   <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-green-800">{formatCurrency(customerDetailPopup.spent)}</div>
@@ -679,7 +776,7 @@ export default function SoldTicketsPage() {
                       setCustomerDetailPopup(null);
                     }}
                     disabled={!!resendingId}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
                   >
                     {resendingId ? (
                       <>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import Event from '@/models/Event';
 import mongoose from 'mongoose';
 
 // GET /api/admin/tickets/sales
@@ -81,6 +82,7 @@ export async function GET(request: NextRequest) {
           _id: { eventId: '$eventId', ticketName: '$ticketName' },
           eventTitle: { $first: '$event.title' },
           eventDate: { $first: '$event.date' },
+          eventTicketTypes: { $first: '$event.ticketTypes' },
           count: { $sum: 1 },
           revenue: { $sum: '$ticketPrice' },
           items: includeDetails
@@ -116,6 +118,7 @@ export async function GET(request: NextRequest) {
         $project: {
           eventTitle: 1,
           eventDate: 1,
+          eventTicketTypes: 1,
           count: 1,
           revenue: 1,
           items: { $slice: ['$items', perGroupLimit] },
@@ -138,15 +141,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       totals,
-      groups: groups.map((g: any) => ({
-        eventId: g._id.eventId,
-        ticketName: g._id.ticketName,
-        eventTitle: g.eventTitle || 'Unknown Event',
-        eventDate: g.eventDate || null,
-        count: g.count,
-        revenue: g.revenue,
-        items: includeDetails ? g.items : undefined,
-      })),
+      groups: groups.map((g: any) => {
+        // Find matching ticket type for capacity info
+        const ticketType = g.eventTicketTypes?.find((tt: any) => tt.name === g._id.ticketName);
+        return {
+          eventId: g._id.eventId,
+          ticketName: g._id.ticketName,
+          eventTitle: g.eventTitle || 'Unknown Event',
+          eventDate: g.eventDate || null,
+          count: g.count,
+          revenue: g.revenue,
+          capacity: ticketType?.capacity || null,
+          availableTickets: ticketType?.availableTickets ?? null,
+          items: includeDetails ? g.items : undefined,
+        };
+      }),
     });
   } catch (error: any) {
     console.error('Tickets sales GET error:', error);

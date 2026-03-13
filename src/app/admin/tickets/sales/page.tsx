@@ -291,7 +291,8 @@ export default function SoldTicketsPage() {
       }
       ev.totalSold += g.count;
       ev.totalRevenue += g.revenue;
-      ev.ticketTypes.push({ name: g.ticketName, sold: g.count, capacity: g.capacity, available: g.availableTickets, revenue: g.revenue });
+      const computedAvailable = g.capacity != null ? g.capacity - g.count : null;
+      ev.ticketTypes.push({ name: g.ticketName, sold: g.count, capacity: g.capacity, available: computedAvailable, revenue: g.revenue });
       ev.groups.push(g);
     }
     return Array.from(map.values());
@@ -686,7 +687,7 @@ export default function SoldTicketsPage() {
             </div>
           </div>
         </div>
-      , document.body)}
+        , document.body)}
 
       {/* Customer Detail Popup */}
       {customerDetailPopup && createPortal(
@@ -796,7 +797,7 @@ export default function SoldTicketsPage() {
             </div>
           </div>
         </div>
-      , document.body)}
+        , document.body)}
 
       {/* Custom Email Dialog (Group) */}
       {showCustomEmailGroupDialog && customEmailGroup && createPortal(
@@ -865,7 +866,7 @@ export default function SoldTicketsPage() {
             </div>
           </div>
         </div>
-      , document.body)}
+        , document.body)}
     </>
   );
 }

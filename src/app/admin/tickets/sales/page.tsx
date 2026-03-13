@@ -39,6 +39,7 @@ export default function SoldTicketsPage() {
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [includePastEvents, setIncludePastEvents] = useState(false);
   
   // Custom email states
   const [showCustomEmailDialog, setShowCustomEmailDialog] = useState(false);
@@ -53,6 +54,7 @@ export default function SoldTicketsPage() {
       setLoading(true);
       const params = new URLSearchParams();
       if (eventId) params.append('eventId', eventId);
+      if (includePastEvents) params.append('includePastEvents', 'true');
       if (startDate) {
         // Start of day local to ISO
         const start = new Date(startDate + 'T00:00:00');
@@ -87,7 +89,7 @@ export default function SoldTicketsPage() {
 
   useEffect(() => {
     if (isLoaded && user) fetchSales();
-  }, [isLoaded, user, eventId]);
+  }, [isLoaded, user, eventId, includePastEvents]);
 
   useEffect(() => {
     if (message) {
@@ -277,9 +279,20 @@ export default function SoldTicketsPage() {
                     </>
                   )}
                 </Button>
-                <Button variant="outline" onClick={() => { setSearch(''); setEventId(''); setStartDate(''); setEndDate(''); fetchSales(); }}>Clear</Button>
+                <Button variant="outline" onClick={() => { setSearch(''); setEventId(''); setStartDate(''); setEndDate(''); setIncludePastEvents(false); fetchSales(); }}>Clear</Button>
                 <Button onClick={exportCSV}>Export CSV</Button>
               </div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={includePastEvents}
+                  onChange={(e) => setIncludePastEvents(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                Show past events
+              </label>
             </div>
           </AdminCardContent>
         </AdminCard>

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const startDate = search.get('startDate');
     const endDate = search.get('endDate');
     const includeDetails = (search.get('includeDetails') || 'true') === 'true';
+    const includePastEvents = search.get('includePastEvents') === 'true';
     const perGroupLimit = Math.max(1, Math.min(parseInt(search.get('perGroupLimit') || '25', 10) || 25, 200));
 
     const match: any = {
@@ -99,6 +100,18 @@ export async function GET(request: NextRequest) {
       },
       { $sort: { 'eventDate': -1, 'eventTitle': 1, '_id.ticketName': 1 } },
     ];
+
+    // Filter out past events by default unless explicitly requested or filtering by specific eventId
+    if (!includePastEvents && !eventId) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { eventDate: { $gte: new Date() } },
+            { eventDate: null },
+          ],
+        },
+      });
+    }
 
     if (includeDetails) {
       // Limit number of items per group to keep payload reasonable

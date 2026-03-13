@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,8 +11,6 @@ import {
   Settings,
   BarChart3,
   CreditCard,
-  Database,
-  Bell,
   Tag,
   BookOpen,
   CheckCircle,
@@ -26,16 +23,6 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   description: string;
-}
-
-interface SiteConfig {
-  siteName: string;
-  siteDescription: string;
-  siteUrl: string;
-  currency: string;
-  timezone: string;
-  logoUrl: string;
-  faviconUrl: string;
 }
 
 const adminNavItems: NavItem[] = [
@@ -168,46 +155,5 @@ export function AdminNavigation() {
         </div>
       </div>
     </nav>
-  );
-}
-
-export function AdminHeader() {
-  const [siteConfig, setSiteConfig] = useState<SiteConfig>({
-    siteName: 'SUPERNOVA', // fallback
-    siteDescription: '',
-    siteUrl: '',
-    currency: 'EUR',
-    timezone: 'UTC',
-    logoUrl: '',
-    faviconUrl: ''
-  })
-
-  // Fetch site configuration
-  useEffect(() => {
-    const fetchSiteConfig = async () => {
-      try {
-        const response = await fetch('/api/site-config')
-        if (response.ok) {
-          const config = await response.json()
-          setSiteConfig(config)
-        }
-      } catch (error) {
-        console.error('Failed to fetch site config:', error)
-      }
-    }
-
-    fetchSiteConfig()
-  }, [])
-
-  return (
-    <header className="bg-white/20 backdrop-blur-xl border-b border-white/30 px-6 py-4 shadow-lg">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white drop-shadow-lg">{siteConfig.siteName} Admin</h2>
-        <div className="flex items-center gap-4">
-          <Bell className="w-5 h-5 text-white/90 hover:text-white cursor-pointer transition-colors drop-shadow-sm" />
-          <div className="w-8 h-8 bg-white/30 rounded-full border border-white/40 shadow-lg backdrop-blur-sm"></div>
-        </div>
-      </div>
-    </header>
   );
 }

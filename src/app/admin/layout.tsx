@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen main-background flex -mt-16">
+    <div className="min-h-screen main-background flex">
       <AdminNavigation />
       <main className="flex-1 p-2 md:p-6 main-content overflow-auto w-full">
         <div className="admin-content p-3 md:p-6 min-h-full">

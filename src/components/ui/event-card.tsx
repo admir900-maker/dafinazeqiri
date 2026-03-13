@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Calendar, MapPin, Play, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -64,6 +64,70 @@ const formatTime = (timeString: string) => {
     minute: '2-digit',
     hour12: false
   })
+}
+
+// Countdown timer component
+function EventCountdown({ eventDate, eventTime }: { eventDate: string; eventTime: string }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const calculate = () => {
+      const target = new Date(`${eventDate.split('T')[0]}T${eventTime || '00:00'}`)
+      const now = new Date()
+      const diff = target.getTime() - now.getTime()
+      if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+      return {
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      }
+    }
+    setTimeLeft(calculate())
+    const timer = setInterval(() => setTimeLeft(calculate()), 1000)
+    return () => clearInterval(timer)
+  }, [eventDate, eventTime])
+
+  if (!mounted) return null
+
+  const units = [
+    { label: 'DAYS', value: timeLeft.days },
+    { label: 'HRS', value: timeLeft.hours },
+    { label: 'MIN', value: timeLeft.minutes },
+    { label: 'SEC', value: timeLeft.seconds },
+  ]
+
+  const isExpired = units.every(u => u.value === 0)
+  if (isExpired) return null
+
+  return (
+    <div className="flex items-center justify-center gap-2 sm:gap-3 py-3 px-4 bg-gradient-to-r from-zinc-950 via-black to-zinc-950 border-t border-b border-orange-500/20">
+      <div className="text-[9px] font-bold text-orange-500/60 uppercase tracking-[0.2em] mr-1 hidden sm:block">Live in</div>
+      {units.map((unit, i) => (
+        <div key={unit.label} className="flex items-center gap-2 sm:gap-3">
+          <div className="relative group/cd">
+            <div className="absolute -inset-1 bg-gradient-to-br from-orange-500/30 to-amber-900/30 rounded-xl blur-md opacity-60" />
+            <div className="relative bg-gradient-to-br from-zinc-900 to-black border border-orange-500/30 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 min-w-[44px] sm:min-w-[52px] text-center shadow-lg">
+              <div className="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-b from-orange-300 to-orange-500 leading-none tabular-nums">
+                {String(unit.value).padStart(2, '0')}
+              </div>
+              <div className="text-[7px] sm:text-[8px] font-bold text-orange-500/50 uppercase tracking-[0.15em] mt-0.5">
+                {unit.label}
+              </div>
+            </div>
+          </div>
+          {i < units.length - 1 && (
+            <div className="flex flex-col gap-1">
+              <div className="w-1 h-1 rounded-full bg-orange-500/60 animate-pulse" />
+              <div className="w-1 h-1 rounded-full bg-orange-500/40 animate-pulse" style={{ animationDelay: '0.5s' }} />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export const EventCard = memo(function EventCard({ event, variant = 'default' }: EventCardProps) {
@@ -248,6 +312,9 @@ export const EventCard = memo(function EventCard({ event, variant = 'default' }:
               </div>
             </div>
           </div>
+
+          {/* Countdown Timer */}
+          <EventCountdown eventDate={event.date} eventTime={event.time} />
 
           {/* Content Section - Compact & Clean */}
           <CardContent className="p-8 space-y-6 bg-gradient-to-br from-zinc-950 via-black to-zinc-950">

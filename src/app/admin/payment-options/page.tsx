@@ -306,38 +306,40 @@ export default function PaymentOptionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8"><div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payment Options</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Payment Options</h1>
+          <p className="text-orange-100/70 mt-1">
             Configure and manage payment methods for your platform
           </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
           <Plus className="w-4 h-4" />
           Add Payment Option
         </Button>
       </div>
 
       {/* Filters and Search */}
-      <Card className="p-4">
+      <Card className="p-4 bg-black/60 border-2 border-orange-500/30">
         <div className="flex gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-1 min-w-64">
-            <Search className="w-4 h-4 text-gray-400" />
+            <Search className="w-4 h-4 text-orange-500/50" />
             <Input
               placeholder="Search payment options..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="border-0 focus:ring-0 focus:border-0"
+              className="border-0 focus:ring-0 focus:border-0 bg-transparent text-orange-100 placeholder:text-orange-100/40"
             />
           </div>
 
@@ -385,7 +387,7 @@ export default function PaymentOptionsPage() {
               size="sm"
               variant="outline"
               onClick={() => handleBulkAction('delete')}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-400 hover:text-red-300"
             >
               Delete
             </Button>
@@ -396,7 +398,7 @@ export default function PaymentOptionsPage() {
       {/* Payment Options List */}
       <div className="space-y-4">
         {filteredOptions.map((option) => (
-          <Card key={option._id} className="p-6">
+          <Card key={option._id} className="p-6 bg-black/60 border-2 border-orange-500/30">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
                 <input
@@ -433,7 +435,7 @@ export default function PaymentOptionsPage() {
                     </Badge>
                   </div>
 
-                  <div className="text-sm text-gray-600 space-y-1">
+                  <div className="text-sm text-orange-100/50 space-y-1">
                     <p><strong>Provider:</strong> {option.provider}</p>
                     <p><strong>Type:</strong> {PAYMENT_TYPES.find(t => t.value === option.type)?.label}</p>
                     <p><strong>Currencies:</strong> {option.supportedCurrencies.join(', ')}</p>
@@ -464,7 +466,7 @@ export default function PaymentOptionsPage() {
                     </Button>
 
                     {showConfig[option._id] && (
-                      <div className="mt-2 p-3 bg-gray-50 rounded text-xs space-y-1">
+                      <div className="mt-2 p-3 bg-black/40 rounded border border-orange-500/20 text-xs space-y-1">
                         {option.configuration.minAmount !== undefined && (
                           <p><strong>Min Amount:</strong> {option.configuration.minAmount} {option.configuration.currency}</p>
                         )}
@@ -495,7 +497,7 @@ export default function PaymentOptionsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDelete(option._id)}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-400 hover:text-red-300"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -505,8 +507,8 @@ export default function PaymentOptionsPage() {
         ))}
 
         {filteredOptions.length === 0 && (
-          <Card className="p-8 text-center">
-            <div className="text-gray-500">
+          <Card className="p-8 text-center bg-black/60 border-2 border-orange-500/30">
+            <div className="text-orange-100/40">
               <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium mb-2">No payment options found</h3>
               <p>Create your first payment option to get started.</p>
@@ -760,20 +762,22 @@ export default function PaymentOptionsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-orange-500/20">
             <Button
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
+              className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
             >
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>
+            <Button onClick={handleSubmit} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
               <Save className="w-4 h-4 mr-2" />
               {editingOption ? 'Update' : 'Create'} Payment Option
             </Button>
           </div>
         </div>
       </Dialog>
+    </div>
     </div>
   );
 }

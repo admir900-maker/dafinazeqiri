@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -129,28 +129,28 @@ export default function ReconcileRaiAcceptPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">RaiAccept Reconciliation</h1>
-            <p className="text-gray-600">Cross-check local bookings against RaiAccept order and transactions</p>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">RaiAccept Reconciliation</h1>
+            <p className="text-orange-100/50">Cross-check local bookings against RaiAccept order and transactions</p>
           </div>
         </div>
 
-        <AdminCard>
-          <AdminCardContent className="p-6">
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Booking ID</label>
+                <label className="block text-sm text-orange-100/70 mb-1">Booking ID</label>
                 <Input value={bookingId} onChange={(e) => setBookingId(e.target.value)} placeholder="Mongo _id" />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">RaiAccept Order ID</label>
+                <label className="block text-sm text-orange-100/70 mb-1">RaiAccept Order ID</label>
                 <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="P-..." />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Customer Name</label>
+                <label className="block text-sm text-orange-100/70 mb-1">Customer Name</label>
                 <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Name Surname" />
               </div>
               <div className="flex items-end gap-2">
@@ -163,92 +163,92 @@ export default function ReconcileRaiAcceptPage() {
                 </Button>
               </div>
             </div>
-          </AdminCardContent>
-        </AdminCard>
+          </CardContent>
+        </Card>
 
         {message && (
-          <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800 flex items-center gap-2">
+          <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded text-yellow-400 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" /> {message}
           </div>
         )}
 
         {result && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitle>Local Booking</AdminCardTitle>
-              </AdminCardHeader>
-              <AdminCardContent className="space-y-2">
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardHeader>
+                <CardTitle className="text-orange-500">Local Booking</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
                 {!result.local ? (
-                  <p className="text-gray-500">No local booking linked to this order.</p>
+                  <p className="text-orange-100/40">No local booking linked to this order.</p>
                 ) : (
                   <div className="space-y-1 text-sm">
-                    <div><span className="text-gray-500">Booking Reference:</span> {result.local.bookingReference}</div>
-                    <div><span className="text-gray-500">Status:</span> <Badge>{result.local.status}</Badge></div>
-                    <div><span className="text-gray-500">Payment:</span> <Badge>{result.local.paymentStatus}</Badge></div>
-                    <div><span className="text-gray-500">Order ID:</span> {result.local.orderId || '—'}</div>
-                    <div><span className="text-gray-500">Amount:</span> €{Number(result.local.totalAmount).toFixed(2)} {result.local.currency}</div>
+                    <div><span className="text-orange-100/40">Booking Reference:</span> {result.local.bookingReference}</div>
+                    <div><span className="text-orange-100/40">Status:</span> <Badge>{result.local.status}</Badge></div>
+                    <div><span className="text-orange-100/40">Payment:</span> <Badge>{result.local.paymentStatus}</Badge></div>
+                    <div><span className="text-orange-100/40">Order ID:</span> {result.local.orderId || 'â€”'}</div>
+                    <div><span className="text-orange-100/40">Amount:</span> â‚¬{Number(result.local.totalAmount).toFixed(2)} {result.local.currency}</div>
                     <div className="flex gap-2 pt-2">
                       {result.summary.recommendedAction === 'markPaidAndResend' && (
-                        <Button onClick={applyFix} disabled={fixing} className="bg-green-600 hover:bg-green-700 text-white">
+                        <Button onClick={applyFix} disabled={fixing} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
                           {fixing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                           Mark Paid
                         </Button>
                       )}
                       {result.summary.recommendedAction === 'markFailed' && (
-                        <Button onClick={applyFix} disabled={fixing} variant="outline" className="text-red-700 border-red-700 hover:bg-red-50">
+                        <Button onClick={applyFix} disabled={fixing} variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10">
                           {fixing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
                           Mark Failed
                         </Button>
                       )}
                       {result.local && (
-                        <Button onClick={resend} disabled={fixing} variant="outline" className="text-blue-700 border-blue-700 hover:bg-blue-50">
+                        <Button onClick={resend} disabled={fixing} variant="outline" className="text-orange-100 border-orange-500/30 hover:bg-orange-500/10">
                           <Mail className="h-4 w-4 mr-2" /> Resend Tickets
                         </Button>
                       )}
                     </div>
                   </div>
                 )}
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
 
-            <AdminCard>
-              <AdminCardHeader>
-                <AdminCardTitle>RaiAccept</AdminCardTitle>
-              </AdminCardHeader>
-              <AdminCardContent className="space-y-2 text-sm">
-                <div><span className="text-gray-500">Order ID:</span> {result.remote.orderId}</div>
+            <Card className="bg-black/60 border-2 border-orange-500/30">
+              <CardHeader>
+                <CardTitle className="text-orange-500">RaiAccept</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div><span className="text-orange-100/40">Order ID:</span> {result.remote.orderId}</div>
                 <div>
-                  <span className="text-gray-500">Latest Status:</span>{' '}
+                  <span className="text-orange-100/40">Latest Status:</span>{' '}
                   <Badge className={
-                    result.summary.codeType === 'success' ? 'bg-green-100 text-green-800' :
-                      result.summary.codeType === 'decline' ? 'bg-red-100 text-red-800' :
-                        result.summary.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
-                          result.summary.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                    result.summary.codeType === 'success' ? 'bg-green-500/20 text-green-400' :
+                      result.summary.codeType === 'decline' ? 'bg-red-500/20 text-red-400' :
+                        result.summary.codeType === 'error' ? 'bg-orange-500/20 text-orange-400' :
+                          result.summary.codeType === 'technical' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-orange-500/20 text-orange-100'
                   }>
                     {result.summary.remoteStatus || 'UNKNOWN'}
                   </Badge>
                   {result.summary.statusCode && (
-                    <span className="text-gray-600 ml-2">
+                    <span className="text-orange-100/50 ml-2">
                       (code {result.summary.statusCode})
                     </span>
                   )}
                 </div>
                 {result.summary.codeDescription && (
-                  <div className="text-sm p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="text-sm p-2 bg-orange-500/10 border border-orange-500/30 rounded">
                     <span className="font-semibold">Code {result.summary.statusCode}:</span> {result.summary.codeDescription}
                   </div>
                 )}
                 {result.remote.error && (
-                  <div className="text-red-600">API error: {result.remote.error}</div>
+                  <div className="text-red-400">API error: {result.remote.error}</div>
                 )}
                 <div className="pt-2">
                   <div className="font-semibold mb-1">Transactions ({result.remote.transactions?.length || 0})</div>
                   <div className="max-h-60 overflow-auto border rounded">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-gray-50">
+                        <tr className="bg-black/40">
                           <th className="text-left p-2">ID</th>
                           <th className="text-left p-2">Status</th>
                           <th className="text-left p-2">Code</th>
@@ -258,30 +258,30 @@ export default function ReconcileRaiAcceptPage() {
                       <tbody>
                         {(result.remote.transactions || []).map((t: any, idx: number) => (
                           <tr key={idx} className="border-t">
-                            <td className="p-2 whitespace-nowrap">{t.transactionId || t.id || '—'}</td>
-                            <td className="p-2">{t.status || t.transactionStatus || '—'}</td>
-                            <td className="p-2">{t.statusCode || t.transactionStatusCode || '—'}</td>
-                            <td className="p-2 text-right">{(t.transactionAmount ?? t.amount) ? `${(t.transactionAmount ?? t.amount) / 100} ${t.transactionCurrency ?? ''}` : '—'}</td>
+                            <td className="p-2 whitespace-nowrap">{t.transactionId || t.id || 'â€”'}</td>
+                            <td className="p-2">{t.status || t.transactionStatus || 'â€”'}</td>
+                            <td className="p-2">{t.statusCode || t.transactionStatusCode || 'â€”'}</td>
+                            <td className="p-2 text-right">{(t.transactionAmount ?? t.amount) ? `${(t.transactionAmount ?? t.amount) / 100} ${t.transactionCurrency ?? ''}` : 'â€”'}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
-              </AdminCardContent>
-            </AdminCard>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {customerResults.length > 0 && (
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitle>Customer Bookings ({customerResults.length})</AdminCardTitle>
-            </AdminCardHeader>
-            <AdminCardContent className="overflow-auto">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="text-orange-500">Customer Bookings ({customerResults.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50">
+                  <tr className="border-b border-orange-500/20 bg-black/40">
                     <th className="p-2 text-left">Customer</th>
                     <th className="p-2 text-left">Booking Ref</th>
                     <th className="p-2 text-left">Order ID</th>
@@ -294,30 +294,30 @@ export default function ReconcileRaiAcceptPage() {
                 </thead>
                 <tbody>
                   {customerResults.map((r, i) => (
-                    <tr key={i} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{r.local?.customerName || '—'}</td>
+                    <tr key={i} className="border-b hover:bg-orange-500/10">
+                      <td className="p-2">{r.local?.customerName || 'â€”'}</td>
                       <td className="p-2">{r.local?.bookingReference}</td>
                       <td className="p-2 text-xs">{r.remote?.orderId}</td>
                       <td className="p-2">
-                        <Badge className={r.local?.status === 'confirmed' && r.local?.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                        <Badge className={r.local?.status === 'confirmed' && r.local?.paymentStatus === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}>
                           {r.local?.status}/{r.local?.paymentStatus}
                         </Badge>
                       </td>
                       <td className="p-2">
                         <Badge className={
-                          r.summary?.codeType === 'success' ? 'bg-green-100 text-green-800' :
-                            r.summary?.codeType === 'decline' ? 'bg-red-100 text-red-800' :
-                              r.summary?.codeType === 'error' ? 'bg-orange-100 text-orange-800' :
-                                r.summary?.codeType === 'technical' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
+                          r.summary?.codeType === 'success' ? 'bg-green-500/20 text-green-400' :
+                            r.summary?.codeType === 'decline' ? 'bg-red-500/20 text-red-400' :
+                              r.summary?.codeType === 'error' ? 'bg-orange-500/20 text-orange-400' :
+                                r.summary?.codeType === 'technical' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-orange-500/20 text-orange-100'
                         }>
                           {r.summary.remoteStatus} {r.summary.statusCode ? `(${r.summary.statusCode})` : ''}
                         </Badge>
                       </td>
-                      <td className="p-2 text-xs text-gray-600">
-                        {r.summary?.codeDescription || '—'}
+                      <td className="p-2 text-xs text-orange-100/50">
+                        {r.summary?.codeDescription || 'â€”'}
                       </td>
-                      <td className="p-2 text-right">€{Number(r.local?.totalAmount).toFixed(2)}</td>
+                      <td className="p-2 text-right">â‚¬{Number(r.local?.totalAmount).toFixed(2)}</td>
                       <td className="p-2">
                         <div className="flex gap-1">
                           {r.summary.recommendedAction === 'markPaidAndResend' && (
@@ -331,7 +331,7 @@ export default function ReconcileRaiAcceptPage() {
                                 });
                                 if (resp.ok) setMessage('Marked paid'); else setMessage('Failed to mark paid');
                               } finally { setFixing(false); }
-                            }} className="bg-green-600 hover:bg-green-700 text-white">
+                            }} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
                               Mark Paid
                             </Button>
                           )}
@@ -346,7 +346,7 @@ export default function ReconcileRaiAcceptPage() {
                                 });
                                 if (resp.ok) setMessage('Marked failed'); else setMessage('Failed to mark failed');
                               } finally { setFixing(false); }
-                            }} className="text-red-700 border-red-700 hover:bg-red-50">
+                            }} className="text-red-400 border-red-500/30 hover:bg-red-500/10">
                               Mark Failed
                             </Button>
                           )}
@@ -358,7 +358,7 @@ export default function ReconcileRaiAcceptPage() {
                                 const data = await resp.json();
                                 if (resp.ok) setMessage('Tickets resent'); else setMessage(data.error || 'Failed to resend');
                               } finally { setFixing(false); }
-                            }} className="text-blue-700 border-blue-700 hover:bg-blue-50">
+                            }} className="text-orange-100 border-orange-500/30 hover:bg-orange-500/10">
                               <Mail className="h-3 w-3" />
                             </Button>
                           )}
@@ -368,16 +368,16 @@ export default function ReconcileRaiAcceptPage() {
                   ))}
                 </tbody>
               </table>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
         )}
 
         {scanResults.length > 0 && (
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitle>Discrepancies found ({scanResults.length})</AdminCardTitle>
-            </AdminCardHeader>
-            <AdminCardContent className="overflow-auto">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="text-orange-500">Discrepancies found ({scanResults.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
@@ -390,7 +390,7 @@ export default function ReconcileRaiAcceptPage() {
                 </thead>
                 <tbody>
                   {scanResults.map((r, i) => (
-                    <tr key={i} className="border-b hover:bg-gray-50">
+                    <tr key={i} className="border-b hover:bg-orange-500/10">
                       <td className="p-2">{r.local?.bookingReference}</td>
                       <td className="p-2">{r.local?.id}</td>
                       <td className="p-2">{r.local?.status}/{r.local?.paymentStatus}</td>
@@ -431,8 +431,8 @@ export default function ReconcileRaiAcceptPage() {
                   ))}
                 </tbody>
               </table>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

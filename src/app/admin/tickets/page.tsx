@@ -13,7 +13,7 @@ import {
   Save,
   X
 } from 'lucide-react';
-import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardContent } from '@/components/ui/admin-card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,7 +62,7 @@ export default function TicketsManagementPage() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching events for ticket management...');
+      console.log('ðŸ” Fetching events for ticket management...');
 
       const response = await fetch('/api/admin/events');
       if (!response.ok) {
@@ -70,10 +70,10 @@ export default function TicketsManagementPage() {
       }
 
       const data = await response.json();
-      console.log('✅ Found', data.events?.length || 0, 'events');
+      console.log('âœ… Found', data.events?.length || 0, 'events');
       setEvents(data.events || []);
     } catch (error) {
-      console.error('❌ Error fetching events:', error);
+      console.error('âŒ Error fetching events:', error);
       setMessage('Failed to fetch events');
     } finally {
       setLoading(false);
@@ -200,15 +200,15 @@ export default function TicketsManagementPage() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Ticket Management</h1>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">Ticket Management</h1>
           </div>
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cd7f32] mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading tickets...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-orange-100/70">Loading tickets...</p>
             </div>
           </div>
         </div>
@@ -229,39 +229,39 @@ export default function TicketsManagementPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Ticket Management</h1>
-          <p className="text-gray-600">Manage ticket types and pricing for events</p>
+          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">Ticket Management</h1>
+          <p className="text-orange-100/70">Manage ticket types and pricing for events</p>
         </div>
 
         {/* Message Display */}
         {message && (
-          <div className="mb-6 p-4 bg-orange-50 border border-[#cd7f32] rounded-md">
-            <p className="text-[#b4530a]">{message}</p>
+          <div className="mb-6 p-4 bg-orange-500/10 border border-orange-500/30 rounded-md">
+            <p className="text-orange-100">{message}</p>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Events List */}
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitle className="flex items-center gap-2">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-500">
                 <Calendar className="h-5 w-5" />
                 Events ({filteredEvents.length})
-              </AdminCardTitle>
-            </AdminCardHeader>
-            <AdminCardContent>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               {/* Search */}
               <div className="mb-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500/50 h-4 w-4" />
                   <Input
                     placeholder="Search events..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
                   />
                 </div>
               </div>
@@ -269,14 +269,14 @@ export default function TicketsManagementPage() {
               {/* Events List */}
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="h-6 w-6 animate-spin text-[#cd7f32] mr-2" />
+                  <RefreshCw className="h-6 w-6 animate-spin text-orange-500 mr-2" />
                   <span>Loading events...</span>
                 </div>
               ) : filteredEvents.length === 0 ? (
                 <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
-                  <p className="text-gray-500">Create some events first to manage their tickets.</p>
+                  <Calendar className="h-12 w-12 text-orange-500/50 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-orange-100 mb-2">No events found</h3>
+                  <p className="text-orange-100/40">Create some events first to manage their tickets.</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -284,15 +284,15 @@ export default function TicketsManagementPage() {
                     <div
                       key={event._id}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${selectedEvent?._id === event._id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-orange-500 bg-orange-500/20'
+                        : 'border-orange-500/20 hover:border-orange-500/30 hover:bg-orange-500/10'
                         }`}
                       onClick={() => setSelectedEvent(event)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium text-gray-900">{event.title}</h3>
-                          <p className="text-sm text-gray-500">
+                          <h3 className="font-medium text-orange-100">{event.title}</h3>
+                          <p className="text-sm text-orange-100/40">
                             {new Date(event.date).toLocaleDateString()}
                           </p>
                           {event.category && (
@@ -302,7 +302,7 @@ export default function TicketsManagementPage() {
                           )}
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-orange-100">
                             {event.ticketTypes?.length || 0} ticket types
                           </p>
                         </div>
@@ -311,13 +311,13 @@ export default function TicketsManagementPage() {
                   ))}
                 </div>
               )}
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
 
           {/* Ticket Types Management */}
-          <AdminCard>
-            <AdminCardHeader>
-              <AdminCardTitle className="flex items-center justify-between">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between text-orange-500">
                 <div className="flex items-center gap-2">
                   <Tag className="h-5 w-5" />
                   Ticket Types
@@ -332,29 +332,29 @@ export default function TicketsManagementPage() {
                     Add Ticket Type
                   </Button>
                 )}
-              </AdminCardTitle>
-            </AdminCardHeader>
-            <AdminCardContent>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               {!selectedEvent ? (
                 <div className="text-center py-8">
-                  <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Select an Event</h3>
-                  <p className="text-gray-500">Choose an event from the list to manage its ticket types.</p>
+                  <Tag className="h-12 w-12 text-orange-500/50 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-orange-100 mb-2">Select an Event</h3>
+                  <p className="text-orange-100/40">Choose an event from the list to manage its ticket types.</p>
                 </div>
               ) : (
                 <div>
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <h3 className="font-medium text-gray-900">{selectedEvent.title}</h3>
-                    <p className="text-sm text-gray-500">
+                  <div className="mb-4 p-3 bg-black/40 rounded-lg border border-orange-500/20">
+                    <h3 className="font-medium text-orange-100">{selectedEvent.title}</h3>
+                    <p className="text-sm text-orange-100/40">
                       {new Date(selectedEvent.date).toLocaleDateString()}
                     </p>
                   </div>
 
                   {/* Add/Edit Form */}
                   {showAddForm && (
-                    <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+                    <div className="mb-6 p-4 bg-black/40 border-2 border-orange-500/30 rounded-lg">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-medium text-gray-900">
+                        <h4 className="text-lg font-medium text-orange-100">
                           {editingTicket ? 'Edit Ticket Type' : 'Add New Ticket Type'}
                         </h4>
                         <Button
@@ -379,7 +379,7 @@ export default function TicketsManagementPage() {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="price">Price (€) *</Label>
+                            <Label htmlFor="price">Price (â‚¬) *</Label>
                             <Input
                               id="price"
                               type="number"
@@ -411,7 +411,7 @@ export default function TicketsManagementPage() {
                                 type="color"
                                 value={formData.color}
                                 onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                                className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
+                                className="w-10 h-10 border border-orange-500/30 rounded cursor-pointer"
                               />
                               <Input
                                 value={formData.color}
@@ -452,9 +452,9 @@ export default function TicketsManagementPage() {
                   {/* Ticket Types List */}
                   {selectedEvent.ticketTypes?.length === 0 ? (
                     <div className="text-center py-8">
-                      <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Ticket Types</h3>
-                      <p className="text-gray-500 mb-4">Add ticket types to start selling tickets for this event.</p>
+                      <Tag className="h-12 w-12 text-orange-500/50 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-orange-100 mb-2">No Ticket Types</h3>
+                      <p className="text-orange-100/40 mb-4">Add ticket types to start selling tickets for this event.</p>
                       <Button onClick={() => setShowAddForm(true)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add First Ticket Type
@@ -465,7 +465,7 @@ export default function TicketsManagementPage() {
                       {selectedEvent.ticketTypes?.map((ticket) => (
                         <div
                           key={ticket._id}
-                          className="p-4 border border-gray-200 rounded-lg"
+                          className="p-4 border border-orange-500/20 rounded-lg"
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -474,9 +474,9 @@ export default function TicketsManagementPage() {
                                   className="w-4 h-4 rounded"
                                   style={{ backgroundColor: ticket.color }}
                                 ></div>
-                                <h4 className="font-medium text-gray-900">{ticket.name}</h4>
+                                <h4 className="font-medium text-orange-100">{ticket.name}</h4>
                               </div>
-                              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                              <div className="grid grid-cols-2 gap-4 text-sm text-orange-100/50">
                                 <div>
                                   <span className="font-medium">Price:</span> {formatPrice(ticket.price)}
                                 </div>
@@ -491,7 +491,7 @@ export default function TicketsManagementPage() {
                                 </div>
                               </div>
                               {ticket.description && (
-                                <p className="mt-2 text-sm text-gray-600">{ticket.description}</p>
+                                <p className="mt-2 text-sm text-orange-100/50">{ticket.description}</p>
                               )}
                             </div>
                             <div className="flex items-center gap-2 ml-4">
@@ -505,7 +505,7 @@ export default function TicketsManagementPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-red-600 border-red-600 hover:bg-red-50"
+                                className="text-red-400 border-red-500/30 hover:bg-red-500/10"
                                 onClick={() => handleDelete(ticket._id!)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -518,8 +518,8 @@ export default function TicketsManagementPage() {
                   )}
                 </div>
               )}
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

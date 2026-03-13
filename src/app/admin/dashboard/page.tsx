@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   BarChart3,
@@ -195,8 +195,8 @@ export default function AdminDashboard() {
   if (!isLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="flex items-center gap-2 text-gray-900">
-          <RefreshCw className="w-5 h-5 animate-spin" />
+        <div className="flex items-center gap-2 text-orange-100">
+          <RefreshCw className="w-5 h-5 animate-spin text-orange-500" />
           Loading dashboard...
         </div>
       </div>
@@ -235,181 +235,183 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.firstName || 'Admin'}</p>
-        </div>
-        <Button
-          onClick={fetchDashboardData}
-          className="bg-blue-600 text-white hover:bg-blue-700"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <AdminCard key={stat.title}>
-              <AdminCardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600 text-sm">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <p className="text-gray-500 text-xs">{stat.description}</p>
-                  </div>
-                  <Icon className={`w-8 h-8 ${stat.color}`} />
-                </div>
-              </AdminCardContent>
-            </AdminCard>
-          );
-        })}
-      </div>
-
-      {/* Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <AdminCard>
-          <AdminCardHeader>
-            <AdminCardTitle>Quick Actions</AdminCardTitle>
-          </AdminCardHeader>
-          <AdminCardContent className="space-y-4">
-            <Button
-              className="w-full justify-start bg-[#cd7f32] text-white hover:bg-[#b4530a]"
-              onClick={() => router.push('/admin/events')}
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              Create New Event
-            </Button>
-            <Button
-              className="w-full justify-start bg-green-600 text-white hover:bg-green-700"
-              onClick={() => router.push('/admin/categories')}
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Manage Categories
-            </Button>
-            <Button
-              className="w-full justify-start bg-[#cd7f32] text-white hover:bg-[#b4530a]"
-              onClick={() => router.push('/admin/bookings')}
-            >
-              <Ticket className="w-4 h-4 mr-2" />
-              View Bookings
-            </Button>
-            <Button
-              className="w-full justify-start bg-orange-600 text-white hover:bg-orange-700"
-              onClick={() => router.push('/admin/users')}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Manage Users
-            </Button>
-          </AdminCardContent>
-        </AdminCard>
-
-        {/* Recent Activity and Bookings */}
-        <AdminCard>
-          <AdminCardHeader>
-            <AdminCardTitle>Recent Activity</AdminCardTitle>
-          </AdminCardHeader>
-          <AdminCardContent>
-            <div className="space-y-4">
-              {stats.recentActivity && stats.recentActivity.length > 0 ? (
-                stats.recentActivity.map((activity: any) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {activity.status === 'upcoming' && <Calendar className="w-4 h-4 text-blue-400" />}
-                      {activity.status === 'past' && <Clock className="w-4 h-4 text-gray-400" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-900 text-sm">Event: {activity.title}</p>
-                      <p className="text-gray-500 text-xs">
-                        {activity.category} • {new Date(activity.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : activities.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No recent activity</p>
-              ) : (
-                activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {activity.status === 'success' && <CheckCircle className="w-4 h-4 text-green-400" />}
-                      {activity.status === 'pending' && <Clock className="w-4 h-4 text-orange-500" />}
-                      {activity.status === 'error' && <AlertTriangle className="w-4 h-4 text-red-400" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-900 text-sm">{activity.description}</p>
-                      <p className="text-gray-500 text-xs">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </AdminCardContent>
-        </AdminCard>
-
-        {/* Recent Bookings */}
-        <AdminCard>
-          <AdminCardHeader>
-            <AdminCardTitle>Recent Bookings</AdminCardTitle>
-          </AdminCardHeader>
-          <AdminCardContent>
-            <div className="space-y-4">
-              {stats.recentBookings && stats.recentBookings.length > 0 ? (
-                stats.recentBookings.map((booking: any) => (
-                  <div key={booking.id} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {booking.paymentStatus === 'paid' && <CheckCircle className="w-4 h-4 text-green-400" />}
-                      {booking.paymentStatus === 'pending' && <Clock className="w-4 h-4 text-orange-500" />}
-                      {booking.paymentStatus === 'failed' && <AlertTriangle className="w-4 h-4 text-red-400" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-900 text-sm">
-                        {booking.bookingReference} - {booking.customerName || 'Unknown Customer'}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        {booking.eventTitle} • €{booking.totalAmount.toFixed(2)} • {booking.status}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No recent bookings</p>
-              )}
-            </div>
-          </AdminCardContent>
-        </AdminCard>
-      </div>
-
-      {/* System Status */}
-      <AdminCard>
-        <AdminCardHeader>
-          <AdminCardTitle>System Status</AdminCardTitle>
-        </AdminCardHeader>
-        <AdminCardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-gray-900">Database Connected</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-gray-900">Payment Gateway Active</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-gray-900">Email Service Running</span>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Dashboard</h1>
+            <p className="text-orange-100/70">Welcome back, {user?.firstName || 'Admin'}</p>
           </div>
-        </AdminCardContent>
-      </AdminCard>
+          <Button
+            onClick={fetchDashboardData}
+            className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statCards.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={stat.title} className="bg-black/60 border-2 border-orange-500/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-orange-100/70 text-sm font-bold">{stat.title}</p>
+                      <p className="text-2xl font-black text-orange-500">{stat.value}</p>
+                      <p className="text-orange-100/50 text-xs">{stat.description}</p>
+                    </div>
+                    <Icon className={`w-8 h-8 ${stat.color}`} />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Quick Actions & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Quick Actions */}
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="text-2xl font-black text-orange-500">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                className="w-full justify-start bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                onClick={() => router.push('/admin/events')}
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Create New Event
+              </Button>
+              <Button
+                className="w-full justify-start border-2 border-orange-500/30 bg-black/40 text-orange-100 hover:bg-orange-500/10"
+                onClick={() => router.push('/admin/categories')}
+              >
+                <BarChart3 className="w-4 h-4 mr-2 text-orange-500" />
+                Manage Categories
+              </Button>
+              <Button
+                className="w-full justify-start bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                onClick={() => router.push('/admin/bookings')}
+              >
+                <Ticket className="w-4 h-4 mr-2" />
+                View Bookings
+              </Button>
+              <Button
+                className="w-full justify-start border-2 border-orange-500/30 bg-black/40 text-orange-100 hover:bg-orange-500/10"
+                onClick={() => router.push('/admin/users')}
+              >
+                <Users className="w-4 h-4 mr-2 text-orange-500" />
+                Manage Users
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity and Bookings */}
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="text-2xl font-black text-orange-500">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats.recentActivity && stats.recentActivity.length > 0 ? (
+                  stats.recentActivity.map((activity: any) => (
+                    <div key={activity.id} className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {activity.status === 'upcoming' && <Calendar className="w-4 h-4 text-blue-400" />}
+                        {activity.status === 'past' && <Clock className="w-4 h-4 text-gray-400" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-orange-100 text-sm">Event: {activity.title}</p>
+                        <p className="text-orange-100/50 text-xs">
+                          {activity.category} • {new Date(activity.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : activities.length === 0 ? (
+                  <p className="text-orange-100/50 text-center py-4">No recent activity</p>
+                ) : (
+                  activities.map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {activity.status === 'success' && <CheckCircle className="w-4 h-4 text-green-400" />}
+                        {activity.status === 'pending' && <Clock className="w-4 h-4 text-orange-500" />}
+                        {activity.status === 'error' && <AlertTriangle className="w-4 h-4 text-red-400" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-orange-100 text-sm">{activity.description}</p>
+                        <p className="text-orange-100/50 text-xs">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Bookings */}
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="text-2xl font-black text-orange-500">Recent Bookings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats.recentBookings && stats.recentBookings.length > 0 ? (
+                  stats.recentBookings.map((booking: any) => (
+                    <div key={booking.id} className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {booking.paymentStatus === 'paid' && <CheckCircle className="w-4 h-4 text-green-400" />}
+                        {booking.paymentStatus === 'pending' && <Clock className="w-4 h-4 text-orange-500" />}
+                        {booking.paymentStatus === 'failed' && <AlertTriangle className="w-4 h-4 text-red-400" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-orange-100 text-sm">
+                          {booking.bookingReference} - {booking.customerName || 'Unknown Customer'}
+                        </p>
+                        <p className="text-orange-100/50 text-xs">
+                          {booking.eventTitle} • €{booking.totalAmount.toFixed(2)} • {booking.status}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-orange-100/50 text-center py-4">No recent bookings</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* System Status */}
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardHeader>
+            <CardTitle className="text-2xl font-black text-orange-500">System Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-orange-100">Database Connected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-orange-100">Payment Gateway Active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-orange-100">Email Service Running</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

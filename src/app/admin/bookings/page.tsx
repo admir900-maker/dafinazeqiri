@@ -18,7 +18,7 @@ import {
   Calendar,
   Undo2
 } from 'lucide-react';
-import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardContent } from '@/components/ui/admin-card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -266,10 +266,10 @@ export default function BookingManagementPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { color: 'bg-orange-100 text-orange-900', icon: Clock },
-      confirmed: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: AlertCircle },
-      refunded: { color: 'bg-gray-100 text-gray-800', icon: RefreshCw }
+      pending: { color: 'bg-orange-500/20 text-orange-500', icon: Clock },
+      confirmed: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
+      cancelled: { color: 'bg-red-500/20 text-red-400', icon: AlertCircle },
+      refunded: { color: 'bg-orange-100/10 text-orange-100/70', icon: RefreshCw }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -285,10 +285,10 @@ export default function BookingManagementPage() {
 
   const getPaymentStatusBadge = (paymentStatus: string) => {
     const statusConfig = {
-      pending: { color: 'bg-orange-100 text-orange-800' },
-      paid: { color: 'bg-green-100 text-green-800' },
-      failed: { color: 'bg-red-100 text-red-800' },
-      refunded: { color: 'bg-gray-100 text-gray-800' }
+      pending: { color: 'bg-orange-500/20 text-orange-500' },
+      paid: { color: 'bg-green-500/20 text-green-400' },
+      failed: { color: 'bg-red-500/20 text-red-400' },
+      refunded: { color: 'bg-orange-100/10 text-orange-100/70' }
     };
 
     const config = statusConfig[paymentStatus as keyof typeof statusConfig] || statusConfig.pending;
@@ -302,15 +302,15 @@ export default function BookingManagementPage() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Management</h1>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">Booking Management</h1>
           </div>
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cd7f32] mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading bookings...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-orange-100/70">Loading bookings...</p>
             </div>
           </div>
         </div>
@@ -327,90 +327,90 @@ export default function BookingManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Management</h1>
-          <p className="text-gray-600">Manage all event bookings and reservations</p>
+          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">Booking Management</h1>
+          <p className="text-orange-100/70">Manage all event bookings and reservations</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <AdminCard>
-            <AdminCardContent className="flex items-center p-6">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardContent className="flex items-center p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg mr-4">
-                  <Calendar className="h-6 w-6 text-[#cd7f32]" />
+                <div className="p-2 bg-orange-500/20 rounded-lg mr-4">
+                  <Calendar className="h-6 w-6 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                  <p className="text-2xl font-bold text-gray-900">{pagination?.total || 0}</p>
+                  <p className="text-sm font-bold text-orange-100/70">Total Bookings</p>
+                  <p className="text-2xl font-black text-orange-500">{pagination?.total || 0}</p>
                 </div>
               </div>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
 
-          <AdminCard>
-            <AdminCardContent className="flex items-center p-6">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardContent className="flex items-center p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg mr-4">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
+                <div className="p-2 bg-green-500/20 rounded-lg mr-4">
+                  <CheckCircle className="h-6 w-6 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Confirmed</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-bold text-orange-100/70">Confirmed</p>
+                  <p className="text-2xl font-black text-orange-500">
                     {bookings.filter(b => b.status === 'confirmed').length}
                   </p>
                 </div>
               </div>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
 
-          <AdminCard>
-            <AdminCardContent className="flex items-center p-6">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardContent className="flex items-center p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg mr-4">
-                  <Clock className="h-6 w-6 text-orange-700" />
+                <div className="p-2 bg-orange-500/20 rounded-lg mr-4">
+                  <Clock className="h-6 w-6 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Pending</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-bold text-orange-100/70">Pending</p>
+                  <p className="text-2xl font-black text-orange-500">
                     {bookings.filter(b => b.status === 'pending').length}
                   </p>
                 </div>
               </div>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
 
-          <AdminCard>
-            <AdminCardContent className="flex items-center p-6">
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardContent className="flex items-center p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg mr-4">
-                  <DollarSign className="h-6 w-6 text-green-600" />
+                <div className="p-2 bg-green-500/20 rounded-lg mr-4">
+                  <DollarSign className="h-6 w-6 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-bold text-orange-100/70">Revenue</p>
+                  <p className="text-2xl font-black text-orange-500">
                     €{bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0).toFixed(2)}
                   </p>
                 </div>
               </div>
-            </AdminCardContent>
-          </AdminCard>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
-        <AdminCard className="mb-6">
-          <AdminCardContent className="p-6">
+        <Card className="mb-6 bg-black/60 border-2 border-orange-500/30">
+          <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500/50 h-4 w-4" />
                   <Input
                     placeholder="Search by booking reference, customer name, or event..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
                   />
                 </div>
               </div>
@@ -421,9 +421,9 @@ export default function BookingManagementPage() {
                   fetchBookings();
                 }}
                 variant="outline"
-                className="px-4"
+                className="px-4 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
               >
-                <Search className="h-4 w-4 mr-2" />
+                <Search className="h-4 w-4 mr-2 text-orange-500" />
                 Search
               </Button>
 
@@ -436,90 +436,90 @@ export default function BookingManagementPage() {
                   fetchBookings();
                 }}
                 variant="outline"
-                className="px-4"
+                className="px-4 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
               >
                 Clear Filters
               </Button>
             </div>
-          </AdminCardContent>
-        </AdminCard>
+          </CardContent>
+        </Card>
 
         {/* Message Display */}
         {message && (
-          <div className="mb-6 p-4 bg-orange-50 border border-[#cd7f32] rounded-md">
-            <p className="text-[#b4530a]">{message}</p>
+          <div className="mb-6 p-4 bg-orange-500/10 border border-orange-500/30 rounded-md">
+            <p className="text-orange-100">{message}</p>
           </div>
         )}
 
         {/* Bookings Table */}
-        <AdminCard>
-          <AdminCardHeader>
-            <AdminCardTitle className="flex items-center gap-2">
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl font-black text-orange-500">
               <Users className="h-5 w-5" />
               All Bookings ({pagination?.total || 0})
-            </AdminCardTitle>
-          </AdminCardHeader>
-          <AdminCardContent>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <RefreshCw className="h-6 w-6 animate-spin text-[#cd7f32] mr-2" />
-                <span>Loading bookings...</span>
+                <RefreshCw className="h-6 w-6 animate-spin text-orange-500 mr-2" />
+                <span className="text-orange-100">Loading bookings...</span>
               </div>
             ) : bookings.length === 0 ? (
               <div className="text-center py-8">
-                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings found</h3>
-                <p className="text-gray-500">No bookings match your current filters.</p>
+                <AlertCircle className="h-12 w-12 text-orange-500/50 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-orange-100 mb-2">No bookings found</h3>
+                <p className="text-orange-100/50">No bookings match your current filters.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Booking</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Customer</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Event</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Amount</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Payment</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                    <tr className="border-b border-orange-500/30">
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Booking</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Customer</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Event</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Amount</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Status</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Payment</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Date</th>
+                      <th className="text-left py-3 px-4 font-bold text-orange-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookings.map((booking) => (
-                      <tr key={booking._id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={booking._id} className="border-b border-orange-500/20 hover:bg-orange-500/10">
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">{booking.bookingReference}</p>
-                            <p className="text-sm text-gray-500">{booking.ticketCount} tickets</p>
+                            <p className="font-medium text-orange-100">{booking.bookingReference}</p>
+                            <p className="text-sm text-orange-100/50">{booking.ticketCount} tickets</p>
                           </div>
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-orange-100">
                               {booking.customerName || booking.userDetails?.firstName + ' ' + booking.userDetails?.lastName || 'Unknown'}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-orange-100/50">
                               {booking.customerEmail || booking.userDetails?.email || 'No email'}
                             </p>
                           </div>
                         </td>
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">{booking.eventTitle || booking.event?.title || 'Unknown Event'}</p>
+                            <p className="font-medium text-orange-100">{booking.eventTitle || booking.event?.title || 'Unknown Event'}</p>
                             {booking.event?.date && (
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-orange-100/50">
                                 {new Date(booking.event.date).toLocaleDateString()}
                               </p>
                             )}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-orange-100">
                             €{booking.totalAmount.toFixed(2)}
                           </p>
-                          <p className="text-sm text-gray-500">{booking.currency || 'EUR'}</p>
+                          <p className="text-sm text-orange-100/50">{booking.currency || 'EUR'}</p>
                         </td>
                         <td className="py-3 px-4">
                           {getStatusBadge(booking.status)}
@@ -528,7 +528,7 @@ export default function BookingManagementPage() {
                           {getPaymentStatusBadge(booking.paymentStatus)}
                         </td>
                         <td className="py-3 px-4">
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-orange-100">
                             {new Date(booking.createdAt).toLocaleDateString()}
                           </p>
                         </td>
@@ -540,7 +540,7 @@ export default function BookingManagementPage() {
                                 disabled={updating === booking._id}
                                 size="sm"
                                 variant="outline"
-                                className="text-green-600 border-green-600 hover:bg-green-50"
+                                className="text-green-400 border-green-500/30 hover:bg-green-500/10"
                                 title="Confirm booking"
                               >
                                 {updating === booking._id ? (
@@ -559,7 +559,7 @@ export default function BookingManagementPage() {
                                   disabled={updating === booking._id}
                                   size="sm"
                                   variant="outline"
-                                  className="text-[#cd7f32] border-[#cd7f32] hover:bg-orange-50"
+                                  className="text-orange-500 border-orange-500/30 hover:bg-orange-500/10"
                                   title="Issue refund"
                                 >
                                   <Undo2 className="h-4 w-4" />
@@ -572,7 +572,7 @@ export default function BookingManagementPage() {
                                 disabled={resendingId === booking._id}
                                 size="sm"
                                 variant="outline"
-                                className="text-blue-700 border-blue-700 hover:bg-blue-50"
+                                className="text-orange-500 border-orange-500/30 hover:bg-orange-500/10"
                                 title="Resend tickets via email"
                               >
                                 {resendingId === booking._id ? (
@@ -588,7 +588,7 @@ export default function BookingManagementPage() {
                               disabled={updating === booking._id}
                               size="sm"
                               variant="outline"
-                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              className="text-red-400 border-red-500/30 hover:bg-red-500/10"
                               title="Cancel booking"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -604,8 +604,8 @@ export default function BookingManagementPage() {
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-                <div className="text-sm text-gray-700">
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-orange-500/20">
+                <div className="text-sm text-orange-100/70">
                   Showing {bookings.length} of {pagination.total} bookings
                 </div>
                 <div className="flex items-center gap-2">
@@ -614,10 +614,11 @@ export default function BookingManagementPage() {
                     disabled={!pagination.hasPrev}
                     variant="outline"
                     size="sm"
+                    className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                   >
                     Previous
                   </Button>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-orange-100/70">
                     Page {currentPage} of {pagination.totalPages}
                   </span>
                   <Button
@@ -625,29 +626,30 @@ export default function BookingManagementPage() {
                     disabled={!pagination.hasNext}
                     variant="outline"
                     size="sm"
+                    className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                   >
                     Next
                   </Button>
                 </div>
               </div>
             )}
-          </AdminCardContent>
-        </AdminCard>
+          </CardContent>
+        </Card>
 
         {/* Refund Modal */}
         {showRefundModal && selectedBooking && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Issue Refund</h3>
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-zinc-950 border-2 border-orange-500/50 rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-black text-orange-500 mb-4">Issue Refund</h3>
 
-              <div className="mb-4 p-4 bg-gray-50 rounded-md">
-                <p className="text-sm text-gray-600">Booking: <span className="font-medium text-gray-900">{selectedBooking.bookingReference}</span></p>
-                <p className="text-sm text-gray-600">Customer: <span className="font-medium text-gray-900">{selectedBooking.customerName || selectedBooking.customerEmail}</span></p>
-                <p className="text-sm text-gray-600">Original Amount: <span className="font-medium text-gray-900">€{selectedBooking.totalAmount.toFixed(2)}</span></p>
+              <div className="mb-4 p-4 bg-black/60 border border-orange-500/30 rounded-md">
+                <p className="text-sm text-orange-100/70">Booking: <span className="font-medium text-orange-100">{selectedBooking.bookingReference}</span></p>
+                <p className="text-sm text-orange-100/70">Customer: <span className="font-medium text-orange-100">{selectedBooking.customerName || selectedBooking.customerEmail}</span></p>
+                <p className="text-sm text-orange-100/70">Original Amount: <span className="font-medium text-orange-100">€{selectedBooking.totalAmount.toFixed(2)}</span></p>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-orange-100/70 mb-2">
                   Refund Amount (EUR)
                 </label>
                 <Input
@@ -658,22 +660,22 @@ export default function BookingManagementPage() {
                   max={selectedBooking.totalAmount}
                   step="0.01"
                   placeholder="Enter refund amount"
-                  className="w-full"
+                  className="w-full border-2 border-orange-500/30 bg-black/60 text-orange-100 focus:border-orange-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-orange-100/50 mt-1">
                   Maximum: €{selectedBooking.totalAmount.toFixed(2)}
                 </p>
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-orange-100/70 mb-2">
                   Reason for Refund
                 </label>
                 <textarea
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
                   placeholder="Enter reason for refund (optional)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border-2 border-orange-500/30 bg-black/60 text-orange-100 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none placeholder:text-orange-100/40"
                   rows={3}
                 />
               </div>
@@ -687,14 +689,14 @@ export default function BookingManagementPage() {
                     setRefundReason('');
                   }}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={processRefund}
                   disabled={!refundAmount || parseFloat(refundAmount) <= 0 || updating === selectedBooking._id}
-                  className="flex-1 bg-[#cd7f32] hover:bg-[#b4530a] text-white"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                 >
                   {updating === selectedBooking._id ? (
                     <>

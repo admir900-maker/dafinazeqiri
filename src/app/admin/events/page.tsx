@@ -5,7 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { AdminCard, AdminCardContent, AdminCardHeader, AdminCardTitle } from '@/components/ui/admin-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -256,14 +256,16 @@ export default function EventsManagementPage() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-white">Events Management</h1>
-        </div>
-        <div className="flex items-center justify-center min-h-96 text-white">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-lg">Loading events...</p>
+      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Events Management</h1>
+          </div>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-lg text-orange-100/70">Loading events...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -271,330 +273,332 @@ export default function EventsManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Events Management</h1>
-        <Button
-          onClick={() => setShowForm(true)}
-          className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Event
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">Events Management</h1>
+          <Button
+            onClick={() => setShowForm(true)}
+            className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Event
+          </Button>
+        </div>
 
-      {/* Search and Filters */}
-      <AdminCard>
-        <AdminCardContent className="p-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search events..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="border-gray-300"
-              />
-            </div>
-            <Button className="bg-[#cd7f32] text-white hover:bg-[#b4530a]">
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
-        </AdminCardContent>
-      </AdminCard>
-
-      {/* Event Form Modal */}
-      {showForm && (
-        <AdminCard>
-          <AdminCardHeader>
-            <div className="flex items-center justify-between">
-              <AdminCardTitle>
-                {editingEvent ? 'Edit Event' : 'Create New Event'}
-              </AdminCardTitle>
-              <Button
-                onClick={resetForm}
-                className="bg-gray-600 text-white hover:bg-gray-700"
-              >
-                <X className="w-4 h-4" />
+        {/* Search and Filters */}
+        <Card className="bg-black/60 border-2 border-orange-500/30">
+          <CardContent className="p-4">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search events..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                />
+              </div>
+              <Button className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
+                <Search className="w-4 h-4" />
               </Button>
             </div>
-          </AdminCardHeader>
-          <AdminCardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-gray-900 text-sm font-medium">Title</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="border-gray-300"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-900 text-sm font-medium">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          </CardContent>
+        </Card>
 
-              <div>
-                <label className="text-white text-sm font-medium">Description</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-white text-sm font-medium">Date</label>
-                  <Input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-white text-sm font-medium">Time</label>
-                  <Input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-white text-sm font-medium">Venue</label>
-                  <Input
-                    value={formData.venue}
-                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                    placeholder="e.g., National Arena"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-white text-sm font-medium">Address</label>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                    placeholder="e.g., 123 Main Street"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-white text-sm font-medium">City</label>
-                  <Input
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                    placeholder="e.g., Pristina"
-                  />
-                </div>
-                <div>
-                  <label className="text-white text-sm font-medium">Country</label>
-                  <Input
-                    value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                    placeholder="e.g., Kosovo"
-                  />
-                </div>
-              </div>
-
-
-
-              <div>
-                <label className="text-white text-sm font-medium">Event Image</label>
-                <ImageUpload
-                  value={formData.image}
-                  onChange={(url) => setFormData({ ...formData, image: url })}
-                />
-              </div>
-
-              {/* Media Upload Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-white border-b border-white/20 pb-2 flex items-center gap-2">
-                  <FileImage className="w-5 h-5" />
-                  Media & Content
-                </h3>
-
-                <div>
-                  <label className="text-white text-sm font-medium flex items-center gap-2">
-                    <Image className="w-4 h-4" />
-                    Poster Image
-                  </label>
-                  <p className="text-white/60 text-xs mb-2">Main promotional image for the event</p>
-                  <ImageUpload
-                    value={formData.posterImage}
-                    onChange={(url) => setFormData({ ...formData, posterImage: url })}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-white text-sm font-medium flex items-center gap-2">
-                    <Image className="w-4 h-4" />
-                    Banner Image
-                  </label>
-                  <p className="text-white/60 text-xs mb-2">Wide banner image for event headers</p>
-                  <ImageUpload
-                    value={formData.bannerImage}
-                    onChange={(url) => setFormData({ ...formData, bannerImage: url })}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-white text-sm font-medium flex items-center gap-2">
-                    <Video className="w-4 h-4" />
-                    YouTube Trailer
-                  </label>
-                  <p className="text-white/60 text-xs mb-2">YouTube video URL for event promotion</p>
-                  <Input
-                    type="url"
-                    value={formData.youtubeTrailer}
-                    onChange={(e) => setFormData({ ...formData, youtubeTrailer: e.target.value })}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4">
+        {/* Event Form Modal */}
+        {showForm && (
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-black text-orange-500">
+                  {editingEvent ? 'Edit Event' : 'Create New Event'}
+                </CardTitle>
                 <Button
-                  type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {editingEvent ? 'Update Event' : 'Create Event'}
-                </Button>
-                <Button
-                  type="button"
                   onClick={resetForm}
-                  className="bg-gray-600 hover:bg-gray-700 text-white"
+                  className="bg-orange-500/20 text-orange-100 hover:bg-orange-500/30"
                 >
-                  Cancel
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
-            </form>
-          </AdminCardContent>
-        </AdminCard>
-      )}
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Title</label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 focus:border-orange-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full p-2 border-2 border-orange-500/30 rounded-md text-orange-100 bg-black/60 focus:border-orange-500"
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-      {/* Events List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEvents.map((event) => (
-          <AdminCard key={event._id}>
-            <AdminCardContent className="p-4">
-              <div className="space-y-3">
-                {event.image && (
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-32 object-cover rounded-lg"
+                <div>
+                  <label className="text-orange-100/70 text-sm font-bold">Description</label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                    rows={3}
                   />
-                )}
-
-                <div className="flex items-start justify-between">
-                  <h3 className="text-white font-semibold text-lg truncate">{event.title}</h3>
-                  <Badge variant={event.isActive ? 'default' : 'secondary'}>
-                    {event.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
                 </div>
 
-                <p className="text-white/70 text-sm line-clamp-2">{event.description}</p>
-
-                <div className="space-y-2 text-sm text-white/70">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(event.date).toLocaleDateString()} at {event.time}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Date</label>
+                    <Input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 focus:border-orange-500"
+                      required
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    {event.venue}
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Time</label>
+                    <Input
+                      type="time"
+                      value={formData.time}
+                      onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 focus:border-orange-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Venue</label>
+                    <Input
+                      value={formData.venue}
+                      onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                      placeholder="e.g., National Arena"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Address</label>
+                    <Input
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                      placeholder="e.g., 123 Main Street"
+                    />
                   </div>
                 </div>
 
-                {/* Media Indicators */}
-                {(event.posterImage || event.bannerImage || event.youtubeTrailer) && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-white/60">Media:</span>
-                    {event.posterImage && (
-                      <Badge variant="outline" className="text-xs border-green-400 text-green-400">
-                        <Image className="w-3 h-3 mr-1" />
-                        Poster
-                      </Badge>
-                    )}
-                    {event.bannerImage && (
-                      <Badge variant="outline" className="text-xs border-[#cd7f32] text-[#cd7f32]">
-                        <FileImage className="w-3 h-3 mr-1" />
-                        Banner
-                      </Badge>
-                    )}
-                    {event.youtubeTrailer && (
-                      <Badge variant="outline" className="text-xs border-red-400 text-red-400">
-                        <Video className="w-3 h-3 mr-1" />
-                        Trailer
-                      </Badge>
-                    )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">City</label>
+                    <Input
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                      placeholder="e.g., Pristina"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold">Country</label>
+                    <Input
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                      placeholder="e.g., Kosovo"
+                    />
+                  </div>
+                </div>
 
-                <div className="flex gap-2 pt-2">
+
+
+                <div>
+                  <label className="text-orange-100/70 text-sm font-bold">Event Image</label>
+                  <ImageUpload
+                    value={formData.image}
+                    onChange={(url) => setFormData({ ...formData, image: url })}
+                  />
+                </div>
+
+                {/* Media Upload Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-orange-500 border-b border-orange-500/20 pb-2 flex items-center gap-2">
+                    <FileImage className="w-5 h-5" />
+                    Media & Content
+                  </h3>
+
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold flex items-center gap-2">
+                      <Image className="w-4 h-4" />
+                      Poster Image
+                    </label>
+                    <p className="text-orange-100/50 text-xs mb-2">Main promotional image for the event</p>
+                    <ImageUpload
+                      value={formData.posterImage}
+                      onChange={(url) => setFormData({ ...formData, posterImage: url })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold flex items-center gap-2">
+                      <Image className="w-4 h-4" />
+                      Banner Image
+                    </label>
+                    <p className="text-orange-100/50 text-xs mb-2">Wide banner image for event headers</p>
+                    <ImageUpload
+                      value={formData.bannerImage}
+                      onChange={(url) => setFormData({ ...formData, bannerImage: url })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-orange-100/70 text-sm font-bold flex items-center gap-2">
+                      <Video className="w-4 h-4" />
+                      YouTube Trailer
+                    </label>
+                    <p className="text-orange-100/50 text-xs mb-2">YouTube video URL for event promotion</p>
+                    <Input
+                      type="url"
+                      value={formData.youtubeTrailer}
+                      onChange={(e) => setFormData({ ...formData, youtubeTrailer: e.target.value })}
+                      className="border-2 border-orange-500/30 bg-black/60 text-orange-100 placeholder:text-orange-100/40 focus:border-orange-500"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
                   <Button
-                    onClick={() => startEdit(event)}
-                    className="flex-1 bg-[#cd7f32] hover:bg-[#b4530a] text-white text-xs"
+                    type="submit"
+                    className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
                   >
-                    <Edit className="w-3 h-3 mr-1" />
-                    Edit
+                    <Save className="w-4 h-4 mr-2" />
+                    {editingEvent ? 'Update Event' : 'Create Event'}
                   </Button>
                   <Button
-                    onClick={() => toggleEventStatus(event._id, event.isActive)}
-                    className="flex-1 bg-orange-700 hover:bg-orange-800 text-white text-xs"
+                    type="button"
+                    onClick={resetForm}
+                    className="border-orange-500/30 text-orange-100 hover:bg-orange-500/10 border"
                   >
-                    {event.isActive ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
-                    {event.isActive ? 'Hide' : 'Show'}
-                  </Button>
-                  <Button
-                    onClick={() => handleDelete(event._id)}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs"
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    Delete
+                    Cancel
                   </Button>
                 </div>
-              </div>
-            </AdminCardContent>
-          </AdminCard>
-        ))}
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Events List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.map((event) => (
+            <Card key={event._id} className="bg-black/60 border-2 border-orange-500/30">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {event.image && (
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                  )}
+
+                  <div className="flex items-start justify-between">
+                    <h3 className="text-orange-100 font-semibold text-lg truncate">{event.title}</h3>
+                    <Badge variant={event.isActive ? 'default' : 'secondary'}>
+                      {event.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+
+                  <p className="text-orange-100/70 text-sm line-clamp-2">{event.description}</p>
+
+                  <div className="space-y-2 text-sm text-orange-100/70">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(event.date).toLocaleDateString()} at {event.time}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      {event.venue}
+                    </div>
+                  </div>
+
+                  {/* Media Indicators */}
+                  {(event.posterImage || event.bannerImage || event.youtubeTrailer) && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-orange-100/50">Media:</span>
+                      {event.posterImage && (
+                        <Badge variant="outline" className="text-xs border-green-400 text-green-400">
+                          <Image className="w-3 h-3 mr-1" />
+                          Poster
+                        </Badge>
+                      )}
+                      {event.bannerImage && (
+                        <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                          <FileImage className="w-3 h-3 mr-1" />
+                          Banner
+                        </Badge>
+                      )}
+                      {event.youtubeTrailer && (
+                        <Badge variant="outline" className="text-xs border-red-400 text-red-400">
+                          <Video className="w-3 h-3 mr-1" />
+                          Trailer
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => startEdit(event)}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold text-xs"
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => toggleEventStatus(event._id, event.isActive)}
+                      className="flex-1 border border-orange-500/30 bg-black/40 text-orange-100 hover:bg-orange-500/10 text-xs"
+                    >
+                      {event.isActive ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                      {event.isActive ? 'Hide' : 'Show'}
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(event._id)}
+                      className="flex-1 border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredEvents.length === 0 && (
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardContent className="p-8 text-center">
+              <Calendar className="w-12 h-12 text-orange-500/50 mx-auto mb-4" />
+              <p className="text-orange-100/70">No events found. Create your first event!</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {filteredEvents.length === 0 && (
-        <AdminCard>
-          <AdminCardContent className="p-8 text-center">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No events found. Create your first event!</p>
-          </AdminCardContent>
-        </AdminCard>
-      )}
     </div>
   );
 }

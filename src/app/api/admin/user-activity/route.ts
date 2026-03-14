@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const search = searchParams.get('search');
+    const device = searchParams.get('device');
+    const browser = searchParams.get('browser');
 
     // Build query
     const query: any = {};
@@ -56,6 +58,14 @@ export async function GET(request: NextRequest) {
       if (endDate) {
         query.createdAt.$lte = new Date(endDate);
       }
+    }
+
+    if (device) {
+      query.device = device;
+    }
+
+    if (browser) {
+      query.browser = { $regex: browser, $options: 'i' };
     }
 
     if (search) {
@@ -104,6 +114,54 @@ export async function GET(request: NextRequest) {
           recentActivity: [
             { $sort: { createdAt: -1 } },
             { $limit: 10 }
+          ],
+          // Referral sources - where users come from
+          byReferrer: [
+            { $match: { referrer: { $exists: true, $ne: '', $ne: null } } },
+            { $group: { _id: '$referrer', count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+            { $sort: { count: -1 } },
+            { $limit: 15 }
+          ],
+          // User visit frequency - how many times each user visited
+          topVisitors: [
+            { $group: { _id: '$userId', email: { $first: '$userEmail' }, name: { $first: '$userName' }, totalActions: { $sum: 1 }, lastSeen: { $max: '$createdAt' }, firstSeen: { $min: '$createdAt' } } },
+            { $sort: { totalActions: -1 } },
+            { $limit: 15 }
+          ],
+          // Entry intents - first action per session (what brought them in)
+          entryIntents: [
+            { $sort: { createdAt: 1 } },
+            { $group: { _id: '$sessionId', firstAction: { $first: '$action' }, userId: { $first: '$userId' } } },
+            { $group: { _id: '$firstAction', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+          ],
+          // Most browsed events
+          topBrowsedEvents: [
+            { $match: { action: 'event_view', eventTitle: { $exists: true, $ne: null } } },
+            { $group: { _id: '$eventTitle', eventId: { $first: '$eventId' }, views: { $sum: 1 }, uniqueViewers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, eventId: 1, views: 1, uniqueViewers: { $size: '$uniqueViewers' } } },
+            { $sort: { views: -1 } },
+            { $limit: 10 }
+          ],
+          // Most viewed pages
+          topPages: [
+            { $match: { action: 'page_view' } },
+            { $group: { _id: '$description', count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+          ],
+          // Unique users count
+          uniqueUsersCount: [
+            { $group: { _id: '$userId' } },
+            { $count: 'total' }
+          ],
+          // Unique sessions count
+          uniqueSessionsCount: [
+            { $match: { sessionId: { $exists: true, $ne: null } } },
+            { $group: { _id: '$sessionId' } },
+            { $count: 'total' }
           ]
         }
       }
@@ -132,7 +190,14 @@ export async function GET(request: NextRequest) {
           byDevice: stats[0].byDevice,
           byBrowser: stats[0].byBrowser,
           totalRevenue: stats[0].totalRevenue[0]?.total || 0,
-          recentActivity: stats[0].recentActivity
+          recentActivity: stats[0].recentActivity,
+          byReferrer: stats[0].byReferrer,
+          topVisitors: stats[0].topVisitors,
+          entryIntents: stats[0].entryIntents,
+          topBrowsedEvents: stats[0].topBrowsedEvents,
+          topPages: stats[0].topPages,
+          uniqueUsers: stats[0].uniqueUsersCount[0]?.total || 0,
+          uniqueSessions: stats[0].uniqueSessionsCount[0]?.total || 0
         }
       }
     });

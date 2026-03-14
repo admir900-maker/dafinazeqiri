@@ -40,7 +40,7 @@ const MAP_REGIONS: Record<string, { label: string; bounds: L.LatLngBoundsExpress
 
 interface LiveMapProps {
   liveData: any;
-  mapMode: 'live' | 'historical';
+  mapMode: 'live' | 'today' | 'historical';
   mapZoom: string;
   onCountryClick?: (countryCode: string) => void;
 }
@@ -152,6 +152,7 @@ export default function LiveMap({ liveData, mapMode, mapZoom, onCountryClick }: 
 
   const countries = useMemo(() => liveData?.countries || [], [liveData]);
   const maxCount = useMemo(() => Math.max(...countries.map((c: any) => c.count), 1), [countries]);
+  const liveCountryCodes = useMemo(() => new Set(liveData?.liveCountryCodes || []), [liveData]);
 
   // Initialize map once
   useEffect(() => {
@@ -220,30 +221,31 @@ export default function LiveMap({ liveData, mapMode, mapZoom, onCountryClick }: 
       const countryLatLng = L.latLng(coords[0], coords[1]);
       const intensity = Math.min(1, c.count / maxCount);
       const isBuyer = c.purchases > 0;
+      const isLive = mapMode === 'live' || liveCountryCodes.has(c._id);
       const color = isBuyer ? '#34d399' : '#60a5fa';
       const arcColor = isBuyer ? '#22c55e' : '#3b82f6';
 
       // Curved arc
       const arcPoints = curvedLatLngs(countryLatLng, serverLatLng);
       const arc = L.polyline(arcPoints, {
-        color: arcColor,
+        color: isLive ? arcColor : arcColor,
         weight: Math.max(1, intensity * 3),
-        opacity: 0.4 + intensity * 0.3,
-        dashArray: mapMode === 'live' ? '8 6' : undefined,
+        opacity: isLive ? (0.5 + intensity * 0.4) : (0.2 + intensity * 0.15),
+        dashArray: isLive ? '8 6' : undefined,
         smoothFactor: 1,
       });
       // Glow line behind
       const glow = L.polyline(arcPoints, {
         color: arcColor,
         weight: Math.max(4, intensity * 10),
-        opacity: 0.06,
+        opacity: isLive ? 0.08 : 0.03,
         smoothFactor: 1,
       });
       layers.addLayer(glow);
       layers.addLayer(arc);
 
-      // Animated dot along arc in live mode
-      if (mapMode === 'live' && arcPoints.length > 2) {
+      // Animated dot along arc for live countries
+      if (isLive && arcPoints.length > 2) {
         const dotMarker = L.circleMarker(arcPoints[0], {
           radius: 3,
           fillColor: color,
@@ -264,15 +266,16 @@ export default function LiveMap({ liveData, mapMode, mapZoom, onCountryClick }: 
       // Country marker
       const dotSize = 8 + intensity * 8;
       const marker = L.marker(coords, {
-        icon: countryDotIcon(color, dotSize, mapMode === 'live'),
+        icon: countryDotIcon(color, dotSize, isLive),
         zIndexOffset: 500,
       });
 
       const tooltipContent = `
         <div>
           <strong>${c.country || c._id}</strong>
-          <div style="color:#94a3b8;margin-top:2px">${c.count} visit${c.count !== 1 ? 's' : ''}${isBuyer ? ` · <span style="color:#34d399">${c.purchases} purchase${c.purchases !== 1 ? 's' : ''}</span>` : ''}</div>
-          ${c.uniqueUsers ? `<div style="color:#64748b;margin-top:1px">${c.uniqueUsers} unique user${c.uniqueUsers !== 1 ? 's' : ''}</div>` : ''}
+          ${isLive ? '<span style=\"color:#10b981;font-size:9px;margin-left:4px\">● LIVE</span>' : ''}
+          <div style=\"color:#94a3b8;margin-top:2px\">${c.count} visit${c.count !== 1 ? 's' : ''}${isBuyer ? ` · <span style=\"color:#34d399\">${c.purchases} purchase${c.purchases !== 1 ? 's' : ''}</span>` : ''}</div>
+          ${c.uniqueUsers ? `<div style=\"color:#64748b;margin-top:1px\">${c.uniqueUsers} unique user${c.uniqueUsers !== 1 ? 's' : ''}</div>` : ''}
         </div>
       `;
       marker.bindTooltip(tooltipContent, {
@@ -294,7 +297,7 @@ export default function LiveMap({ liveData, mapMode, mapZoom, onCountryClick }: 
         if (layer._animInterval) clearInterval(layer._animInterval);
       });
     };
-  }, [countries, maxCount, mapMode, onCountryClick]);
+  }, [countries, maxCount, mapMode, liveCountryCodes, onCountryClick]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%', minHeight: 420 }} />;
 }

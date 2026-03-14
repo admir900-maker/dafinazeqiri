@@ -111,7 +111,7 @@ export default function UserActivityPage() {
   const [showLiveMap, setShowLiveMap] = useState(false);
 
   // Live map
-  const [mapMode, setMapMode] = useState<'live' | 'historical'>('live');
+  const [mapMode, setMapMode] = useState<'live' | 'today' | 'historical'>('today');
   const [liveData, setLiveData] = useState<any>(null);
   const [liveLoading, setLiveLoading] = useState(false);
   const liveInterval = useRef<any>(null);
@@ -149,12 +149,13 @@ export default function UserActivityPage() {
 
   // Start/stop live polling
   useEffect(() => {
-    if (showLiveMap && mapMode === 'live') {
+    if (showLiveMap) {
       fetchLiveData();
-      liveInterval.current = setInterval(fetchLiveData, 8000);
-      return () => { if (liveInterval.current) clearInterval(liveInterval.current); };
-    } else if (showLiveMap && mapMode === 'historical') {
-      fetchLiveData();
+      // Poll every 8s for live and today modes (to catch new live connections)
+      if (mapMode === 'live' || mapMode === 'today') {
+        liveInterval.current = setInterval(fetchLiveData, 8000);
+        return () => { if (liveInterval.current) clearInterval(liveInterval.current); };
+      }
     }
     return () => { if (liveInterval.current) clearInterval(liveInterval.current); };
   }, [showLiveMap, mapMode, fetchLiveData]);
@@ -977,14 +978,14 @@ export default function UserActivityPage() {
           <div className="px-5 py-3.5 border-b border-zinc-800/40 flex items-center justify-between bg-[#0c0c16]/80 backdrop-blur-sm">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2.5">
-                {mapMode === 'live' && (
+                {mapMode !== 'historical' && (
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                 )}
                 <h3 className="text-white/90 text-sm font-semibold tracking-wide uppercase">
-                  {mapMode === 'live' ? 'Real-Time Traffic' : 'Historical Overview'}
+                  {mapMode === 'live' ? 'Real-Time Traffic' : mapMode === 'today' ? "Today's Traffic" : 'Historical Overview'}
                 </h3>
               </div>
               {liveData && (
@@ -1014,6 +1015,10 @@ export default function UserActivityPage() {
                   className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${mapMode === 'live' ? 'bg-emerald-600/90 text-white shadow-lg shadow-emerald-900/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
                   Live
                 </button>
+                <button onClick={() => setMapMode('today')}
+                  className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${mapMode === 'today' ? 'bg-orange-600/90 text-white shadow-lg shadow-orange-900/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  Today
+                </button>
                 <button onClick={() => setMapMode('historical')}
                   className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${mapMode === 'historical' ? 'bg-blue-600/90 text-white shadow-lg shadow-blue-900/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
                   30 Days
@@ -1042,7 +1047,7 @@ export default function UserActivityPage() {
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#60a5fa]"></div><span className="text-zinc-400">Visitors</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#34d399]"></div><span className="text-zinc-400">Buyers</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#f97316]"></div><span className="text-zinc-400">Server</span></div>
-                <span className="text-zinc-600">{mapMode === 'live' ? '● Live · 8s' : '● 30 days'}</span>
+                <span className="text-zinc-600">{mapMode === 'live' ? '● Live · 8s' : mapMode === 'today' ? '● Today + Live' : '● 30 days'}</span>
               </div>
             </div>
 
@@ -1050,14 +1055,14 @@ export default function UserActivityPage() {
             <div className="lg:w-80 border-t lg:border-t-0 lg:border-l border-zinc-800/40 flex flex-col bg-[#0c0c14]">
               <div className="px-4 py-3 border-b border-zinc-800/40 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {mapMode === 'live' && (
+                  {mapMode !== 'historical' && (
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                     </span>
                   )}
                   <span className="text-white/80 text-[11px] font-semibold tracking-wider uppercase">
-                    {mapMode === 'live' ? 'Live Feed' : 'Recent Events'}
+                    {mapMode === 'live' ? 'Live Feed' : mapMode === 'today' ? "Today's Activity" : 'Recent Events'}
                   </span>
                 </div>
                 <span className="text-zinc-600 text-[10px] font-mono">{liveData?.activities?.length || 0}</span>
@@ -1111,7 +1116,7 @@ export default function UserActivityPage() {
                     <div className="w-10 h-10 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
                       <Globe className="h-5 w-5 text-zinc-600" />
                     </div>
-                    <p className="text-zinc-500 text-xs">{mapMode === 'live' ? 'Waiting for connections...' : 'No recent data'}</p>
+                    <p className="text-zinc-500 text-xs">{mapMode === 'live' ? 'Waiting for connections...' : mapMode === 'today' ? 'No activity today yet' : 'No recent data'}</p>
                   </div>
                 )}
               </div>
@@ -1119,9 +1124,9 @@ export default function UserActivityPage() {
               {/* Country summary */}
               {liveData?.countries && liveData.countries.length > 0 && (
                 <div className="border-t border-zinc-800/40 px-4 py-3 bg-[#080810]">
-                  <p className="text-zinc-600 text-[9px] font-semibold tracking-wider uppercase mb-2">Top Sources</p>
+                  <p className="text-zinc-600 text-[9px] font-semibold tracking-wider uppercase mb-2">All Sources</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {liveData.countries.slice(0, 8).map((c: any, i: number) => (
+                    {liveData.countries.map((c: any, i: number) => (
                       <button key={i} onClick={() => {
                         const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id);
                         if (cd) openCountryDetail(cd);

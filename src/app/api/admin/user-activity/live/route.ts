@@ -16,15 +16,33 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const minutes = parseInt(searchParams.get('minutes') || '5');
-    const mode = searchParams.get('mode') || 'live'; // live | historical
+    const mode = searchParams.get('mode') || 'live'; // live | today | historical
 
     let matchStage: any = {};
 
     if (mode === 'live') {
       matchStage.createdAt = { $gte: new Date(Date.now() - minutes * 60 * 1000) };
+    } else if (mode === 'today') {
+      // Today from midnight UTC
+      const todayStart = new Date();
+      todayStart.setUTCHours(0, 0, 0, 0);
+      matchStage.createdAt = { $gte: todayStart };
     } else {
       // Historical - last 30 days
       matchStage.createdAt = { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
+    }
+
+    // For 'today' mode also get live activities from last N minutes
+    let liveActivities: any[] = [];
+    if (mode === 'today') {
+      liveActivities = await UserActivity.find({
+        createdAt: { $gte: new Date(Date.now() - minutes * 60 * 1000) },
+        country: { $exists: true, $nin: ['', null] },
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .select('action country countryCode city userName userEmail userId createdAt status amount')
+        .lean();
     }
 
     // Get recent activities with geo data
@@ -33,7 +51,7 @@ export async function GET(request: NextRequest) {
       country: { $exists: true, $nin: ['', null] },
     })
       .sort({ createdAt: -1 })
-      .limit(mode === 'live' ? 50 : 200)
+      .limit(mode === 'live' ? 50 : 500)
       .select('action country countryCode city userName userEmail userId createdAt status amount')
       .lean();
 
@@ -54,10 +72,17 @@ export async function GET(request: NextRequest) {
       { $sort: { count: -1 } },
     ]);
 
+    // For 'today' mode, determine which country codes are "live" (active in last N minutes)
+    const liveCountryCodes = mode === 'today'
+      ? [...new Set(liveActivities.map((a: any) => a.countryCode).filter(Boolean))]
+      : [];
+
     return NextResponse.json({
       success: true,
       data: {
-        activities: recentWithGeo,
+        activities: mode === 'today' ? recentWithGeo : recentWithGeo,
+        liveActivities: mode === 'today' ? liveActivities : [],
+        liveCountryCodes,
         countries: countryAgg,
         timestamp: new Date().toISOString(),
       }

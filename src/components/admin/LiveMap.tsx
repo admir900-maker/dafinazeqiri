@@ -28,14 +28,14 @@ const SERVER_LOC: L.LatLngExpression = [42.6, 21.0];
 
 // Region presets: [south, west, north, east]
 const MAP_REGIONS: Record<string, { label: string; bounds: L.LatLngBoundsExpression; flag: string }> = {
-  world:          { label: 'World',     bounds: [[-60, -160], [75, 180]],   flag: '🌍' },
-  europe:         { label: 'Europe',    bounds: [[34, -12], [72, 42]],      flag: '🇪🇺' },
-  eastern_europe: { label: 'E. Europe', bounds: [[36, 12], [62, 42]],      flag: '🏔️' },
-  balkans:        { label: 'Balkans',   bounds: [[35, 13], [48, 30]],       flag: '⛰️' },
-  americas:       { label: 'Americas',  bounds: [[-56, -130], [72, -30]],   flag: '🌎' },
-  asia:           { label: 'Asia',      bounds: [[-10, 60], [55, 150]],     flag: '🌏' },
-  middle_east:    { label: 'Mid East',  bounds: [[12, 25], [42, 65]],       flag: '🕌' },
-  africa:         { label: 'Africa',    bounds: [[-38, -20], [38, 55]],     flag: '🌍' },
+  world: { label: 'World', bounds: [[-60, -160], [75, 180]], flag: '🌍' },
+  europe: { label: 'Europe', bounds: [[34, -12], [72, 42]], flag: '🇪🇺' },
+  eastern_europe: { label: 'E. Europe', bounds: [[36, 12], [62, 42]], flag: '🏔️' },
+  balkans: { label: 'Balkans', bounds: [[35, 13], [48, 30]], flag: '⛰️' },
+  americas: { label: 'Americas', bounds: [[-56, -130], [72, -30]], flag: '🌎' },
+  asia: { label: 'Asia', bounds: [[-10, 60], [55, 150]], flag: '🌏' },
+  middle_east: { label: 'Mid East', bounds: [[12, 25], [42, 65]], flag: '🕌' },
+  africa: { label: 'Africa', bounds: [[-38, -20], [38, 55]], flag: '🌍' },
 };
 
 interface LiveMapProps {

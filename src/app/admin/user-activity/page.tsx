@@ -74,14 +74,14 @@ const CHART_COLORS = ['#f97316', '#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#0
 
 // Map region labels for zoom selector
 const MAP_REGION_LABELS: Record<string, { label: string; flag: string }> = {
-  world:          { label: 'World',     flag: '🌍' },
-  europe:         { label: 'Europe',    flag: '🇪🇺' },
+  world: { label: 'World', flag: '🌍' },
+  europe: { label: 'Europe', flag: '🇪🇺' },
   eastern_europe: { label: 'E. Europe', flag: '🏔️' },
-  balkans:        { label: 'Balkans',   flag: '⛰️' },
-  americas:       { label: 'Americas',  flag: '🌎' },
-  asia:           { label: 'Asia',      flag: '🌏' },
-  middle_east:    { label: 'Mid East',  flag: '🕌' },
-  africa:         { label: 'Africa',    flag: '🌍' },
+  balkans: { label: 'Balkans', flag: '⛰️' },
+  americas: { label: 'Americas', flag: '🌎' },
+  asia: { label: 'Asia', flag: '🌏' },
+  middle_east: { label: 'Mid East', flag: '🕌' },
+  africa: { label: 'Africa', flag: '🌍' },
 };
 
 export default function UserActivityPage() {
@@ -1002,8 +1002,8 @@ export default function UserActivityPage() {
                 {Object.entries(MAP_REGION_LABELS).map(([key, region]) => (
                   <button key={key} onClick={() => setMapZoom(key)}
                     className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap flex items-center gap-1 ${mapZoom === key
-                        ? 'bg-orange-600/80 text-white shadow-lg shadow-orange-900/30'
-                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                      ? 'bg-orange-600/80 text-white shadow-lg shadow-orange-900/30'
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
                       }`}>
                     <span className="text-[10px]">{region.flag}</span> {region.label}
                   </button>

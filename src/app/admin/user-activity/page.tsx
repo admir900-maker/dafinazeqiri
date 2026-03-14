@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import {
   Activity, Search, Filter, RefreshCw, ChevronDown, ChevronUp,
@@ -9,7 +9,7 @@ import {
   Calendar, FileText, ArrowUpDown, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, Trash2, Download, Star, Mail,
   MousePointerClick, LogIn, LogOut, UserPlus, Share2, Heart,
-  MessageSquare, Bell, Timer, Flag, ArrowDown, ArrowUp
+  MessageSquare, Bell, Timer, Flag, ArrowDown, ArrowUp, Radio, Zap
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -69,6 +69,43 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const CHART_COLORS = ['#f97316', '#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1', '#84cc16', '#e11d48'];
 
+// Country code → approximate [lat, lng] for map lines
+const COUNTRY_COORDS: Record<string, [number, number]> = {
+  US: [39, -98], CA: [56, -96], MX: [23, -102], BR: [-14, -51], AR: [-34, -64],
+  GB: [54, -2], DE: [51, 10], FR: [46, 2], IT: [42, 12], ES: [40, -4],
+  NL: [52, 5], BE: [50, 4], AT: [47, 14], CH: [47, 8], SE: [62, 15],
+  NO: [60, 8], DK: [56, 10], FI: [64, 26], PL: [52, 20], CZ: [50, 15],
+  PT: [39, -8], IE: [53, -8], GR: [39, 22], HR: [45, 16], RO: [46, 25],
+  BG: [43, 25], HU: [47, 20], SK: [49, 19], SI: [46, 15], RS: [44, 21],
+  BA: [44, 18], ME: [42, 19], MK: [41, 22], AL: [41, 20], XK: [42, 21],
+  TR: [39, 35], RU: [60, 100], UA: [49, 32], SA: [24, 45], AE: [24, 54],
+  IL: [31, 35], EG: [27, 30], ZA: [29, 24], NG: [10, 8], KE: [-1, 38],
+  IN: [21, 78], CN: [35, 105], JP: [36, 138], KR: [36, 128], AU: [-25, 134],
+  NZ: [-41, 174], TH: [15, 101], VN: [16, 108], ID: [-5, 120], PH: [13, 122],
+  SG: [1, 104], MY: [4, 102], PK: [30, 70], BD: [24, 90], LK: [7, 81],
+  CO: [4, -72], CL: [-35, -71], PE: [-10, -76], VE: [7, -66], EC: [-2, -78],
+  QA: [25, 51], KW: [29, 48], BH: [26, 51], OM: [21, 57], JO: [31, 36],
+  LB: [34, 36], LT: [56, 24], LV: [57, 25], EE: [59, 26], CY: [35, 33],
+  LU: [50, 6], MT: [36, 14], IS: [65, -18],
+};
+
+// Server location (Kosovo)
+const SERVER_LOC: [number, number] = [42.6, 21.0];
+
+// Simple equirectangular projection for the SVG map
+function geoToSvg(lat: number, lng: number, w: number, h: number): [number, number] {
+  const x = ((lng + 180) / 360) * w;
+  const y = ((90 - lat) / 180) * h;
+  return [x, y];
+}
+
+// Generate a curved SVG path between two points
+function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
+  const mx = (x1 + x2) / 2;
+  const my = Math.min(y1, y2) - Math.abs(x2 - x1) * 0.15;
+  return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
+}
+
 export default function UserActivityPage() {
   const { user } = useUser();
   const [activities, setActivities] = useState<any[]>([]);
@@ -93,6 +130,14 @@ export default function UserActivityPage() {
   const [showGeo, setShowGeo] = useState(false);
   const [showReports, setShowReports] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showLiveMap, setShowLiveMap] = useState(false);
+
+  // Live map
+  const [mapMode, setMapMode] = useState<'live' | 'historical'>('live');
+  const [liveData, setLiveData] = useState<any>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const liveInterval = useRef<any>(null);
+  const [livePulse, setLivePulse] = useState(0);
 
   // Drill-down
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
@@ -106,6 +151,34 @@ export default function UserActivityPage() {
   // User demographics from Clerk
   const [userDemographics, setUserDemographics] = useState<any[]>([]);
   const [loadingDemographics, setLoadingDemographics] = useState(false);
+
+  const fetchLiveData = useCallback(async () => {
+    try {
+      setLiveLoading(true);
+      const res = await fetch(`/api/admin/user-activity/live?mode=${mapMode}&minutes=5`);
+      const data = await res.json();
+      if (data.success) {
+        setLiveData(data.data);
+        setLivePulse(p => p + 1);
+      }
+    } catch (err) {
+      console.error('Failed to fetch live data:', err);
+    } finally {
+      setLiveLoading(false);
+    }
+  }, [mapMode]);
+
+  // Start/stop live polling
+  useEffect(() => {
+    if (showLiveMap && mapMode === 'live') {
+      fetchLiveData();
+      liveInterval.current = setInterval(fetchLiveData, 8000);
+      return () => { if (liveInterval.current) clearInterval(liveInterval.current); };
+    } else if (showLiveMap && mapMode === 'historical') {
+      fetchLiveData();
+    }
+    return () => { if (liveInterval.current) clearInterval(liveInterval.current); };
+  }, [showLiveMap, mapMode, fetchLiveData]);
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -304,6 +377,10 @@ export default function UserActivityPage() {
           <button onClick={() => setShowTimeline(!showTimeline)}
             className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showTimeline ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
             <Calendar className="h-4 w-4" /> Timeline
+          </button>
+          <button onClick={() => setShowLiveMap(!showLiveMap)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showLiveMap ? 'bg-red-600 text-white animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <Radio className="h-4 w-4" /> Live Map
           </button>
           <button onClick={() => { setCurrentPage(1); fetchActivities(); }}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 flex items-center gap-1 transition">
@@ -910,6 +987,258 @@ export default function UserActivityPage() {
               <Area type="monotone" dataKey="purchases" stroke="#22c55e" fill="#22c55e40" name="Purchases" />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Live Map Panel */}
+      {showLiveMap && (
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl overflow-hidden">
+          {/* Map Header */}
+          <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                {mapMode === 'live' && <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span></span>}
+                <Radio className="h-4 w-4 text-orange-500" />
+                {mapMode === 'live' ? 'Live Connection Map' : 'Historical Connection Map'}
+              </h3>
+              {liveData && <span className="text-zinc-500 text-xs">{liveData.countries?.length || 0} countries • {liveData.activities?.length || 0} events</span>}
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setMapMode('live')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${mapMode === 'live' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+                <Zap className="h-3 w-3 inline mr-1" />Live
+              </button>
+              <button onClick={() => setMapMode('historical')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${mapMode === 'historical' ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+                <Clock className="h-3 w-3 inline mr-1" />Historical
+              </button>
+              <button onClick={fetchLiveData} className="px-2 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition">
+                <RefreshCw className={`h-3.5 w-3.5 ${liveLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row">
+            {/* SVG Map */}
+            <div className="flex-1 relative bg-zinc-950/50 p-2">
+              {(() => {
+                const W = 900, H = 460;
+                const serverPt = geoToSvg(SERVER_LOC[0], SERVER_LOC[1], W, H);
+                const countries = liveData?.countries || [];
+                const maxCount = Math.max(...countries.map((c: any) => c.count), 1);
+
+                return (
+                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ minHeight: 300 }}>
+                    <defs>
+                      <radialGradient id="serverGlow">
+                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+                        <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+                      </radialGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                      {/* Animated dash for live mode */}
+                      <style>{`
+                        @keyframes dash { to { stroke-dashoffset: -20; } }
+                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                        @keyframes ripple { 0% { r: 4; opacity: 0.8; } 100% { r: 18; opacity: 0; } }
+                        .conn-line { animation: dash 1.5s linear infinite; }
+                        .fade-in { animation: fadeIn 0.6s ease-out; }
+                      `}</style>
+                    </defs>
+
+                    {/* Background grid */}
+                    <rect width={W} height={H} fill="#09090b" rx="8" />
+                    {Array.from({ length: 18 }, (_, i) => (
+                      <line key={`vg${i}`} x1={(i + 1) * (W / 18)} y1={0} x2={(i + 1) * (W / 18)} y2={H} stroke="#1a1a2e" strokeWidth="0.5" />
+                    ))}
+                    {Array.from({ length: 9 }, (_, i) => (
+                      <line key={`hg${i}`} x1={0} y1={(i + 1) * (H / 9)} x2={W} y2={(i + 1) * (H / 9)} stroke="#1a1a2e" strokeWidth="0.5" />
+                    ))}
+
+                    {/* Simplified continent outlines as filled regions */}
+                    {/* North America */}
+                    <ellipse cx={200} cy={140} rx={120} ry={80} fill="#1a2332" opacity={0.5} />
+                    {/* South America */}
+                    <ellipse cx={250} cy={310} rx={60} ry={90} fill="#1a2332" opacity={0.5} />
+                    {/* Europe */}
+                    <ellipse cx={470} cy={120} rx={70} ry={55} fill="#1a2332" opacity={0.5} />
+                    {/* Africa */}
+                    <ellipse cx={480} cy={270} rx={65} ry={90} fill="#1a2332" opacity={0.5} />
+                    {/* Asia */}
+                    <ellipse cx={650} cy={160} rx={130} ry={85} fill="#1a2332" opacity={0.5} />
+                    {/* Oceania */}
+                    <ellipse cx={760} cy={330} rx={60} ry={40} fill="#1a2332" opacity={0.5} />
+
+                    {/* Connection lines from countries to server */}
+                    {countries.map((c: any, i: number) => {
+                      const coords = COUNTRY_COORDS[c._id];
+                      if (!coords) return null;
+                      const pt = geoToSvg(coords[0], coords[1], W, H);
+                      const intensity = Math.min(1, c.count / maxCount);
+                      const color = c.purchases > 0 ? '#22c55e' : '#3b82f6';
+                      return (
+                        <g key={`line-${c._id}`} className="fade-in">
+                          {/* Curved connection line */}
+                          <path
+                            d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth={Math.max(0.8, intensity * 3)}
+                            strokeOpacity={0.3 + intensity * 0.5}
+                            strokeDasharray={mapMode === 'live' ? '6 4' : 'none'}
+                            className={mapMode === 'live' ? 'conn-line' : ''}
+                            filter="url(#glow)"
+                          />
+                          {/* Glow on the line */}
+                          <path
+                            d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth={Math.max(2, intensity * 6)}
+                            strokeOpacity={0.08}
+                          />
+                        </g>
+                      );
+                    })}
+
+                    {/* Country dots */}
+                    {countries.map((c: any, i: number) => {
+                      const coords = COUNTRY_COORDS[c._id];
+                      if (!coords) return null;
+                      const pt = geoToSvg(coords[0], coords[1], W, H);
+                      const intensity = Math.min(1, c.count / maxCount);
+                      const r = 3 + intensity * 5;
+                      const color = c.purchases > 0 ? '#22c55e' : '#3b82f6';
+                      return (
+                        <g key={`dot-${c._id}`} className="fade-in" style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id);
+                            if (cd) openCountryDetail(cd);
+                          }}>
+                          {/* Ripple for live */}
+                          {mapMode === 'live' && (
+                            <circle cx={pt[0]} cy={pt[1]} r={4} fill="none" stroke={color} strokeWidth="1" opacity="0.6">
+                              <animate attributeName="r" from="4" to="18" dur="2s" repeatCount="indefinite" />
+                              <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                          )}
+                          {/* Outer glow */}
+                          <circle cx={pt[0]} cy={pt[1]} r={r + 3} fill={color} opacity={0.15} />
+                          {/* Main dot */}
+                          <circle cx={pt[0]} cy={pt[1]} r={r} fill={color} opacity={0.7 + intensity * 0.3} filter="url(#glow)" />
+                          {/* Label */}
+                          <text x={pt[0]} y={pt[1] - r - 4} textAnchor="middle" fill="#d4d4d8" fontSize="8" fontWeight="600">
+                            {countryCodeToFlag(c._id)} {c.country}
+                          </text>
+                          <text x={pt[0]} y={pt[1] - r - 14} textAnchor="middle" fill="#a1a1aa" fontSize="7">
+                            {c.count} {c.purchases > 0 ? `(${c.purchases} 💰)` : ''}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Server dot (Kosovo) */}
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={20} fill="url(#serverGlow)" />
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={6} fill="#f97316" filter="url(#glow)">
+                      {mapMode === 'live' && <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />}
+                    </circle>
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={3} fill="#fff" />
+                    <text x={serverPt[0]} y={serverPt[1] + 16} textAnchor="middle" fill="#f97316" fontSize="9" fontWeight="700">
+                      🏠 Server
+                    </text>
+
+                    {/* Legend */}
+                    <g transform={`translate(12, ${H - 60})`}>
+                      <rect x={0} y={0} width={140} height={52} fill="#18181b" rx="6" opacity="0.9" />
+                      <circle cx={14} cy={14} r={4} fill="#3b82f6" />
+                      <text x={24} y={18} fill="#a1a1aa" fontSize="8">Visitors</text>
+                      <circle cx={14} cy={30} r={4} fill="#22c55e" />
+                      <text x={24} y={34} fill="#a1a1aa" fontSize="8">Buyers</text>
+                      <circle cx={80} cy={14} r={4} fill="#f97316" />
+                      <text x={90} y={18} fill="#a1a1aa" fontSize="8">Server</text>
+                      <text x={14} y={46} fill="#52525b" fontSize="7">
+                        {mapMode === 'live' ? 'auto-refresh 8s' : 'last 30 days'}
+                      </text>
+                    </g>
+                  </svg>
+                );
+              })()}
+            </div>
+
+            {/* Live Activity Feed */}
+            <div className="lg:w-72 border-t lg:border-t-0 lg:border-l border-zinc-800 flex flex-col">
+              <div className="px-3 py-2.5 border-b border-zinc-800 flex items-center justify-between">
+                <span className="text-white text-xs font-semibold flex items-center gap-1.5">
+                  {mapMode === 'live' && <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>}
+                  {mapMode === 'live' ? 'Live Feed' : 'Recent Activity'}
+                </span>
+                <span className="text-zinc-600 text-[10px]">{liveData?.activities?.length || 0} events</span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[380px] divide-y divide-zinc-800/50">
+                {(liveData?.activities || []).slice(0, 30).map((act: any, i: number) => {
+                  const acfg = ACTION_CONFIG[act.action] || { label: act.action, color: '#6b7280', icon: '📌' };
+                  return (
+                    <div key={i} className="px-3 py-2 hover:bg-zinc-800/30 transition">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm flex-shrink-0">{acfg.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: acfg.color + '20', color: acfg.color }}>
+                              {acfg.label}
+                            </span>
+                            {act.amount > 0 && <span className="text-green-400 text-[10px] font-medium">€{act.amount}</span>}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {act.countryCode && <span className="text-xs">{countryCodeToFlag(act.countryCode)}</span>}
+                            <span className="text-zinc-400 text-[10px] truncate">{act.city || act.country}</span>
+                            <span className="text-zinc-600 text-[10px]">•</span>
+                            <span className="text-zinc-500 text-[10px] truncate">{act.userName || act.userEmail || 'Anonymous'}</span>
+                          </div>
+                        </div>
+                        <span className="text-zinc-600 text-[9px] flex-shrink-0 whitespace-nowrap">
+                          {(() => {
+                            const diff = Date.now() - new Date(act.createdAt).getTime();
+                            const mins = Math.floor(diff / 60000);
+                            if (mins < 1) return 'now';
+                            if (mins < 60) return `${mins}m`;
+                            const hrs = Math.floor(mins / 60);
+                            if (hrs < 24) return `${hrs}h`;
+                            return `${Math.floor(hrs / 24)}d`;
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {(!liveData?.activities || liveData.activities.length === 0) && (
+                  <div className="p-6 text-center">
+                    <Globe className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
+                    <p className="text-zinc-500 text-xs">{mapMode === 'live' ? 'No live activity yet' : 'No data available'}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Country summary at bottom */}
+              {liveData?.countries && liveData.countries.length > 0 && (
+                <div className="border-t border-zinc-800 px-3 py-2">
+                  <p className="text-zinc-500 text-[10px] mb-1.5">Top Sources</p>
+                  <div className="flex flex-wrap gap-1">
+                    {liveData.countries.slice(0, 8).map((c: any, i: number) => (
+                      <button key={i} onClick={() => {
+                        const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id);
+                        if (cd) openCountryDetail(cd);
+                      }}
+                        className="text-[10px] bg-zinc-800 rounded-full px-2 py-0.5 text-zinc-300 hover:bg-zinc-700 transition flex items-center gap-1">
+                        {countryCodeToFlag(c._id)} {c.count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

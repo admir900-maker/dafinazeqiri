@@ -15,7 +15,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area
 } from 'recharts';
-import { WORLD_LAND_PATH, WORLD_COUNTRY_PATHS } from '@/lib/worldMapPaths';
+import dynamic from 'next/dynamic';
+
+const LiveMap = dynamic(() => import('@/components/admin/LiveMap'), { ssr: false });
 
 // Country code to flag emoji
 function countryCodeToFlag(code: string): string {
@@ -70,54 +72,17 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const CHART_COLORS = ['#f97316', '#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1', '#84cc16', '#e11d48'];
 
-// Country code → approximate [lat, lng] for map lines
-const COUNTRY_COORDS: Record<string, [number, number]> = {
-  US: [39, -98], CA: [56, -96], MX: [23, -102], BR: [-14, -51], AR: [-34, -64],
-  GB: [54, -2], DE: [51, 10], FR: [46, 2], IT: [42, 12], ES: [40, -4],
-  NL: [52, 5], BE: [50, 4], AT: [47, 14], CH: [47, 8], SE: [62, 15],
-  NO: [60, 8], DK: [56, 10], FI: [64, 26], PL: [52, 20], CZ: [50, 15],
-  PT: [39, -8], IE: [53, -8], GR: [39, 22], HR: [45, 16], RO: [46, 25],
-  BG: [43, 25], HU: [47, 20], SK: [49, 19], SI: [46, 15], RS: [44, 21],
-  BA: [44, 18], ME: [42, 19], MK: [41, 22], AL: [41, 20], XK: [42, 21],
-  TR: [39, 35], RU: [60, 100], UA: [49, 32], SA: [24, 45], AE: [24, 54],
-  IL: [31, 35], EG: [27, 30], ZA: [29, 24], NG: [10, 8], KE: [-1, 38],
-  IN: [21, 78], CN: [35, 105], JP: [36, 138], KR: [36, 128], AU: [-25, 134],
-  NZ: [-41, 174], TH: [15, 101], VN: [16, 108], ID: [-5, 120], PH: [13, 122],
-  SG: [1, 104], MY: [4, 102], PK: [30, 70], BD: [24, 90], LK: [7, 81],
-  CO: [4, -72], CL: [-35, -71], PE: [-10, -76], VE: [7, -66], EC: [-2, -78],
-  QA: [25, 51], KW: [29, 48], BH: [26, 51], OM: [21, 57], JO: [31, 36],
-  LB: [34, 36], LT: [56, 24], LV: [57, 25], EE: [59, 26], CY: [35, 33],
-  LU: [50, 6], MT: [36, 14], IS: [65, -18],
+// Map region labels for zoom selector
+const MAP_REGION_LABELS: Record<string, { label: string; flag: string }> = {
+  world:          { label: 'World',     flag: '🌍' },
+  europe:         { label: 'Europe',    flag: '🇪🇺' },
+  eastern_europe: { label: 'E. Europe', flag: '🏔️' },
+  balkans:        { label: 'Balkans',   flag: '⛰️' },
+  americas:       { label: 'Americas',  flag: '🌎' },
+  asia:           { label: 'Asia',      flag: '🌏' },
+  middle_east:    { label: 'Mid East',  flag: '🕌' },
+  africa:         { label: 'Africa',    flag: '🌍' },
 };
-
-// Server location (Kosovo)
-const SERVER_LOC: [number, number] = [42.6, 21.0];
-
-// Map region zoom presets: [minLng, minLat, maxLng, maxLat]
-const MAP_REGIONS: Record<string, { label: string; bounds: [number, number, number, number]; flag?: string }> = {
-  world: { label: 'World', bounds: [-180, -90, 180, 90], flag: '🌍' },
-  europe: { label: 'Europe', bounds: [-12, 34, 42, 72], flag: '🇪🇺' },
-  eastern_europe: { label: 'E. Europe', bounds: [12, 36, 42, 62], flag: '🏔️' },
-  balkans: { label: 'Balkans', bounds: [13, 35, 30, 48], flag: '⛰️' },
-  americas: { label: 'Americas', bounds: [-130, -56, -30, 72], flag: '🌎' },
-  asia: { label: 'Asia', bounds: [60, -10, 150, 55], flag: '🌏' },
-  middle_east: { label: 'Mid East', bounds: [25, 12, 65, 42], flag: '🕌' },
-  africa: { label: 'Africa', bounds: [-20, -38, 55, 38], flag: '🌍' },
-};
-
-// Simple equirectangular projection for the SVG map
-function geoToSvg(lat: number, lng: number, w: number, h: number): [number, number] {
-  const x = ((lng + 180) / 360) * w;
-  const y = ((90 - lat) / 180) * h;
-  return [x, y];
-}
-
-// Generate a curved SVG path between two points
-function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
-  const mx = (x1 + x2) / 2;
-  const my = Math.min(y1, y2) - Math.abs(x2 - x1) * 0.15;
-  return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
-}
 
 export default function UserActivityPage() {
   const { user } = useUser();
@@ -1033,7 +998,7 @@ export default function UserActivityPage() {
             <div className="flex items-center gap-2">
               {/* Region zoom selector */}
               <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-                {Object.entries(MAP_REGIONS).map(([key, region]) => (
+                {Object.entries(MAP_REGION_LABELS).map(([key, region]) => (
                   <button key={key} onClick={() => setMapZoom(key)}
                     className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap flex items-center gap-1 ${mapZoom === key
                         ? 'bg-orange-600/80 text-white shadow-lg shadow-orange-900/30'
@@ -1061,204 +1026,24 @@ export default function UserActivityPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row">
-            {/* SVG World Map */}
-            <div className="flex-1 relative">
-              {(() => {
-                const W = 960, H = 500;
-                const serverPt = geoToSvg(SERVER_LOC[0], SERVER_LOC[1], W, H);
-                const countries = liveData?.countries || [];
-                const maxCount = Math.max(...countries.map((c: any) => c.count), 1);
-                const accentColor = mapMode === 'live' ? '#10b981' : '#3b82f6';
-
-                // Compute viewBox from selected region
-                const regionDef = MAP_REGIONS[mapZoom] || MAP_REGIONS.world;
-                const [minLng, minLat, maxLng, maxLat] = regionDef.bounds;
-                const vx = ((minLng + 180) / 360) * W;
-                const vy = ((90 - maxLat) / 180) * H;
-                const vw = ((maxLng - minLng) / 360) * W;
-                const vh = ((maxLat - minLat) / 180) * H;
-                // Scale factor: all absolute sizes must shrink proportionally when zoomed
-                const s = vw / W;
-
-                return (
-                  <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="w-full h-auto" style={{ minHeight: 340 }}>
-                    <defs>
-                      <radialGradient id="mapBg" cx="50%" cy="40%">
-                        <stop offset="0%" stopColor="#111827" />
-                        <stop offset="100%" stopColor="#030712" />
-                      </radialGradient>
-                      <radialGradient id="serverAura">
-                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.35" />
-                        <stop offset="50%" stopColor="#f97316" stopOpacity="0.08" />
-                        <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-                      </radialGradient>
-                      <filter id="softGlow">
-                        <feGaussianBlur stdDeviation={3 * s} result="blur" />
-                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                      </filter>
-                      <filter id="lineGlow">
-                        <feGaussianBlur stdDeviation={1.5 * s} result="blur" />
-                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                      </filter>
-                      {countries.map((c: any, i: number) => {
-                        const color = c.purchases > 0 ? '#22c55e' : '#60a5fa';
-                        return (
-                          <linearGradient key={`lg-${c._id}`} id={`grad-${c._id}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor={color} stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="#f97316" stopOpacity="0.9" />
-                          </linearGradient>
-                        );
-                      })}
-                      {/* Arrow marker for arcs */}
-                      <marker id="arcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth={5} markerHeight={5} orient="auto" markerUnits="userSpaceOnUse">
-                        <path d="M0,1 L10,5 L0,9" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" />
-                      </marker>
-                      <marker id="arcArrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth={5} markerHeight={5} orient="auto" markerUnits="userSpaceOnUse">
-                        <path d="M0,1 L10,5 L0,9" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" />
-                      </marker>
-                      <style>{`
-                        @keyframes arcFlow { to { stroke-dashoffset: ${-24 * s}; } }
-                        .arc-flow { animation: arcFlow 2s linear infinite; }
-                      `}</style>
-                    </defs>
-
-                    {/* Background */}
-                    <rect width={W} height={H} fill="url(#mapBg)" />
-
-                    {/* Subtle latitude lines */}
-                    {[-60, -30, 0, 30, 60].map(lat => {
-                      const y = ((90 - lat) / 180) * H;
-                      return <line key={`lat${lat}`} x1={0} y1={y} x2={W} y2={y} stroke="#1e293b" strokeWidth={0.3 * s} strokeDasharray={`${4 * s} ${8 * s}`} />;
-                    })}
-                    {/* Subtle longitude lines */}
-                    {[-120, -60, 0, 60, 120].map(lng => {
-                      const x = ((lng + 180) / 360) * W;
-                      return <line key={`lng${lng}`} x1={x} y1={0} x2={x} y2={H} stroke="#1e293b" strokeWidth={0.3 * s} strokeDasharray={`${4 * s} ${8 * s}`} />;
-                    })}
-
-                    {/* Real world map - Natural Earth 110m data */}
-                    {/* Land fill */}
-                    <path d={WORLD_LAND_PATH} fill="#1a2332" stroke="none" />
-                    {/* Country borders */}
-                    {WORLD_COUNTRY_PATHS.map((d, i) => (
-                      <path key={`country-${i}`} d={d} fill="none" stroke="#2a3a4a" strokeWidth={0.4 * s} strokeOpacity={0.6} />
-                    ))}
-
-                    {/* Connection arcs with arrows */}
-                    {countries.map((c: any) => {
-                      const coords = COUNTRY_COORDS[c._id];
-                      if (!coords) return null;
-                      const pt = geoToSvg(coords[0], coords[1], W, H);
-                      const intensity = Math.min(1, c.count / maxCount);
-                      const arcD = curvedPath(pt[0], pt[1], serverPt[0], serverPt[1]);
-                      const sw = Math.max(0.8, intensity * 2.5) * s;
-                      const arrowId = c.purchases > 0 ? 'arcArrowGreen' : 'arcArrow';
-                      return (
-                        <g key={`arc-${c._id}`}>
-                          {/* Wide glow arc */}
-                          <path d={arcD} fill="none"
-                            stroke={`url(#grad-${c._id})`} strokeWidth={Math.max(3, intensity * 8) * s} strokeOpacity={0.06} />
-                          {/* Main arc with arrow */}
-                          <path d={arcD} fill="none"
-                            stroke={`url(#grad-${c._id})`}
-                            strokeWidth={sw}
-                            strokeOpacity={0.5 + intensity * 0.4}
-                            strokeDasharray={mapMode === 'live' ? `${8 * s} ${6 * s}` : 'none'}
-                            className={mapMode === 'live' ? 'arc-flow' : ''}
-                            markerEnd={`url(#${arrowId})`}
-                            filter="url(#lineGlow)" />
-                          {/* Animated traveling dot in live mode */}
-                          {mapMode === 'live' && (
-                            <circle r={Math.max(1.5, intensity * 3) * s} fill={c.purchases > 0 ? '#34d399' : '#60a5fa'} opacity="0">
-                              <animateMotion dur={`${2 + Math.random() * 2}s`} repeatCount="indefinite" path={arcD} />
-                              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur={`${2 + Math.random() * 2}s`} repeatCount="indefinite" />
-                            </circle>
-                          )}
-                        </g>
-                      );
-                    })}
-
-                    {/* Country nodes */}
-                    {countries.map((c: any) => {
-                      const coords = COUNTRY_COORDS[c._id];
-                      if (!coords) return null;
-                      const pt = geoToSvg(coords[0], coords[1], W, H);
-                      const intensity = Math.min(1, c.count / maxCount);
-                      const r = (2.5 + intensity * 4) * s;
-                      const color = c.purchases > 0 ? '#34d399' : '#60a5fa';
-                      const fontSize = 7.5 * s;
-                      const fontSizeSm = 6.5 * s;
-                      const pulseSpread = 14 * s;
-
-                      // Smart label placement to avoid overlap
-                      const labelY = pt[1] < vy + vh * 0.3 ? pt[1] + r + 12 * s : pt[1] - r - 6 * s;
-                      const labelAnchor = pt[0] < vx + vw * 0.15 ? 'start' : pt[0] > vx + vw * 0.85 ? 'end' : 'middle';
-
-                      return (
-                        <g key={`node-${c._id}`} style={{ cursor: 'pointer' }}
-                          onClick={() => { const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id); if (cd) openCountryDetail(cd); }}>
-                          {/* Pulse ring (live only) */}
-                          {mapMode === 'live' && (
-                            <circle cx={pt[0]} cy={pt[1]} fill="none" stroke={color} strokeWidth={0.8 * s} opacity="0">
-                              <animate attributeName="r" from={r} to={r + pulseSpread} dur="2.5s" repeatCount="indefinite" />
-                              <animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" />
-                            </circle>
-                          )}
-                          {/* Glow */}
-                          <circle cx={pt[0]} cy={pt[1]} r={r + 4 * s} fill={color} opacity={0.08} />
-                          {/* Dot */}
-                          <circle cx={pt[0]} cy={pt[1]} r={r} fill={color} opacity={0.85} filter="url(#softGlow)" />
-                          <circle cx={pt[0]} cy={pt[1]} r={r * 0.45} fill="#fff" opacity={0.6} />
-                          {/* Label */}
-                          <text x={pt[0]} y={labelY} textAnchor={labelAnchor} fill="#94a3b8" fontSize={fontSize} fontFamily="system-ui" fontWeight="500">
-                            {c.country}
-                          </text>
-                          <text x={pt[0]} y={labelY + (pt[1] < vy + vh * 0.3 ? fontSize + s : -(fontSize + s))} textAnchor={labelAnchor} fill="#64748b" fontSize={fontSizeSm} fontFamily="system-ui">
-                            {c.count} visit{c.count !== 1 ? 's' : ''}{c.purchases > 0 ? ` · ${c.purchases} purchase${c.purchases !== 1 ? 's' : ''}` : ''}
-                          </text>
-                        </g>
-                      );
-                    })}
-
-                    {/* Server node (Kosovo) */}
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={28 * s} fill="url(#serverAura)" />
-                    {mapMode === 'live' && (
-                      <>
-                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth={0.6 * s} opacity="0">
-                          <animate attributeName="r" from={8 * s} to={22 * s} dur="2s" repeatCount="indefinite" />
-                          <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite" />
-                        </circle>
-                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth={0.4 * s} opacity="0">
-                          <animate attributeName="r" from={8 * s} to={22 * s} dur="2s" begin="0.7s" repeatCount="indefinite" />
-                          <animate attributeName="opacity" from="0.3" to="0" dur="2s" begin="0.7s" repeatCount="indefinite" />
-                        </circle>
-                      </>
-                    )}
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={5 * s} fill="#f97316" filter="url(#softGlow)" />
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={2.2 * s} fill="#fff" opacity={0.9} />
-                    <text x={serverPt[0]} y={serverPt[1] + 14 * s} textAnchor="middle" fill="#f97316" fontSize={7.5 * s} fontFamily="system-ui" fontWeight="600" letterSpacing={0.5 * s}>
-                      SERVER
-                    </text>
-                    <text x={serverPt[0]} y={serverPt[1] + 23 * s} textAnchor="middle" fill="#a16207" fontSize={6 * s} fontFamily="system-ui">
-                      Kosovo
-                    </text>
-
-                    {/* Legend - positioned relative to visible viewport */}
-                    <g transform={`translate(${vx + 4 * s}, ${vy + vh - 12 * s}) scale(${s})`}>
-                      <rect x={-4} y={-6} width={165} height={44} fill="#0f172a" rx="8" stroke="#1e293b" strokeWidth="0.5" opacity="0.95" />
-                      <circle cx={8} cy={7} r={3} fill="#60a5fa" />
-                      <text x={16} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Visitors</text>
-                      <circle cx={60} cy={7} r={3} fill="#34d399" />
-                      <text x={68} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Buyers</text>
-                      <circle cx={110} cy={7} r={3} fill="#f97316" />
-                      <text x={118} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Server</text>
-                      <text x={8} y={26} fill="#334155" fontSize="6.5" fontFamily="system-ui">
-                        {mapMode === 'live' ? '● Real-time · 8s refresh' : '● Last 30 days'}
-                      </text>
-                    </g>
-                  </svg>
-                );
-              })()}
+            {/* Interactive Map */}
+            <div className="flex-1 relative" style={{ minHeight: 420 }}>
+              <LiveMap
+                liveData={liveData}
+                mapMode={mapMode}
+                mapZoom={mapZoom}
+                onCountryClick={(code: string) => {
+                  const cd = stats?.countryDetails?.find((x: any) => x.countryCode === code);
+                  if (cd) openCountryDetail(cd);
+                }}
+              />
+              {/* Legend overlay */}
+              <div className="absolute bottom-3 left-3 bg-[#0f172aee] border border-zinc-700/50 rounded-lg px-3 py-2 flex items-center gap-4 text-[10px] z-[1000]">
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#60a5fa]"></div><span className="text-zinc-400">Visitors</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#34d399]"></div><span className="text-zinc-400">Buyers</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#f97316]"></div><span className="text-zinc-400">Server</span></div>
+                <span className="text-zinc-600">{mapMode === 'live' ? '● Live · 8s' : '● 30 days'}</span>
+              </div>
             </div>
 
             {/* Activity Feed Sidebar */}

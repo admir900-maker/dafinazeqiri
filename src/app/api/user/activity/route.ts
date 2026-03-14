@@ -4,6 +4,29 @@ import { headers } from 'next/headers';
 import { connectToDatabase } from '@/lib/mongodb';
 import UserActivity from '@/models/UserActivity';
 
+// Helper to get geolocation from IP (uses free ip-api.com)
+async function getGeoFromIP(ip: string): Promise<{ city?: string; country?: string; region?: string }> {
+  if (!ip || ip === 'unknown' || ip === '127.0.0.1' || ip === '::1') {
+    return {};
+  }
+  try {
+    // Use the first IP if multiple are provided (comma-separated)
+    const cleanIP = ip.split(',')[0].trim();
+    const res = await fetch(`http://ip-api.com/json/${cleanIP}?fields=city,country,regionName`, {
+      signal: AbortSignal.timeout(2000) // 2s timeout - don't block logging
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.city || data.country) {
+        return { city: data.city, country: data.country, region: data.regionName };
+      }
+    }
+  } catch {
+    // Silently fail - geo is optional
+  }
+  return {};
+}
+
 // Helper function to extract user info from headers
 function extractUserInfo(request: NextRequest, headersList: Headers) {
   const userAgent = headersList.get('user-agent') || '';
@@ -78,6 +101,9 @@ export async function POST(request: NextRequest) {
     // Extract user info from headers
     const userInfo = extractUserInfo(request, headersList);
 
+    // Get geolocation from IP (non-blocking best effort)
+    const geo = await getGeoFromIP(userInfo.ipAddress);
+
     // Create activity log
     const activityData = {
       userId: userId || 'anonymous',
@@ -95,6 +121,9 @@ export async function POST(request: NextRequest) {
       paymentMethod,
       status,
       location,
+      city: geo.city,
+      country: geo.country,
+      region: geo.region,
       referrer,
       duration,
       metadata,

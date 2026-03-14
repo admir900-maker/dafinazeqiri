@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import UserActivity from '@/models/UserActivity';
+import Booking from '@/models/Booking';
 import Event from '@/models/Event';
 
 export async function GET(request: NextRequest) {
@@ -162,6 +163,35 @@ export async function GET(request: NextRequest) {
             { $match: { sessionId: { $exists: true, $ne: null } } },
             { $group: { _id: '$sessionId' } },
             { $count: 'total' }
+          ],
+          // Geolocation - by country
+          byCountry: [
+            { $match: { country: { $exists: true, $nin: ['', null] } } },
+            { $group: { _id: '$country', count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+            { $sort: { count: -1 } },
+            { $limit: 15 }
+          ],
+          // Geolocation - by city
+          byCity: [
+            { $match: { city: { $exists: true, $nin: ['', null] } } },
+            { $group: { _id: { city: '$city', country: '$country' }, count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+            { $sort: { count: -1 } },
+            { $limit: 20 }
+          ],
+          // Average session duration
+          avgSessionDuration: [
+            { $match: { duration: { $exists: true, $gt: 0 } } },
+            { $group: { _id: null, avgDuration: { $avg: '$duration' }, totalDuration: { $sum: '$duration' }, count: { $sum: 1 } } }
+          ],
+          // Top buyers by location
+          topBuyersByLocation: [
+            { $match: { action: 'payment_successful', amount: { $gt: 0 }, country: { $exists: true, $nin: ['', null] } } },
+            { $group: { _id: { city: '$city', country: '$country' }, totalSpent: { $sum: '$amount' }, transactions: { $sum: 1 }, uniqueBuyers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, totalSpent: 1, transactions: 1, uniqueBuyers: { $size: '$uniqueBuyers' } } },
+            { $sort: { totalSpent: -1 } },
+            { $limit: 10 }
           ]
         }
       }
@@ -197,7 +227,11 @@ export async function GET(request: NextRequest) {
           topBrowsedEvents: stats[0].topBrowsedEvents,
           topPages: stats[0].topPages,
           uniqueUsers: stats[0].uniqueUsersCount[0]?.total || 0,
-          uniqueSessions: stats[0].uniqueSessionsCount[0]?.total || 0
+          uniqueSessions: stats[0].uniqueSessionsCount[0]?.total || 0,
+          byCountry: stats[0].byCountry,
+          byCity: stats[0].byCity,
+          avgSessionDuration: stats[0].avgSessionDuration[0] || { avgDuration: 0, totalDuration: 0, count: 0 },
+          topBuyersByLocation: stats[0].topBuyersByLocation
         }
       }
     });

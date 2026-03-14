@@ -20,6 +20,9 @@ export interface IUserActivity extends Document {
   device?: string;
   browser?: string;
   location?: string;
+  city?: string;
+  country?: string;
+  region?: string;
   referrer?: string;
   duration?: number; // in milliseconds
   metadata?: {
@@ -133,6 +136,17 @@ const UserActivitySchema: Schema = new Schema({
     type: String
   },
   location: {
+    type: String
+  },
+  city: {
+    type: String,
+    index: true
+  },
+  country: {
+    type: String,
+    index: true
+  },
+  region: {
     type: String
   },
   referrer: {

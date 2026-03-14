@@ -8,7 +8,8 @@ import {
   RefreshCw, Search, Filter, Download, Clock, User, Activity,
   CheckCircle, XCircle, AlertCircle, Smartphone, Monitor, Tablet,
   Chrome, CreditCard, Calendar, BarChart3, Eye, TrendingUp,
-  Trash2, ChevronDown, ChevronUp, Globe, Link2, Users, Target
+  Trash2, ChevronDown, ChevronUp, Globe, Link2, Users, Target,
+  MapPin, Timer, ShoppingBag
 } from 'lucide-react';
 import {
   BarChart, Bar, PieChart, Pie, Cell,
@@ -58,6 +59,10 @@ interface ActivityStatistics {
   topPages: Array<{ _id: string; count: number; uniqueUsers: number }>;
   uniqueUsers: number;
   uniqueSessions: number;
+  byCountry: Array<{ _id: string; count: number; uniqueUsers: number }>;
+  byCity: Array<{ _id: { city: string; country: string }; count: number; uniqueUsers: number }>;
+  avgSessionDuration: { avgDuration: number; totalDuration: number; count: number };
+  topBuyersByLocation: Array<{ _id: { city: string; country: string }; totalSpent: number; transactions: number; uniqueBuyers: number }>;
 }
 
 interface ActivityData {
@@ -141,6 +146,9 @@ export default function UserActivityPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showCharts, setShowCharts] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [showGeo, setShowGeo] = useState(false);
+  const [userDemographics, setUserDemographics] = useState<any>(null);
+  const [loadingDemographics, setLoadingDemographics] = useState(false);
 
   const fetchActivities = async (page = 1) => {
     try {
@@ -232,6 +240,65 @@ export default function UserActivityPage() {
   useEffect(() => {
     fetchActivities();
   }, []);
+
+  // Fetch user demographics from Clerk via admin users API
+  const fetchUserDemographics = async () => {
+    if (userDemographics) return; // already fetched
+    setLoadingDemographics(true);
+    try {
+      const res = await fetch('/api/admin/users?limit=100&offset=0');
+      const result = await res.json();
+      if (result.success && result.users) {
+        const users = result.users;
+        // Calculate demographics
+        const now = new Date();
+        const registrationByMonth: Record<string, number> = {};
+        let totalSpent = 0;
+        let totalBookings = 0;
+        const topBuyers: Array<{ email: string; name: string; spent: number; bookings: number }> = [];
+
+        users.forEach((u: any) => {
+          const created = new Date(u.createdAt);
+          const monthKey = `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}`;
+          registrationByMonth[monthKey] = (registrationByMonth[monthKey] || 0) + 1;
+          totalSpent += u.bookingStats?.totalSpent || 0;
+          totalBookings += u.bookingStats?.totalBookings || 0;
+          topBuyers.push({
+            email: u.emailAddress,
+            name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+            spent: u.bookingStats?.totalSpent || 0,
+            bookings: u.bookingStats?.totalBookings || 0
+          });
+        });
+
+        topBuyers.sort((a, b) => b.spent - a.spent);
+
+        const registrationTrend = Object.entries(registrationByMonth)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .slice(-12)
+          .map(([month, count]) => ({ month, count }));
+
+        setUserDemographics({
+          totalUsers: result.totalCount,
+          totalSpent,
+          totalBookings,
+          avgSpentPerUser: users.length > 0 ? totalSpent / users.length : 0,
+          topBuyers: topBuyers.slice(0, 10),
+          registrationTrend
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch user demographics:', err);
+    } finally {
+      setLoadingDemographics(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showGeo) {
+      fetchUserDemographics();
+    }
+  }, [showGeo]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -390,6 +457,13 @@ export default function UserActivityPage() {
             >
               <TrendingUp className="w-4 h-4 mr-2" />
               {showInsights ? 'Hide Insights' : 'Insights'}
+            </Button>
+            <Button
+              onClick={() => setShowGeo(!showGeo)}
+              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+            >
+              <MapPin className="w-4 h-4 mr-2" />
+              {showGeo ? 'Hide Geo' : 'Geo & Users'}
             </Button>
             <Button onClick={exportActivities} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
               <Download className="w-4 h-4 mr-2" />
@@ -816,6 +890,305 @@ export default function UserActivityPage() {
                     )}
                   </CardContent>
                 </Card>
+              </div>
+            )}
+
+            {/* Geo & Demographics */}
+            {showGeo && (
+              <div className="space-y-4">
+                {/* Geo Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100/70 text-sm font-medium">Top Country</p>
+                          <p className="text-2xl font-bold text-orange-100">
+                            {data.statistics.byCountry?.[0]?._id || 'N/A'}
+                          </p>
+                          <p className="text-orange-100/40 text-xs mt-1">
+                            {data.statistics.byCountry?.[0]?.uniqueUsers || 0} users
+                          </p>
+                        </div>
+                        <Globe className="w-8 h-8 text-orange-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100/70 text-sm font-medium">Top City</p>
+                          <p className="text-2xl font-bold text-orange-100">
+                            {data.statistics.byCity?.[0]?._id?.city || 'N/A'}
+                          </p>
+                          <p className="text-orange-100/40 text-xs mt-1">
+                            {data.statistics.byCity?.[0]?._id?.country || ''}
+                          </p>
+                        </div>
+                        <MapPin className="w-8 h-8 text-blue-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100/70 text-sm font-medium">Avg Session Time</p>
+                          <p className="text-2xl font-bold text-orange-100">
+                            {data.statistics.avgSessionDuration?.avgDuration
+                              ? data.statistics.avgSessionDuration.avgDuration < 1000
+                                ? `${Math.round(data.statistics.avgSessionDuration.avgDuration)}ms`
+                                : data.statistics.avgSessionDuration.avgDuration < 60000
+                                  ? `${(data.statistics.avgSessionDuration.avgDuration / 1000).toFixed(1)}s`
+                                  : `${(data.statistics.avgSessionDuration.avgDuration / 60000).toFixed(1)}m`
+                              : 'N/A'}
+                          </p>
+                          <p className="text-orange-100/40 text-xs mt-1">
+                            {data.statistics.avgSessionDuration?.count || 0} tracked
+                          </p>
+                        </div>
+                        <Timer className="w-8 h-8 text-emerald-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100/70 text-sm font-medium">Countries</p>
+                          <p className="text-2xl font-bold text-orange-100">
+                            {data.statistics.byCountry?.length || 0}
+                          </p>
+                          <p className="text-orange-100/40 text-xs mt-1">
+                            {data.statistics.byCity?.length || 0} cities
+                          </p>
+                        </div>
+                        <MapPin className="w-8 h-8 text-pink-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Traffic by Country */}
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-orange-500" />
+                        Traffic by Country
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {data.statistics.byCountry && data.statistics.byCountry.length > 0 ? (
+                        <div className="space-y-3">
+                          {data.statistics.byCountry.map((c, i) => {
+                            const maxCount = data.statistics.byCountry[0]?.count || 1;
+                            return (
+                              <div key={i}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-orange-100 text-sm font-medium">{c._id}</span>
+                                  <div className="flex items-center gap-3 text-sm">
+                                    <span className="text-orange-100/50">{c.uniqueUsers} users</span>
+                                    <span className="text-orange-500 font-medium">{c.count} visits</span>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-orange-500/10 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-orange-500 to-amber-700 h-2 rounded-full transition-all"
+                                    style={{ width: `${(c.count / maxCount) * 100}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-orange-100/40 text-center py-6">No geolocation data yet. Data will populate as users interact with the site.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Traffic by City */}
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-orange-500" />
+                        Traffic by City
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {data.statistics.byCity && data.statistics.byCity.length > 0 ? (
+                        <div className="divide-y divide-orange-500/10">
+                          {data.statistics.byCity.map((c, i) => (
+                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
+                                <div>
+                                  <p className="text-orange-100 text-sm font-medium">{c._id.city}</p>
+                                  <p className="text-orange-100/40 text-xs">{c._id.country}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="text-right">
+                                  <p className="text-blue-400 font-medium">{c.uniqueUsers}</p>
+                                  <p className="text-orange-100/40 text-xs">users</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-orange-500 font-bold">{c.count}</p>
+                                  <p className="text-orange-100/40 text-xs">visits</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-orange-100/40 text-center py-6">No city data yet</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Top Buyers by Location */}
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
+                        <ShoppingBag className="w-5 h-5 text-orange-500" />
+                        Top Buying Locations
+                      </CardTitle>
+                      <p className="text-orange-100/40 text-sm">Where the most purchases come from</p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {data.statistics.topBuyersByLocation && data.statistics.topBuyersByLocation.length > 0 ? (
+                        <div className="divide-y divide-orange-500/10">
+                          {data.statistics.topBuyersByLocation.map((loc, i) => (
+                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
+                                <div>
+                                  <p className="text-orange-100 text-sm font-medium">{loc._id.city || 'Unknown City'}</p>
+                                  <p className="text-orange-100/40 text-xs">{loc._id.country || 'Unknown'}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="text-right">
+                                  <p className="text-blue-400 font-medium">{loc.uniqueBuyers}</p>
+                                  <p className="text-orange-100/40 text-xs">buyers</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-emerald-400 font-medium">{loc.transactions}</p>
+                                  <p className="text-orange-100/40 text-xs">orders</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-orange-500 font-bold">{formatPrice(loc.totalSpent)}</p>
+                                  <p className="text-orange-100/40 text-xs">spent</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-orange-100/40 text-center py-6">No purchase location data yet</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* User Demographics from Clerk */}
+                  <Card className="bg-black/60 border-2 border-orange-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
+                        <Users className="w-5 h-5 text-orange-500" />
+                        Top Buyers Overall
+                      </CardTitle>
+                      <p className="text-orange-100/40 text-sm">Users who spend the most on tickets</p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {loadingDemographics ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Activity className="w-6 h-6 text-orange-500 animate-pulse" />
+                          <span className="text-orange-100/50 ml-2">Loading user data...</span>
+                        </div>
+                      ) : userDemographics?.topBuyers && userDemographics.topBuyers.length > 0 ? (
+                        <div className="divide-y divide-orange-500/10">
+                          {userDemographics.topBuyers.filter((b: any) => b.spent > 0).map((buyer: any, i: number) => (
+                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
+                                <div>
+                                  <p className="text-orange-100 text-sm font-medium">{buyer.name || buyer.email}</p>
+                                  {buyer.name && <p className="text-orange-100/40 text-xs">{buyer.email}</p>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="text-right">
+                                  <p className="text-blue-400 font-medium">{buyer.bookings}</p>
+                                  <p className="text-orange-100/40 text-xs">bookings</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-orange-500 font-bold">{formatPrice(buyer.spent)}</p>
+                                  <p className="text-orange-100/40 text-xs">total</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-orange-100/40 text-center py-6">No buyer data available</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Registration Trend & Overall Stats */}
+                {userDemographics && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <Card className="bg-black/60 border-2 border-orange-500/30">
+                      <CardHeader>
+                        <CardTitle className="text-orange-100 text-lg">User Registrations Over Time</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {userDemographics.registrationTrend.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={userDemographics.registrationTrend}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                              <XAxis dataKey="month" tick={{ fill: '#fed7aa', fontSize: 11 }} />
+                              <YAxis tick={{ fill: '#fed7aa', fontSize: 12 }} />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <p className="text-orange-100/40 text-center py-6">No registration data</p>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-black/60 border-2 border-orange-500/30">
+                      <CardHeader>
+                        <CardTitle className="text-orange-100 text-lg">Platform Overview</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-4 bg-black/30 rounded-lg text-center">
+                            <p className="text-3xl font-bold text-orange-500">{userDemographics.totalUsers}</p>
+                            <p className="text-orange-100/50 text-sm mt-1">Total Users</p>
+                          </div>
+                          <div className="p-4 bg-black/30 rounded-lg text-center">
+                            <p className="text-3xl font-bold text-emerald-400">{userDemographics.totalBookings}</p>
+                            <p className="text-orange-100/50 text-sm mt-1">Total Bookings</p>
+                          </div>
+                          <div className="p-4 bg-black/30 rounded-lg text-center">
+                            <p className="text-3xl font-bold text-blue-400">{formatPrice(userDemographics.totalSpent)}</p>
+                            <p className="text-orange-100/50 text-sm mt-1">Total Revenue</p>
+                          </div>
+                          <div className="p-4 bg-black/30 rounded-lg text-center">
+                            <p className="text-3xl font-bold text-pink-400">{formatPrice(userDemographics.avgSpentPerUser)}</p>
+                            <p className="text-orange-100/50 text-sm mt-1">Avg Spend/User</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
             )}
 

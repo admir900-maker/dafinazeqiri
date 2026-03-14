@@ -1035,11 +1035,10 @@ export default function UserActivityPage() {
               <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
                 {Object.entries(MAP_REGIONS).map(([key, region]) => (
                   <button key={key} onClick={() => setMapZoom(key)}
-                    className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap flex items-center gap-1 ${
-                      mapZoom === key
+                    className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap flex items-center gap-1 ${mapZoom === key
                         ? 'bg-orange-600/80 text-white shadow-lg shadow-orange-900/30'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-                    }`}>
+                      }`}>
                     <span className="text-[10px]">{region.flag}</span> {region.label}
                   </button>
                 ))}
@@ -1078,6 +1077,8 @@ export default function UserActivityPage() {
                 const vy = ((90 - maxLat) / 180) * H;
                 const vw = ((maxLng - minLng) / 360) * W;
                 const vh = ((maxLat - minLat) / 180) * H;
+                // Scale factor: all absolute sizes must shrink proportionally when zoomed
+                const s = vw / W;
 
                 return (
                   <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="w-full h-auto" style={{ minHeight: 340 }}>
@@ -1092,11 +1093,11 @@ export default function UserActivityPage() {
                         <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
                       </radialGradient>
                       <filter id="softGlow">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feGaussianBlur stdDeviation={3 * s} result="blur" />
                         <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                       </filter>
                       <filter id="lineGlow">
-                        <feGaussianBlur stdDeviation="1.5" result="blur" />
+                        <feGaussianBlur stdDeviation={1.5 * s} result="blur" />
                         <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                       </filter>
                       {countries.map((c: any, i: number) => {
@@ -1109,15 +1110,14 @@ export default function UserActivityPage() {
                         );
                       })}
                       {/* Arrow marker for arcs */}
-                      <marker id="arcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto" markerUnits="strokeWidth">
+                      <marker id="arcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth={5} markerHeight={5} orient="auto" markerUnits="userSpaceOnUse">
                         <path d="M0,1 L10,5 L0,9" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" />
                       </marker>
-                      <marker id="arcArrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto" markerUnits="strokeWidth">
+                      <marker id="arcArrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth={5} markerHeight={5} orient="auto" markerUnits="userSpaceOnUse">
                         <path d="M0,1 L10,5 L0,9" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" />
                       </marker>
                       <style>{`
-                        @keyframes arcFlow { to { stroke-dashoffset: -24; } }
-                        @keyframes dotTravel { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+                        @keyframes arcFlow { to { stroke-dashoffset: ${-24 * s}; } }
                         .arc-flow { animation: arcFlow 2s linear infinite; }
                       `}</style>
                     </defs>
@@ -1128,12 +1128,12 @@ export default function UserActivityPage() {
                     {/* Subtle latitude lines */}
                     {[-60, -30, 0, 30, 60].map(lat => {
                       const y = ((90 - lat) / 180) * H;
-                      return <line key={`lat${lat}`} x1={0} y1={y} x2={W} y2={y} stroke="#1e293b" strokeWidth="0.3" strokeDasharray="4 8" />;
+                      return <line key={`lat${lat}`} x1={0} y1={y} x2={W} y2={y} stroke="#1e293b" strokeWidth={0.3 * s} strokeDasharray={`${4 * s} ${8 * s}`} />;
                     })}
                     {/* Subtle longitude lines */}
                     {[-120, -60, 0, 60, 120].map(lng => {
                       const x = ((lng + 180) / 360) * W;
-                      return <line key={`lng${lng}`} x1={x} y1={0} x2={x} y2={H} stroke="#1e293b" strokeWidth="0.3" strokeDasharray="4 8" />;
+                      return <line key={`lng${lng}`} x1={x} y1={0} x2={x} y2={H} stroke="#1e293b" strokeWidth={0.3 * s} strokeDasharray={`${4 * s} ${8 * s}`} />;
                     })}
 
                     {/* Real world map - Natural Earth 110m data */}
@@ -1141,7 +1141,7 @@ export default function UserActivityPage() {
                     <path d={WORLD_LAND_PATH} fill="#1a2332" stroke="none" />
                     {/* Country borders */}
                     {WORLD_COUNTRY_PATHS.map((d, i) => (
-                      <path key={`country-${i}`} d={d} fill="none" stroke="#2a3a4a" strokeWidth="0.4" strokeOpacity={0.6} />
+                      <path key={`country-${i}`} d={d} fill="none" stroke="#2a3a4a" strokeWidth={0.4 * s} strokeOpacity={0.6} />
                     ))}
 
                     {/* Connection arcs with arrows */}
@@ -1151,25 +1151,25 @@ export default function UserActivityPage() {
                       const pt = geoToSvg(coords[0], coords[1], W, H);
                       const intensity = Math.min(1, c.count / maxCount);
                       const arcD = curvedPath(pt[0], pt[1], serverPt[0], serverPt[1]);
-                      const sw = Math.max(0.8, intensity * 2.5);
+                      const sw = Math.max(0.8, intensity * 2.5) * s;
                       const arrowId = c.purchases > 0 ? 'arcArrowGreen' : 'arcArrow';
                       return (
                         <g key={`arc-${c._id}`}>
                           {/* Wide glow arc */}
                           <path d={arcD} fill="none"
-                            stroke={`url(#grad-${c._id})`} strokeWidth={Math.max(3, intensity * 8)} strokeOpacity={0.06} />
+                            stroke={`url(#grad-${c._id})`} strokeWidth={Math.max(3, intensity * 8) * s} strokeOpacity={0.06} />
                           {/* Main arc with arrow */}
                           <path d={arcD} fill="none"
                             stroke={`url(#grad-${c._id})`}
                             strokeWidth={sw}
                             strokeOpacity={0.5 + intensity * 0.4}
-                            strokeDasharray={mapMode === 'live' ? '8 6' : 'none'}
+                            strokeDasharray={mapMode === 'live' ? `${8 * s} ${6 * s}` : 'none'}
                             className={mapMode === 'live' ? 'arc-flow' : ''}
                             markerEnd={`url(#${arrowId})`}
                             filter="url(#lineGlow)" />
                           {/* Animated traveling dot in live mode */}
                           {mapMode === 'live' && (
-                            <circle r={Math.max(1.5, intensity * 3)} fill={c.purchases > 0 ? '#34d399' : '#60a5fa'} opacity="0">
+                            <circle r={Math.max(1.5, intensity * 3) * s} fill={c.purchases > 0 ? '#34d399' : '#60a5fa'} opacity="0">
                               <animateMotion dur={`${2 + Math.random() * 2}s`} repeatCount="indefinite" path={arcD} />
                               <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur={`${2 + Math.random() * 2}s`} repeatCount="indefinite" />
                             </circle>
@@ -1184,28 +1184,28 @@ export default function UserActivityPage() {
                       if (!coords) return null;
                       const pt = geoToSvg(coords[0], coords[1], W, H);
                       const intensity = Math.min(1, c.count / maxCount);
-                      const isZoomed = mapZoom !== 'world';
-                      const r = isZoomed ? 3.5 + intensity * 5 : 2.5 + intensity * 4;
+                      const r = (2.5 + intensity * 4) * s;
                       const color = c.purchases > 0 ? '#34d399' : '#60a5fa';
-                      const fontSize = isZoomed ? 9 : 7.5;
-                      const fontSizeSm = isZoomed ? 7.5 : 6.5;
+                      const fontSize = 7.5 * s;
+                      const fontSizeSm = 6.5 * s;
+                      const pulseSpread = 14 * s;
 
                       // Smart label placement to avoid overlap
-                      const labelY = pt[1] < 80 ? pt[1] + r + 12 : pt[1] - r - 6;
-                      const labelAnchor = pt[0] < 100 ? 'start' : pt[0] > W - 100 ? 'end' : 'middle';
+                      const labelY = pt[1] < vy + vh * 0.3 ? pt[1] + r + 12 * s : pt[1] - r - 6 * s;
+                      const labelAnchor = pt[0] < vx + vw * 0.15 ? 'start' : pt[0] > vx + vw * 0.85 ? 'end' : 'middle';
 
                       return (
                         <g key={`node-${c._id}`} style={{ cursor: 'pointer' }}
                           onClick={() => { const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id); if (cd) openCountryDetail(cd); }}>
                           {/* Pulse ring (live only) */}
                           {mapMode === 'live' && (
-                            <circle cx={pt[0]} cy={pt[1]} fill="none" stroke={color} strokeWidth="0.8" opacity="0">
-                              <animate attributeName="r" from={r} to={r + 14} dur="2.5s" repeatCount="indefinite" />
+                            <circle cx={pt[0]} cy={pt[1]} fill="none" stroke={color} strokeWidth={0.8 * s} opacity="0">
+                              <animate attributeName="r" from={r} to={r + pulseSpread} dur="2.5s" repeatCount="indefinite" />
                               <animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" />
                             </circle>
                           )}
                           {/* Glow */}
-                          <circle cx={pt[0]} cy={pt[1]} r={r + 4} fill={color} opacity={0.08} />
+                          <circle cx={pt[0]} cy={pt[1]} r={r + 4 * s} fill={color} opacity={0.08} />
                           {/* Dot */}
                           <circle cx={pt[0]} cy={pt[1]} r={r} fill={color} opacity={0.85} filter="url(#softGlow)" />
                           <circle cx={pt[0]} cy={pt[1]} r={r * 0.45} fill="#fff" opacity={0.6} />
@@ -1213,7 +1213,7 @@ export default function UserActivityPage() {
                           <text x={pt[0]} y={labelY} textAnchor={labelAnchor} fill="#94a3b8" fontSize={fontSize} fontFamily="system-ui" fontWeight="500">
                             {c.country}
                           </text>
-                          <text x={pt[0]} y={labelY + (pt[1] < 80 ? fontSize + 1 : -(fontSize + 1))} textAnchor={labelAnchor} fill="#64748b" fontSize={fontSizeSm} fontFamily="system-ui">
+                          <text x={pt[0]} y={labelY + (pt[1] < vy + vh * 0.3 ? fontSize + s : -(fontSize + s))} textAnchor={labelAnchor} fill="#64748b" fontSize={fontSizeSm} fontFamily="system-ui">
                             {c.count} visit{c.count !== 1 ? 's' : ''}{c.purchases > 0 ? ` · ${c.purchases} purchase${c.purchases !== 1 ? 's' : ''}` : ''}
                           </text>
                         </g>
@@ -1221,30 +1221,30 @@ export default function UserActivityPage() {
                     })}
 
                     {/* Server node (Kosovo) */}
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={28} fill="url(#serverAura)" />
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={28 * s} fill="url(#serverAura)" />
                     {mapMode === 'live' && (
                       <>
-                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth="0.6" opacity="0">
-                          <animate attributeName="r" from="8" to="22" dur="2s" repeatCount="indefinite" />
+                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth={0.6 * s} opacity="0">
+                          <animate attributeName="r" from={8 * s} to={22 * s} dur="2s" repeatCount="indefinite" />
                           <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite" />
                         </circle>
-                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth="0.4" opacity="0">
-                          <animate attributeName="r" from="8" to="22" dur="2s" begin="0.7s" repeatCount="indefinite" />
+                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth={0.4 * s} opacity="0">
+                          <animate attributeName="r" from={8 * s} to={22 * s} dur="2s" begin="0.7s" repeatCount="indefinite" />
                           <animate attributeName="opacity" from="0.3" to="0" dur="2s" begin="0.7s" repeatCount="indefinite" />
                         </circle>
                       </>
                     )}
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={5} fill="#f97316" filter="url(#softGlow)" />
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={2.2} fill="#fff" opacity={0.9} />
-                    <text x={serverPt[0]} y={serverPt[1] + 14} textAnchor="middle" fill="#f97316" fontSize="7.5" fontFamily="system-ui" fontWeight="600" letterSpacing="0.5">
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={5 * s} fill="#f97316" filter="url(#softGlow)" />
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={2.2 * s} fill="#fff" opacity={0.9} />
+                    <text x={serverPt[0]} y={serverPt[1] + 14 * s} textAnchor="middle" fill="#f97316" fontSize={7.5 * s} fontFamily="system-ui" fontWeight="600" letterSpacing={0.5 * s}>
                       SERVER
                     </text>
-                    <text x={serverPt[0]} y={serverPt[1] + 23} textAnchor="middle" fill="#a16207" fontSize="6" fontFamily="system-ui">
+                    <text x={serverPt[0]} y={serverPt[1] + 23 * s} textAnchor="middle" fill="#a16207" fontSize={6 * s} fontFamily="system-ui">
                       Kosovo
                     </text>
 
-                    {/* Legend */}
-                    <g transform={`translate(16, ${H - 48})`}>
+                    {/* Legend - positioned relative to visible viewport */}
+                    <g transform={`translate(${vx + 4 * s}, ${vy + vh - 12 * s}) scale(${s})`}>
                       <rect x={-4} y={-6} width={165} height={44} fill="#0f172a" rx="8" stroke="#1e293b" strokeWidth="0.5" opacity="0.95" />
                       <circle cx={8} cy={7} r={3} fill="#60a5fa" />
                       <text x={16} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Visitors</text>

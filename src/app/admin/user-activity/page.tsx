@@ -15,6 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area
 } from 'recharts';
+import { WORLD_LAND_PATH, WORLD_COUNTRY_PATHS } from '@/lib/worldMapPaths';
 
 // Country code to flag emoji
 function countryCodeToFlag(code: string): string {
@@ -1093,52 +1094,13 @@ export default function UserActivityPage() {
                       return <line key={`lng${lng}`} x1={x} y1={0} x2={x} y2={H} stroke="#1e293b" strokeWidth="0.3" strokeDasharray="4 8" />;
                     })}
 
-                    {/* World map - simplified continent outlines using paths */}
-                    {/* North America */}
-                    <path d="M120,85 L160,75 L200,80 L230,95 L260,100 L270,120 L265,145 L250,165 L235,175 L220,190 L200,195 L180,200 L165,210 L170,225 L180,230 L175,240 L160,235 L140,220 L120,195 L105,175 L95,155 L90,135 L95,110 L105,95 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
-                    {/* Greenland */}
-                    <path d="M290,50 L310,45 L330,50 L340,65 L335,80 L320,85 L300,80 L290,65 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
-                    {/* South America */}
-                    <path d="M210,260 L225,255 L240,260 L255,275 L265,290 L270,310 L268,335 L260,355 L250,370 L240,385 L230,395 L222,390 L218,375 L215,355 L210,335 L205,315 L200,295 L205,275 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
-                    {/* Europe */}
-                    <path d="M420,80 L440,75 L460,72 L480,75 L500,80 L510,90 L515,105 L510,120 L500,130 L490,140 L475,148 L460,152 L445,148 L430,140 L420,130 L415,115 L410,100 L415,88 Z"
-                      fill="#1e293b" opacity="0.4" stroke="#334155" strokeWidth="0.5" />
-                    {/* UK & Ireland */}
-                    <path d="M395,85 L405,82 L410,90 L408,100 L400,105 L393,100 L392,92 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.4" />
-                    {/* Scandinavia */}
-                    <path d="M455,48 L465,45 L475,50 L480,60 L478,72 L470,75 L460,72 L455,62 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
-                    {/* Africa */}
-                    <path d="M435,175 L455,170 L475,172 L495,180 L510,195 L520,215 L525,240 L520,270 L510,300 L495,325 L480,340 L465,348 L450,345 L440,330 L435,310 L430,285 L425,260 L425,235 L428,210 L430,190 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
-                    {/* Middle East */}
-                    <path d="M520,140 L545,135 L560,145 L565,160 L555,175 L540,180 L525,175 L515,165 L515,150 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
-                    {/* Russia / Central Asia */}
-                    <path d="M510,55 L560,48 L620,45 L680,48 L730,55 L760,65 L770,80 L765,95 L750,108 L720,115 L680,118 L640,115 L600,110 L560,105 L530,100 L515,90 L510,75 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
-                    {/* India */}
-                    <path d="M600,160 L620,155 L635,165 L640,185 L635,210 L625,225 L610,230 L600,220 L595,200 L592,180 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.4" />
-                    {/* China / East Asia */}
-                    <path d="M660,100 L700,95 L740,100 L760,115 L765,135 L755,155 L735,165 L710,168 L685,162 L665,150 L655,135 L650,118 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
-                    {/* Southeast Asia */}
-                    <path d="M690,185 L710,180 L730,185 L740,200 L735,215 L720,225 L700,222 L688,210 L685,198 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
-                    {/* Japan */}
-                    <path d="M780,110 L788,105 L795,110 L792,125 L785,130 L778,125 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
-                    {/* Australia */}
-                    <path d="M720,310 L755,300 L790,305 L810,320 L815,340 L805,360 L785,370 L760,368 L740,358 L725,340 L718,325 Z"
-                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
-                    {/* New Zealand */}
-                    <path d="M840,355 L848,350 L855,358 L850,370 L842,372 L838,365 Z"
-                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
+                    {/* Real world map - Natural Earth 110m data */}
+                    {/* Land fill */}
+                    <path d={WORLD_LAND_PATH} fill="#1a2332" stroke="none" />
+                    {/* Country borders */}
+                    {WORLD_COUNTRY_PATHS.map((d, i) => (
+                      <path key={`country-${i}`} d={d} fill="none" stroke="#2a3a4a" strokeWidth="0.4" strokeOpacity={0.6} />
+                    ))}
 
                     {/* Connection arcs */}
                     {countries.map((c: any) => {

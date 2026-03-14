@@ -98,6 +98,11 @@ export default function UserActivityPage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [expandedActivity, setExpandedActivity] = useState<string | null>(null);
 
+  // Detail modal
+  const [detailModal, setDetailModal] = useState<{ type: string; data: any } | null>(null);
+  const [detailData, setDetailData] = useState<any>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   // User demographics from Clerk
   const [userDemographics, setUserDemographics] = useState<any[]>([]);
   const [loadingDemographics, setLoadingDemographics] = useState(false);
@@ -139,6 +144,57 @@ export default function UserActivityPage() {
     } finally {
       setLoadingDemographics(false);
     }
+  };
+
+  const fetchUserDetail = async (userId: string) => {
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/admin/user-activity?userId=${encodeURIComponent(userId)}&limit=100`);
+      const data = await res.json();
+      if (data.success) setDetailData(data.data);
+    } catch (err) {
+      console.error('Failed to fetch user detail:', err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const openUserDetail = (userId: string, name?: string, email?: string) => {
+    const demo = userDemographics.find((u: any) => u.id === userId);
+    setDetailModal({
+      type: 'user',
+      data: {
+        userId,
+        name: demo ? `${demo.firstName || ''} ${demo.lastName || ''}`.trim() : (name || ''),
+        email: demo?.emailAddress || email || '',
+        imageUrl: demo?.imageUrl,
+        bookingStats: demo?.bookingStats,
+      }
+    });
+    fetchUserDetail(userId);
+  };
+
+  const openCountryDetail = (countryData: any) => {
+    const cities = (stats?.cityDetails || []).filter((c: any) => c._id?.country === countryData._id);
+    const buyers = (stats?.topBuyersByLocation || []).filter((b: any) => b._id?.country === countryData._id);
+    setDetailModal({ type: 'country', data: { ...countryData, cities, buyers } });
+    setDetailData(null);
+  };
+
+  const openCityDetail = (cityData: any) => {
+    const buyers = (stats?.topBuyersByLocation || []).filter(
+      (b: any) => b._id?.city === cityData._id?.city && b._id?.country === cityData._id?.country
+    );
+    setDetailModal({ type: 'city', data: { ...cityData, buyers } });
+    setDetailData(null);
+  };
+
+  const resolveUser = (userId: string, fallbackName?: string, fallbackEmail?: string) => {
+    const demo = userDemographics.find((u: any) => u.id === userId);
+    if (demo) return { name: `${demo.firstName || ''} ${demo.lastName || ''}`.trim(), email: demo.emailAddress, imageUrl: demo.imageUrl };
+    if (fallbackName) return { name: fallbackName, email: fallbackEmail || '', imageUrl: null };
+    if (fallbackEmail) return { name: fallbackEmail, email: fallbackEmail, imageUrl: null };
+    return { name: userId?.slice(0, 12) + '...', email: '', imageUrl: null };
   };
 
   useEffect(() => { fetchActivities(); }, [fetchActivities]);
@@ -233,7 +289,7 @@ export default function UserActivityPage() {
             className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showCharts ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
             <BarChart3 className="h-4 w-4" /> Charts
           </button>
-          <button onClick={() => setShowInsights(!showInsights)}
+          <button onClick={() => { setShowInsights(!showInsights); if (!showInsights && userDemographics.length === 0) fetchDemographics(); }}
             className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showInsights ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
             <TrendingUp className="h-4 w-4" /> Insights
           </button>
@@ -415,21 +471,24 @@ export default function UserActivityPage() {
             <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-orange-500" /> Conversion Funnel
             </h3>
-            {getFunnelData().map((step: any, i: number) => {
-              const maxCount = Number(getFunnelData()[0]?.count) || 1;
-              const pct = ((Number(step.count) / maxCount) * 100).toFixed(1);
-              return (
-                <div key={i} className="mb-2">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-zinc-300">{step.name}</span>
-                    <span className="text-zinc-400">{step.count.toLocaleString()} ({pct}%)</span>
+            {(() => {
+              const funnelItems = getFunnelData();
+              const maxFunnel = Math.max(...funnelItems.map((d: any) => Number(d.count)), 1);
+              return funnelItems.map((step: any, i: number) => {
+                const pct = Math.min(100, (Number(step.count) / maxFunnel) * 100).toFixed(1);
+                return (
+                  <div key={i} className="mb-2">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-zinc-300">{step.name}</span>
+                      <span className="text-zinc-400">{step.count.toLocaleString()} ({pct}%)</span>
+                    </div>
+                    <div className="w-full bg-zinc-800 rounded-full h-2">
+                      <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: CHART_COLORS[i] }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-zinc-800 rounded-full h-2">
-                    <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: CHART_COLORS[i] }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
 
           {/* Referral Sources */}
@@ -468,27 +527,32 @@ export default function UserActivityPage() {
             </div>
           </div>
 
-          {/* Most Active Users (fixed — shows name/email) */}
+          {/* Most Active Users */}
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
             <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
               <Users className="h-4 w-4 text-purple-500" /> Most Active Users
             </h3>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {(stats.topVisitors || []).map((v: any, i: number) => (
-                <div key={i} className="flex justify-between items-center text-sm bg-zinc-800/50 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-orange-400 font-mono text-xs w-5">#{i + 1}</span>
-                    <div className="min-w-0">
-                      <p className="text-zinc-200 truncate text-xs font-medium">{v.name || v.email || v._id?.slice(0, 12) + '...'}</p>
-                      {v.email && v.name && <p className="text-zinc-500 truncate text-[10px]">{v.email}</p>}
+              {(stats.topVisitors || []).map((v: any, i: number) => {
+                const resolved = resolveUser(v._id, v.name, v.email);
+                return (
+                  <button key={i} onClick={() => openUserDetail(v._id, v.name, v.email)}
+                    className="w-full flex justify-between items-center text-sm bg-zinc-800/50 rounded-lg px-3 py-2 hover:bg-zinc-700/50 transition cursor-pointer text-left">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-orange-400 font-mono text-xs w-5">#{i + 1}</span>
+                      {resolved.imageUrl && <img src={resolved.imageUrl} alt="" className="h-5 w-5 rounded-full flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <p className="text-zinc-200 truncate text-xs font-medium">{resolved.name}</p>
+                        {resolved.email && <p className="text-zinc-500 truncate text-[10px]">{resolved.email}</p>}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <p className="text-orange-400 font-semibold text-xs">{v.totalActions}</p>
-                    <p className="text-zinc-500 text-[10px]">{formatDate(v.lastSeen)}</p>
-                  </div>
-                </div>
-              ))}
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className="text-orange-400 font-semibold text-xs">{v.totalActions} actions</p>
+                      <p className="text-zinc-500 text-[10px]">{formatDate(v.lastSeen)}</p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -547,8 +611,8 @@ export default function UserActivityPage() {
                 const cities = getCitiesForCountry(countryName);
                 return (
                   <div key={i}>
-                    <button onClick={() => setSelectedCountry(isExpanded ? null : countryName)}
-                      className={`w-full flex items-center justify-between text-sm px-3 py-2.5 rounded-lg transition ${isExpanded ? 'bg-orange-900/30 border border-orange-800/50' : 'bg-zinc-800/40 hover:bg-zinc-800'}`}>
+                    <div onClick={() => setSelectedCountry(isExpanded ? null : countryName)}
+                      className={`w-full flex items-center justify-between text-sm px-3 py-2.5 rounded-lg transition cursor-pointer ${isExpanded ? 'bg-orange-900/30 border border-orange-800/50' : 'bg-zinc-800/40 hover:bg-zinc-800'}`}>
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{countryCodeToFlag(code)}</span>
                         <span className="text-zinc-200 font-medium">{countryName}</span>
@@ -559,13 +623,17 @@ export default function UserActivityPage() {
                         <span className="text-zinc-500">{c.uniqueUsers} users</span>
                         {c.revenue > 0 && <span className="text-green-400">€{c.revenue?.toFixed(0)}</span>}
                         {c.citiesCount > 0 && <span className="text-zinc-600">{c.citiesCount} cities</span>}
+                        <button onClick={(e) => { e.stopPropagation(); openCountryDetail(c); }} className="text-orange-400 hover:text-orange-300 transition px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700" title="View details">
+                          📊
+                        </button>
                         {isExpanded ? <ChevronUp className="h-3 w-3 text-zinc-400" /> : <ChevronDown className="h-3 w-3 text-zinc-400" />}
                       </div>
-                    </button>
+                    </div>
                     {isExpanded && cities.length > 0 && (
                       <div className="ml-8 mt-1 mb-2 space-y-1">
                         {cities.map((city: any, j: number) => (
-                          <div key={j} className="flex items-center justify-between text-xs px-3 py-2 bg-zinc-800/60 rounded-lg">
+                          <button key={j} onClick={() => openCityDetail(city)}
+                            className="w-full flex items-center justify-between text-xs px-3 py-2 bg-zinc-800/60 rounded-lg hover:bg-zinc-700/60 transition cursor-pointer text-left">
                             <div className="flex items-center gap-2">
                               <MapPin className="h-3 w-3 text-orange-400" />
                               <span className="text-zinc-300">{city._id?.city || 'Unknown'}</span>
@@ -575,7 +643,7 @@ export default function UserActivityPage() {
                               <span className="text-zinc-500">{city.uniqueUsers} users</span>
                               {city.purchases > 0 && <span className="text-green-400">{city.purchases} sales (€{city.revenue?.toFixed(0)})</span>}
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     )}
@@ -749,7 +817,7 @@ export default function UserActivityPage() {
               {(stats.countryDetails || []).map((c: any, i: number) => {
                 const conversionRate = c.count > 0 ? ((c.purchases / c.count) * 100).toFixed(1) : '0';
                 return (
-                  <div key={i} className="bg-zinc-800/50 rounded-lg px-3 py-2">
+                  <button key={i} onClick={() => openCountryDetail(c)} className="w-full bg-zinc-800/50 rounded-lg px-3 py-2 hover:bg-zinc-700/50 transition cursor-pointer text-left">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-zinc-200">{countryCodeToFlag(c.countryCode)} {c._id}</span>
                       <span className="text-zinc-500 text-xs">{conversionRate}% conv.</span>
@@ -762,7 +830,7 @@ export default function UserActivityPage() {
                     <div className="w-full bg-zinc-700 rounded-full h-1.5 mt-1">
                       <div className="h-1.5 rounded-full bg-green-500" style={{ width: `${conversionRate}%` }} />
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -892,14 +960,25 @@ export default function UserActivityPage() {
                       <p className="text-zinc-400 text-xs mt-0.5 truncate">{a.description}</p>
                       <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-500 flex-wrap">
                         {/* User */}
-                        <span>{a.userName || a.userEmail || a.userId?.slice(0, 10) + '...'}</span>
+                        <button onClick={(e) => { e.stopPropagation(); openUserDetail(a.userId, a.userName, a.userEmail); }} className="text-orange-400 hover:text-orange-300 hover:underline transition">
+                          {a.userName || a.userEmail || a.userId?.slice(0, 10) + '...'}
+                        </button>
                         {/* Geo flag + city */}
                         {(a.country || a.countryCode) && (
-                          <span className="flex items-center gap-0.5">
+                          <button onClick={(e) => {
+                            e.stopPropagation();
+                            if (a.city) {
+                              const cd = stats?.cityDetails?.find((c: any) => c._id?.city === a.city && c._id?.country === a.country);
+                              if (cd) openCityDetail(cd); else { const cntry = stats?.countryDetails?.find((c: any) => c._id === a.country); if (cntry) openCountryDetail(cntry); }
+                            } else {
+                              const cntry = stats?.countryDetails?.find((c: any) => c._id === a.country);
+                              if (cntry) openCountryDetail(cntry);
+                            }
+                          }} className="flex items-center gap-0.5 hover:text-orange-400 transition">
                             {countryCodeToFlag(a.countryCode)}
-                            {a.city && <span>{a.city}</span>}
-                            {!a.city && a.country && <span>{a.country}</span>}
-                          </span>
+                            {a.city && <span className="hover:underline">{a.city}</span>}
+                            {!a.city && a.country && <span className="hover:underline">{a.country}</span>}
+                          </button>
                         )}
                         {/* Device */}
                         {a.device && (
@@ -1000,6 +1079,286 @@ export default function UserActivityPage() {
           </div>
         )}
       </div>
+
+      {/* Detail Modal */}
+      {detailModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setDetailModal(null)}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                {detailModal.type === 'user' && <><Users className="h-5 w-5 text-orange-500" /> User Details</>}
+                {detailModal.type === 'country' && <><Globe className="h-5 w-5 text-orange-500" /> {countryCodeToFlag(detailModal.data.countryCode)} {detailModal.data._id}</>}
+                {detailModal.type === 'city' && <><MapPin className="h-5 w-5 text-orange-500" /> {detailModal.data._id?.city}, {detailModal.data._id?.country}</>}
+              </h2>
+              <button onClick={() => setDetailModal(null)} className="text-zinc-400 hover:text-white transition">
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* ── User Detail ── */}
+              {detailModal.type === 'user' && (
+                <>
+                  <div className="flex items-center gap-4">
+                    {detailModal.data.imageUrl && <img src={detailModal.data.imageUrl} alt="" className="h-14 w-14 rounded-full" />}
+                    <div>
+                      <p className="text-white font-semibold text-lg">{detailModal.data.name || 'Unknown User'}</p>
+                      <p className="text-zinc-400 text-sm">{detailModal.data.email}</p>
+                      <p className="text-zinc-500 text-xs font-mono">{detailModal.data.userId}</p>
+                    </div>
+                  </div>
+
+                  {detailModal.data.bookingStats && (
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                        <p className="text-xl font-bold text-orange-400">{detailModal.data.bookingStats.totalBookings || 0}</p>
+                        <p className="text-zinc-500 text-xs">Bookings</p>
+                      </div>
+                      <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                        <p className="text-xl font-bold text-green-400">€{detailModal.data.bookingStats.totalSpent?.toFixed(0) || 0}</p>
+                        <p className="text-zinc-500 text-xs">Total Spent</p>
+                      </div>
+                      <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                        <p className="text-sm font-bold text-blue-400">{detailModal.data.bookingStats.lastBooking ? formatDate(detailModal.data.bookingStats.lastBooking) : '—'}</p>
+                        <p className="text-zinc-500 text-xs">Last Booking</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {loadingDetail ? (
+                    <div className="text-center py-6"><RefreshCw className="h-5 w-5 text-orange-500 animate-spin mx-auto" /><p className="text-zinc-400 text-sm mt-2">Loading activity data...</p></div>
+                  ) : detailData && (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                          <p className="text-xl font-bold text-orange-400">{detailData.pagination?.totalCount || 0}</p>
+                          <p className="text-zinc-500 text-xs">Total Actions</p>
+                        </div>
+                        <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                          <p className="text-xl font-bold text-blue-400">{detailData.statistics?.uniqueSessions || 0}</p>
+                          <p className="text-zinc-500 text-xs">Sessions</p>
+                        </div>
+                        <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                          <p className="text-xl font-bold text-green-400">€{(detailData.statistics?.totalRevenue || 0).toFixed(0)}</p>
+                          <p className="text-zinc-500 text-xs">Revenue</p>
+                        </div>
+                        <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                          <p className="text-xl font-bold text-purple-400">{formatDuration(detailData.statistics?.avgSessionDuration?.avgDuration || 0)}</p>
+                          <p className="text-zinc-500 text-xs">Avg Session</p>
+                        </div>
+                      </div>
+
+                      {detailData.statistics?.byAction?.length > 0 && (
+                        <div>
+                          <h4 className="text-zinc-300 text-sm font-medium mb-2">Activity Breakdown</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
+                            {detailData.statistics.byAction.slice(0, 12).map((a: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/50 rounded px-2 py-1.5">
+                                <span className="text-zinc-300">{ACTION_CONFIG[a._id]?.icon} {ACTION_CONFIG[a._id]?.label || a._id}</span>
+                                <span className="text-orange-400 font-medium">{a.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {detailData.statistics?.byCountry?.length > 0 && (
+                        <div>
+                          <h4 className="text-zinc-300 text-sm font-medium mb-2">Countries Visited</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {detailData.statistics.byCountry.map((c: any, i: number) => (
+                              <button key={i} onClick={() => { const cd = stats?.countryDetails?.find((x: any) => x._id === c._id); if (cd) openCountryDetail(cd); }}
+                                className="text-xs bg-zinc-800/50 rounded-full px-3 py-1 text-zinc-300 hover:bg-zinc-700/50 transition">
+                                {c._id} <span className="text-orange-400">{c.count}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {detailData.statistics?.byDevice?.length > 0 && (
+                        <div>
+                          <h4 className="text-zinc-300 text-sm font-medium mb-2">Devices</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {detailData.statistics.byDevice.map((d: any, i: number) => (
+                              <span key={i} className="text-xs bg-zinc-800/50 rounded-full px-3 py-1 text-zinc-300">
+                                {d._id === 'mobile' ? '📱' : d._id === 'tablet' ? '📟' : '🖥️'} {d._id} <span className="text-orange-400">{d.count}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {detailData.activities?.length > 0 && (
+                        <div>
+                          <h4 className="text-zinc-300 text-sm font-medium mb-2">Recent Activities</h4>
+                          <div className="space-y-1 max-h-48 overflow-y-auto">
+                            {detailData.activities.slice(0, 20).map((act: any, i: number) => {
+                              const acfg = ACTION_CONFIG[act.action] || { label: act.action, color: '#6b7280', icon: '📌' };
+                              return (
+                                <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/40 rounded px-3 py-1.5">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span>{acfg.icon}</span>
+                                    <span className="text-zinc-300">{acfg.label}</span>
+                                    {act.eventTitle && <span className="text-zinc-500 truncate">— {act.eventTitle}</span>}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    {act.amount > 0 && <span className="text-green-400">€{act.amount}</span>}
+                                    <span className="text-zinc-500">{formatDate(act.createdAt)}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* ── Country Detail ── */}
+              {detailModal.type === 'country' && (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-orange-400">{detailModal.data.count || 0}</p>
+                      <p className="text-zinc-500 text-xs">Total Visits</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-blue-400">{detailModal.data.uniqueUsers || 0}</p>
+                      <p className="text-zinc-500 text-xs">Unique Users</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-green-400">{detailModal.data.purchases || 0}</p>
+                      <p className="text-zinc-500 text-xs">Purchases</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-yellow-400">€{(detailModal.data.revenue || 0).toFixed(0)}</p>
+                      <p className="text-zinc-500 text-xs">Revenue</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-800/60 rounded-lg p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-zinc-300 text-sm">Conversion Rate</span>
+                      <span className="text-orange-400 font-semibold">
+                        {detailModal.data.count > 0 ? ((detailModal.data.purchases / detailModal.data.count) * 100).toFixed(1) : 0}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-700 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-green-500 transition-all" style={{
+                        width: `${detailModal.data.count > 0 ? Math.min(100, (detailModal.data.purchases / detailModal.data.count) * 100) : 0}%`
+                      }} />
+                    </div>
+                  </div>
+
+                  {detailModal.data.cities?.length > 0 && (
+                    <div>
+                      <h4 className="text-zinc-300 text-sm font-medium mb-2">Cities ({detailModal.data.cities.length})</h4>
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {detailModal.data.cities.map((city: any, i: number) => (
+                          <button key={i} onClick={() => openCityDetail(city)}
+                            className="w-full flex items-center justify-between text-xs bg-zinc-800/50 rounded-lg px-3 py-2 hover:bg-zinc-700/50 transition text-left">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3 w-3 text-orange-400" />
+                              <span className="text-zinc-200">{city._id?.city || 'Unknown'}</span>
+                            </div>
+                            <div className="flex gap-3">
+                              <span className="text-orange-400">{city.count} visits</span>
+                              <span className="text-zinc-500">{city.uniqueUsers} users</span>
+                              {city.purchases > 0 && <span className="text-green-400">{city.purchases} sales</span>}
+                              {city.revenue > 0 && <span className="text-yellow-400">€{city.revenue?.toFixed(0)}</span>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {detailModal.data.buyers?.length > 0 && (
+                    <div>
+                      <h4 className="text-zinc-300 text-sm font-medium mb-2">Top Buying Locations</h4>
+                      <div className="space-y-1">
+                        {detailModal.data.buyers.map((b: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/50 rounded px-3 py-2">
+                            <span className="text-zinc-300"><MapPin className="h-3 w-3 inline mr-1 text-orange-400" />{b._id?.city || 'Unknown'}</span>
+                            <div className="flex gap-3">
+                              <span className="text-green-400">€{b.totalSpent?.toFixed(0)}</span>
+                              <span className="text-zinc-500">{b.transactions} txns</span>
+                              <span className="text-zinc-500">{b.uniqueBuyers} buyers</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* ── City Detail ── */}
+              {detailModal.type === 'city' && (
+                <>
+                  <div className="text-zinc-400 text-sm mb-2">
+                    {countryCodeToFlag(detailModal.data._id?.countryCode)} {detailModal.data._id?.country}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-orange-400">{detailModal.data.count || 0}</p>
+                      <p className="text-zinc-500 text-xs">Total Visits</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-blue-400">{detailModal.data.uniqueUsers || 0}</p>
+                      <p className="text-zinc-500 text-xs">Unique Users</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-green-400">{detailModal.data.purchases || 0}</p>
+                      <p className="text-zinc-500 text-xs">Purchases</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-yellow-400">€{(detailModal.data.revenue || 0).toFixed(0)}</p>
+                      <p className="text-zinc-500 text-xs">Revenue</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-800/60 rounded-lg p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-zinc-300 text-sm">Conversion Rate</span>
+                      <span className="text-orange-400 font-semibold">
+                        {detailModal.data.count > 0 ? ((detailModal.data.purchases / detailModal.data.count) * 100).toFixed(1) : 0}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-700 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-green-500 transition-all" style={{
+                        width: `${detailModal.data.count > 0 ? Math.min(100, (detailModal.data.purchases / detailModal.data.count) * 100) : 0}%`
+                      }} />
+                    </div>
+                  </div>
+
+                  {detailModal.data.buyers?.length > 0 && (
+                    <div>
+                      <h4 className="text-zinc-300 text-sm font-medium mb-2">Purchase Stats</h4>
+                      <div className="space-y-1">
+                        {detailModal.data.buyers.map((b: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/50 rounded px-3 py-2">
+                            <span className="text-zinc-300">Purchases</span>
+                            <div className="flex gap-3">
+                              <span className="text-green-400">€{b.totalSpent?.toFixed(0)}</span>
+                              <span className="text-zinc-500">{b.transactions} txns</span>
+                              <span className="text-zinc-500">{b.uniqueBuyers} buyers</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

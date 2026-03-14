@@ -93,6 +93,18 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
 // Server location (Kosovo)
 const SERVER_LOC: [number, number] = [42.6, 21.0];
 
+// Map region zoom presets: [minLng, minLat, maxLng, maxLat]
+const MAP_REGIONS: Record<string, { label: string; bounds: [number, number, number, number]; flag?: string }> = {
+  world: { label: 'World', bounds: [-180, -90, 180, 90], flag: '🌍' },
+  europe: { label: 'Europe', bounds: [-12, 34, 42, 72], flag: '🇪🇺' },
+  eastern_europe: { label: 'E. Europe', bounds: [12, 36, 42, 62], flag: '🏔️' },
+  balkans: { label: 'Balkans', bounds: [13, 35, 30, 48], flag: '⛰️' },
+  americas: { label: 'Americas', bounds: [-130, -56, -30, 72], flag: '🌎' },
+  asia: { label: 'Asia', bounds: [60, -10, 150, 55], flag: '🌏' },
+  middle_east: { label: 'Mid East', bounds: [25, 12, 65, 42], flag: '🕌' },
+  africa: { label: 'Africa', bounds: [-20, -38, 55, 38], flag: '🌍' },
+};
+
 // Simple equirectangular projection for the SVG map
 function geoToSvg(lat: number, lng: number, w: number, h: number): [number, number] {
   const x = ((lng + 180) / 360) * w;
@@ -139,6 +151,7 @@ export default function UserActivityPage() {
   const [liveLoading, setLiveLoading] = useState(false);
   const liveInterval = useRef<any>(null);
   const [livePulse, setLivePulse] = useState(0);
+  const [mapZoom, setMapZoom] = useState<string>('world');
 
   // Drill-down
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
@@ -1017,7 +1030,21 @@ export default function UserActivityPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              {/* Region zoom selector */}
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+                {Object.entries(MAP_REGIONS).map(([key, region]) => (
+                  <button key={key} onClick={() => setMapZoom(key)}
+                    className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all whitespace-nowrap flex items-center gap-1 ${
+                      mapZoom === key
+                        ? 'bg-orange-600/80 text-white shadow-lg shadow-orange-900/30'
+                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                    }`}>
+                    <span className="text-[10px]">{region.flag}</span> {region.label}
+                  </button>
+                ))}
+              </div>
+              <div className="w-px h-5 bg-zinc-800"></div>
               <div className="flex bg-zinc-900/80 rounded-lg p-0.5 border border-zinc-800/50">
                 <button onClick={() => setMapMode('live')}
                   className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${mapMode === 'live' ? 'bg-emerald-600/90 text-white shadow-lg shadow-emerald-900/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
@@ -1044,8 +1071,16 @@ export default function UserActivityPage() {
                 const maxCount = Math.max(...countries.map((c: any) => c.count), 1);
                 const accentColor = mapMode === 'live' ? '#10b981' : '#3b82f6';
 
+                // Compute viewBox from selected region
+                const regionDef = MAP_REGIONS[mapZoom] || MAP_REGIONS.world;
+                const [minLng, minLat, maxLng, maxLat] = regionDef.bounds;
+                const vx = ((minLng + 180) / 360) * W;
+                const vy = ((90 - maxLat) / 180) * H;
+                const vw = ((maxLng - minLng) / 360) * W;
+                const vh = ((maxLat - minLat) / 180) * H;
+
                 return (
-                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ minHeight: 340 }}>
+                  <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="w-full h-auto" style={{ minHeight: 340 }}>
                     <defs>
                       <radialGradient id="mapBg" cx="50%" cy="40%">
                         <stop offset="0%" stopColor="#111827" />
@@ -1073,9 +1108,16 @@ export default function UserActivityPage() {
                           </linearGradient>
                         );
                       })}
+                      {/* Arrow marker for arcs */}
+                      <marker id="arcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,1 L10,5 L0,9" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" />
+                      </marker>
+                      <marker id="arcArrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,1 L10,5 L0,9" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" />
+                      </marker>
                       <style>{`
                         @keyframes arcFlow { to { stroke-dashoffset: -24; } }
-                        @keyframes nodeEnter { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+                        @keyframes dotTravel { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
                         .arc-flow { animation: arcFlow 2s linear infinite; }
                       `}</style>
                     </defs>
@@ -1102,25 +1144,36 @@ export default function UserActivityPage() {
                       <path key={`country-${i}`} d={d} fill="none" stroke="#2a3a4a" strokeWidth="0.4" strokeOpacity={0.6} />
                     ))}
 
-                    {/* Connection arcs */}
+                    {/* Connection arcs with arrows */}
                     {countries.map((c: any) => {
                       const coords = COUNTRY_COORDS[c._id];
                       if (!coords) return null;
                       const pt = geoToSvg(coords[0], coords[1], W, H);
                       const intensity = Math.min(1, c.count / maxCount);
+                      const arcD = curvedPath(pt[0], pt[1], serverPt[0], serverPt[1]);
+                      const sw = Math.max(0.8, intensity * 2.5);
+                      const arrowId = c.purchases > 0 ? 'arcArrowGreen' : 'arcArrow';
                       return (
                         <g key={`arc-${c._id}`}>
                           {/* Wide glow arc */}
-                          <path d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])} fill="none"
+                          <path d={arcD} fill="none"
                             stroke={`url(#grad-${c._id})`} strokeWidth={Math.max(3, intensity * 8)} strokeOpacity={0.06} />
-                          {/* Main arc */}
-                          <path d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])} fill="none"
+                          {/* Main arc with arrow */}
+                          <path d={arcD} fill="none"
                             stroke={`url(#grad-${c._id})`}
-                            strokeWidth={Math.max(0.6, intensity * 2)}
-                            strokeOpacity={0.4 + intensity * 0.4}
+                            strokeWidth={sw}
+                            strokeOpacity={0.5 + intensity * 0.4}
                             strokeDasharray={mapMode === 'live' ? '8 6' : 'none'}
                             className={mapMode === 'live' ? 'arc-flow' : ''}
+                            markerEnd={`url(#${arrowId})`}
                             filter="url(#lineGlow)" />
+                          {/* Animated traveling dot in live mode */}
+                          {mapMode === 'live' && (
+                            <circle r={Math.max(1.5, intensity * 3)} fill={c.purchases > 0 ? '#34d399' : '#60a5fa'} opacity="0">
+                              <animateMotion dur={`${2 + Math.random() * 2}s`} repeatCount="indefinite" path={arcD} />
+                              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur={`${2 + Math.random() * 2}s`} repeatCount="indefinite" />
+                            </circle>
+                          )}
                         </g>
                       );
                     })}
@@ -1131,8 +1184,11 @@ export default function UserActivityPage() {
                       if (!coords) return null;
                       const pt = geoToSvg(coords[0], coords[1], W, H);
                       const intensity = Math.min(1, c.count / maxCount);
-                      const r = 2.5 + intensity * 4;
+                      const isZoomed = mapZoom !== 'world';
+                      const r = isZoomed ? 3.5 + intensity * 5 : 2.5 + intensity * 4;
                       const color = c.purchases > 0 ? '#34d399' : '#60a5fa';
+                      const fontSize = isZoomed ? 9 : 7.5;
+                      const fontSizeSm = isZoomed ? 7.5 : 6.5;
 
                       // Smart label placement to avoid overlap
                       const labelY = pt[1] < 80 ? pt[1] + r + 12 : pt[1] - r - 6;
@@ -1154,10 +1210,10 @@ export default function UserActivityPage() {
                           <circle cx={pt[0]} cy={pt[1]} r={r} fill={color} opacity={0.85} filter="url(#softGlow)" />
                           <circle cx={pt[0]} cy={pt[1]} r={r * 0.45} fill="#fff" opacity={0.6} />
                           {/* Label */}
-                          <text x={pt[0]} y={labelY} textAnchor={labelAnchor} fill="#94a3b8" fontSize="7.5" fontFamily="system-ui" fontWeight="500">
+                          <text x={pt[0]} y={labelY} textAnchor={labelAnchor} fill="#94a3b8" fontSize={fontSize} fontFamily="system-ui" fontWeight="500">
                             {c.country}
                           </text>
-                          <text x={pt[0]} y={labelY + (pt[1] < 80 ? 9 : -9)} textAnchor={labelAnchor} fill="#64748b" fontSize="6.5" fontFamily="system-ui">
+                          <text x={pt[0]} y={labelY + (pt[1] < 80 ? fontSize + 1 : -(fontSize + 1))} textAnchor={labelAnchor} fill="#64748b" fontSize={fontSizeSm} fontFamily="system-ui">
                             {c.count} visit{c.count !== 1 ? 's' : ''}{c.purchases > 0 ? ` · ${c.purchases} purchase${c.purchases !== 1 ? 's' : ''}` : ''}
                           </text>
                         </g>

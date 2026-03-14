@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
           ],
           // Referral sources - where users come from
           byReferrer: [
-            { $match: { referrer: { $exists: true, $ne: '', $ne: null } } },
+            { $match: { referrer: { $exists: true, $nin: ['', null] } } },
             { $group: { _id: '$referrer', count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
             { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
             { $sort: { count: -1 } },

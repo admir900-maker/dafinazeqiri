@@ -379,7 +379,8 @@ export default function UserActivityPage() {
             <Calendar className="h-4 w-4" /> Timeline
           </button>
           <button onClick={() => setShowLiveMap(!showLiveMap)}
-            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showLiveMap ? 'bg-red-600 text-white animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition ${showLiveMap ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            {showLiveMap && <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span></span>}
             <Radio className="h-4 w-4" /> Live Map
           </button>
           <button onClick={() => { setCurrentPage(1); fetchActivities(); }}
@@ -992,174 +993,249 @@ export default function UserActivityPage() {
 
       {/* Live Map Panel */}
       {showLiveMap && (
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="bg-[#0a0a12] border border-zinc-800/60 rounded-2xl overflow-hidden shadow-2xl">
           {/* Map Header */}
-          <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h3 className="text-white font-semibold flex items-center gap-2">
-                {mapMode === 'live' && <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span></span>}
-                <Radio className="h-4 w-4 text-orange-500" />
-                {mapMode === 'live' ? 'Live Connection Map' : 'Historical Connection Map'}
-              </h3>
-              {liveData && <span className="text-zinc-500 text-xs">{liveData.countries?.length || 0} countries • {liveData.activities?.length || 0} events</span>}
+          <div className="px-5 py-3.5 border-b border-zinc-800/40 flex items-center justify-between bg-[#0c0c16]/80 backdrop-blur-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2.5">
+                {mapMode === 'live' && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                )}
+                <h3 className="text-white/90 text-sm font-semibold tracking-wide uppercase">
+                  {mapMode === 'live' ? 'Real-Time Traffic' : 'Historical Overview'}
+                </h3>
+              </div>
+              {liveData && (
+                <div className="flex items-center gap-3 text-[11px]">
+                  <span className="text-zinc-500">{liveData.countries?.length || 0} <span className="text-zinc-600">countries</span></span>
+                  <span className="text-zinc-700">|</span>
+                  <span className="text-zinc-500">{liveData.activities?.length || 0} <span className="text-zinc-600">connections</span></span>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setMapMode('live')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${mapMode === 'live' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
-                <Zap className="h-3 w-3 inline mr-1" />Live
-              </button>
-              <button onClick={() => setMapMode('historical')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${mapMode === 'historical' ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
-                <Clock className="h-3 w-3 inline mr-1" />Historical
-              </button>
-              <button onClick={fetchLiveData} className="px-2 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition">
+            <div className="flex items-center gap-1.5">
+              <div className="flex bg-zinc-900/80 rounded-lg p-0.5 border border-zinc-800/50">
+                <button onClick={() => setMapMode('live')}
+                  className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${mapMode === 'live' ? 'bg-emerald-600/90 text-white shadow-lg shadow-emerald-900/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  Live
+                </button>
+                <button onClick={() => setMapMode('historical')}
+                  className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${mapMode === 'historical' ? 'bg-blue-600/90 text-white shadow-lg shadow-blue-900/30' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                  30 Days
+                </button>
+              </div>
+              <button onClick={fetchLiveData} className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition">
                 <RefreshCw className={`h-3.5 w-3.5 ${liveLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
 
           <div className="flex flex-col lg:flex-row">
-            {/* SVG Map */}
-            <div className="flex-1 relative bg-zinc-950/50 p-2">
+            {/* SVG World Map */}
+            <div className="flex-1 relative">
               {(() => {
-                const W = 900, H = 460;
+                const W = 960, H = 500;
                 const serverPt = geoToSvg(SERVER_LOC[0], SERVER_LOC[1], W, H);
                 const countries = liveData?.countries || [];
                 const maxCount = Math.max(...countries.map((c: any) => c.count), 1);
+                const accentColor = mapMode === 'live' ? '#10b981' : '#3b82f6';
 
                 return (
-                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ minHeight: 300 }}>
+                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ minHeight: 340 }}>
                     <defs>
-                      <radialGradient id="serverGlow">
-                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+                      <radialGradient id="mapBg" cx="50%" cy="40%">
+                        <stop offset="0%" stopColor="#111827" />
+                        <stop offset="100%" stopColor="#030712" />
+                      </radialGradient>
+                      <radialGradient id="serverAura">
+                        <stop offset="0%" stopColor="#f97316" stopOpacity="0.35" />
+                        <stop offset="50%" stopColor="#f97316" stopOpacity="0.08" />
                         <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
                       </radialGradient>
-                      <filter id="glow">
-                        <feGaussianBlur stdDeviation="2" result="blur" />
+                      <filter id="softGlow">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
                         <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                       </filter>
-                      {/* Animated dash for live mode */}
+                      <filter id="lineGlow">
+                        <feGaussianBlur stdDeviation="1.5" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                      {countries.map((c: any, i: number) => {
+                        const color = c.purchases > 0 ? '#22c55e' : '#60a5fa';
+                        return (
+                          <linearGradient key={`lg-${c._id}`} id={`grad-${c._id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor={color} stopOpacity="0.8" />
+                            <stop offset="100%" stopColor="#f97316" stopOpacity="0.9" />
+                          </linearGradient>
+                        );
+                      })}
                       <style>{`
-                        @keyframes dash { to { stroke-dashoffset: -20; } }
-                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                        @keyframes ripple { 0% { r: 4; opacity: 0.8; } 100% { r: 18; opacity: 0; } }
-                        .conn-line { animation: dash 1.5s linear infinite; }
-                        .fade-in { animation: fadeIn 0.6s ease-out; }
+                        @keyframes arcFlow { to { stroke-dashoffset: -24; } }
+                        @keyframes nodeEnter { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+                        .arc-flow { animation: arcFlow 2s linear infinite; }
                       `}</style>
                     </defs>
 
-                    {/* Background grid */}
-                    <rect width={W} height={H} fill="#09090b" rx="8" />
-                    {Array.from({ length: 18 }, (_, i) => (
-                      <line key={`vg${i}`} x1={(i + 1) * (W / 18)} y1={0} x2={(i + 1) * (W / 18)} y2={H} stroke="#1a1a2e" strokeWidth="0.5" />
-                    ))}
-                    {Array.from({ length: 9 }, (_, i) => (
-                      <line key={`hg${i}`} x1={0} y1={(i + 1) * (H / 9)} x2={W} y2={(i + 1) * (H / 9)} stroke="#1a1a2e" strokeWidth="0.5" />
-                    ))}
+                    {/* Background */}
+                    <rect width={W} height={H} fill="url(#mapBg)" />
 
-                    {/* Simplified continent outlines as filled regions */}
+                    {/* Subtle latitude lines */}
+                    {[-60, -30, 0, 30, 60].map(lat => {
+                      const y = ((90 - lat) / 180) * H;
+                      return <line key={`lat${lat}`} x1={0} y1={y} x2={W} y2={y} stroke="#1e293b" strokeWidth="0.3" strokeDasharray="4 8" />;
+                    })}
+                    {/* Subtle longitude lines */}
+                    {[-120, -60, 0, 60, 120].map(lng => {
+                      const x = ((lng + 180) / 360) * W;
+                      return <line key={`lng${lng}`} x1={x} y1={0} x2={x} y2={H} stroke="#1e293b" strokeWidth="0.3" strokeDasharray="4 8" />;
+                    })}
+
+                    {/* World map - simplified continent outlines using paths */}
                     {/* North America */}
-                    <ellipse cx={200} cy={140} rx={120} ry={80} fill="#1a2332" opacity={0.5} />
+                    <path d="M120,85 L160,75 L200,80 L230,95 L260,100 L270,120 L265,145 L250,165 L235,175 L220,190 L200,195 L180,200 L165,210 L170,225 L180,230 L175,240 L160,235 L140,220 L120,195 L105,175 L95,155 L90,135 L95,110 L105,95 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
+                    {/* Greenland */}
+                    <path d="M290,50 L310,45 L330,50 L340,65 L335,80 L320,85 L300,80 L290,65 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
                     {/* South America */}
-                    <ellipse cx={250} cy={310} rx={60} ry={90} fill="#1a2332" opacity={0.5} />
+                    <path d="M210,260 L225,255 L240,260 L255,275 L265,290 L270,310 L268,335 L260,355 L250,370 L240,385 L230,395 L222,390 L218,375 L215,355 L210,335 L205,315 L200,295 L205,275 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
                     {/* Europe */}
-                    <ellipse cx={470} cy={120} rx={70} ry={55} fill="#1a2332" opacity={0.5} />
+                    <path d="M420,80 L440,75 L460,72 L480,75 L500,80 L510,90 L515,105 L510,120 L500,130 L490,140 L475,148 L460,152 L445,148 L430,140 L420,130 L415,115 L410,100 L415,88 Z"
+                      fill="#1e293b" opacity="0.4" stroke="#334155" strokeWidth="0.5" />
+                    {/* UK & Ireland */}
+                    <path d="M395,85 L405,82 L410,90 L408,100 L400,105 L393,100 L392,92 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.4" />
+                    {/* Scandinavia */}
+                    <path d="M455,48 L465,45 L475,50 L480,60 L478,72 L470,75 L460,72 L455,62 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
                     {/* Africa */}
-                    <ellipse cx={480} cy={270} rx={65} ry={90} fill="#1a2332" opacity={0.5} />
-                    {/* Asia */}
-                    <ellipse cx={650} cy={160} rx={130} ry={85} fill="#1a2332" opacity={0.5} />
-                    {/* Oceania */}
-                    <ellipse cx={760} cy={330} rx={60} ry={40} fill="#1a2332" opacity={0.5} />
+                    <path d="M435,175 L455,170 L475,172 L495,180 L510,195 L520,215 L525,240 L520,270 L510,300 L495,325 L480,340 L465,348 L450,345 L440,330 L435,310 L430,285 L425,260 L425,235 L428,210 L430,190 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
+                    {/* Middle East */}
+                    <path d="M520,140 L545,135 L560,145 L565,160 L555,175 L540,180 L525,175 L515,165 L515,150 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
+                    {/* Russia / Central Asia */}
+                    <path d="M510,55 L560,48 L620,45 L680,48 L730,55 L760,65 L770,80 L765,95 L750,108 L720,115 L680,118 L640,115 L600,110 L560,105 L530,100 L515,90 L510,75 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
+                    {/* India */}
+                    <path d="M600,160 L620,155 L635,165 L640,185 L635,210 L625,225 L610,230 L600,220 L595,200 L592,180 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.4" />
+                    {/* China / East Asia */}
+                    <path d="M660,100 L700,95 L740,100 L760,115 L765,135 L755,155 L735,165 L710,168 L685,162 L665,150 L655,135 L650,118 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
+                    {/* Southeast Asia */}
+                    <path d="M690,185 L710,180 L730,185 L740,200 L735,215 L720,225 L700,222 L688,210 L685,198 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
+                    {/* Japan */}
+                    <path d="M780,110 L788,105 L795,110 L792,125 L785,130 L778,125 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
+                    {/* Australia */}
+                    <path d="M720,310 L755,300 L790,305 L810,320 L815,340 L805,360 L785,370 L760,368 L740,358 L725,340 L718,325 Z"
+                      fill="#1e293b" opacity="0.35" stroke="#334155" strokeWidth="0.5" />
+                    {/* New Zealand */}
+                    <path d="M840,355 L848,350 L855,358 L850,370 L842,372 L838,365 Z"
+                      fill="#1e293b" opacity="0.3" stroke="#334155" strokeWidth="0.4" />
 
-                    {/* Connection lines from countries to server */}
-                    {countries.map((c: any, i: number) => {
+                    {/* Connection arcs */}
+                    {countries.map((c: any) => {
                       const coords = COUNTRY_COORDS[c._id];
                       if (!coords) return null;
                       const pt = geoToSvg(coords[0], coords[1], W, H);
                       const intensity = Math.min(1, c.count / maxCount);
-                      const color = c.purchases > 0 ? '#22c55e' : '#3b82f6';
                       return (
-                        <g key={`line-${c._id}`} className="fade-in">
-                          {/* Curved connection line */}
-                          <path
-                            d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth={Math.max(0.8, intensity * 3)}
-                            strokeOpacity={0.3 + intensity * 0.5}
-                            strokeDasharray={mapMode === 'live' ? '6 4' : 'none'}
-                            className={mapMode === 'live' ? 'conn-line' : ''}
-                            filter="url(#glow)"
-                          />
-                          {/* Glow on the line */}
-                          <path
-                            d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])}
-                            fill="none"
-                            stroke={color}
-                            strokeWidth={Math.max(2, intensity * 6)}
-                            strokeOpacity={0.08}
-                          />
+                        <g key={`arc-${c._id}`}>
+                          {/* Wide glow arc */}
+                          <path d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])} fill="none"
+                            stroke={`url(#grad-${c._id})`} strokeWidth={Math.max(3, intensity * 8)} strokeOpacity={0.06} />
+                          {/* Main arc */}
+                          <path d={curvedPath(pt[0], pt[1], serverPt[0], serverPt[1])} fill="none"
+                            stroke={`url(#grad-${c._id})`}
+                            strokeWidth={Math.max(0.6, intensity * 2)}
+                            strokeOpacity={0.4 + intensity * 0.4}
+                            strokeDasharray={mapMode === 'live' ? '8 6' : 'none'}
+                            className={mapMode === 'live' ? 'arc-flow' : ''}
+                            filter="url(#lineGlow)" />
                         </g>
                       );
                     })}
 
-                    {/* Country dots */}
-                    {countries.map((c: any, i: number) => {
+                    {/* Country nodes */}
+                    {countries.map((c: any) => {
                       const coords = COUNTRY_COORDS[c._id];
                       if (!coords) return null;
                       const pt = geoToSvg(coords[0], coords[1], W, H);
                       const intensity = Math.min(1, c.count / maxCount);
-                      const r = 3 + intensity * 5;
-                      const color = c.purchases > 0 ? '#22c55e' : '#3b82f6';
+                      const r = 2.5 + intensity * 4;
+                      const color = c.purchases > 0 ? '#34d399' : '#60a5fa';
+
+                      // Smart label placement to avoid overlap
+                      const labelY = pt[1] < 80 ? pt[1] + r + 12 : pt[1] - r - 6;
+                      const labelAnchor = pt[0] < 100 ? 'start' : pt[0] > W - 100 ? 'end' : 'middle';
+
                       return (
-                        <g key={`dot-${c._id}`} className="fade-in" style={{ cursor: 'pointer' }}
-                          onClick={() => {
-                            const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id);
-                            if (cd) openCountryDetail(cd);
-                          }}>
-                          {/* Ripple for live */}
+                        <g key={`node-${c._id}`} style={{ cursor: 'pointer' }}
+                          onClick={() => { const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id); if (cd) openCountryDetail(cd); }}>
+                          {/* Pulse ring (live only) */}
                           {mapMode === 'live' && (
-                            <circle cx={pt[0]} cy={pt[1]} r={4} fill="none" stroke={color} strokeWidth="1" opacity="0.6">
-                              <animate attributeName="r" from="4" to="18" dur="2s" repeatCount="indefinite" />
-                              <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite" />
+                            <circle cx={pt[0]} cy={pt[1]} fill="none" stroke={color} strokeWidth="0.8" opacity="0">
+                              <animate attributeName="r" from={r} to={r + 14} dur="2.5s" repeatCount="indefinite" />
+                              <animate attributeName="opacity" from="0.5" to="0" dur="2.5s" repeatCount="indefinite" />
                             </circle>
                           )}
-                          {/* Outer glow */}
-                          <circle cx={pt[0]} cy={pt[1]} r={r + 3} fill={color} opacity={0.15} />
-                          {/* Main dot */}
-                          <circle cx={pt[0]} cy={pt[1]} r={r} fill={color} opacity={0.7 + intensity * 0.3} filter="url(#glow)" />
+                          {/* Glow */}
+                          <circle cx={pt[0]} cy={pt[1]} r={r + 4} fill={color} opacity={0.08} />
+                          {/* Dot */}
+                          <circle cx={pt[0]} cy={pt[1]} r={r} fill={color} opacity={0.85} filter="url(#softGlow)" />
+                          <circle cx={pt[0]} cy={pt[1]} r={r * 0.45} fill="#fff" opacity={0.6} />
                           {/* Label */}
-                          <text x={pt[0]} y={pt[1] - r - 4} textAnchor="middle" fill="#d4d4d8" fontSize="8" fontWeight="600">
-                            {countryCodeToFlag(c._id)} {c.country}
+                          <text x={pt[0]} y={labelY} textAnchor={labelAnchor} fill="#94a3b8" fontSize="7.5" fontFamily="system-ui" fontWeight="500">
+                            {c.country}
                           </text>
-                          <text x={pt[0]} y={pt[1] - r - 14} textAnchor="middle" fill="#a1a1aa" fontSize="7">
-                            {c.count} {c.purchases > 0 ? `(${c.purchases} 💰)` : ''}
+                          <text x={pt[0]} y={labelY + (pt[1] < 80 ? 9 : -9)} textAnchor={labelAnchor} fill="#64748b" fontSize="6.5" fontFamily="system-ui">
+                            {c.count} visit{c.count !== 1 ? 's' : ''}{c.purchases > 0 ? ` · ${c.purchases} purchase${c.purchases !== 1 ? 's' : ''}` : ''}
                           </text>
                         </g>
                       );
                     })}
 
-                    {/* Server dot (Kosovo) */}
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={20} fill="url(#serverGlow)" />
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={6} fill="#f97316" filter="url(#glow)">
-                      {mapMode === 'live' && <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />}
-                    </circle>
-                    <circle cx={serverPt[0]} cy={serverPt[1]} r={3} fill="#fff" />
-                    <text x={serverPt[0]} y={serverPt[1] + 16} textAnchor="middle" fill="#f97316" fontSize="9" fontWeight="700">
-                      🏠 Server
+                    {/* Server node (Kosovo) */}
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={28} fill="url(#serverAura)" />
+                    {mapMode === 'live' && (
+                      <>
+                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth="0.6" opacity="0">
+                          <animate attributeName="r" from="8" to="22" dur="2s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                        <circle cx={serverPt[0]} cy={serverPt[1]} fill="none" stroke="#f97316" strokeWidth="0.4" opacity="0">
+                          <animate attributeName="r" from="8" to="22" dur="2s" begin="0.7s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" from="0.3" to="0" dur="2s" begin="0.7s" repeatCount="indefinite" />
+                        </circle>
+                      </>
+                    )}
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={5} fill="#f97316" filter="url(#softGlow)" />
+                    <circle cx={serverPt[0]} cy={serverPt[1]} r={2.2} fill="#fff" opacity={0.9} />
+                    <text x={serverPt[0]} y={serverPt[1] + 14} textAnchor="middle" fill="#f97316" fontSize="7.5" fontFamily="system-ui" fontWeight="600" letterSpacing="0.5">
+                      SERVER
+                    </text>
+                    <text x={serverPt[0]} y={serverPt[1] + 23} textAnchor="middle" fill="#a16207" fontSize="6" fontFamily="system-ui">
+                      Kosovo
                     </text>
 
                     {/* Legend */}
-                    <g transform={`translate(12, ${H - 60})`}>
-                      <rect x={0} y={0} width={140} height={52} fill="#18181b" rx="6" opacity="0.9" />
-                      <circle cx={14} cy={14} r={4} fill="#3b82f6" />
-                      <text x={24} y={18} fill="#a1a1aa" fontSize="8">Visitors</text>
-                      <circle cx={14} cy={30} r={4} fill="#22c55e" />
-                      <text x={24} y={34} fill="#a1a1aa" fontSize="8">Buyers</text>
-                      <circle cx={80} cy={14} r={4} fill="#f97316" />
-                      <text x={90} y={18} fill="#a1a1aa" fontSize="8">Server</text>
-                      <text x={14} y={46} fill="#52525b" fontSize="7">
-                        {mapMode === 'live' ? 'auto-refresh 8s' : 'last 30 days'}
+                    <g transform={`translate(16, ${H - 48})`}>
+                      <rect x={-4} y={-6} width={165} height={44} fill="#0f172a" rx="8" stroke="#1e293b" strokeWidth="0.5" opacity="0.95" />
+                      <circle cx={8} cy={7} r={3} fill="#60a5fa" />
+                      <text x={16} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Visitors</text>
+                      <circle cx={60} cy={7} r={3} fill="#34d399" />
+                      <text x={68} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Buyers</text>
+                      <circle cx={110} cy={7} r={3} fill="#f97316" />
+                      <text x={118} y={10} fill="#64748b" fontSize="7" fontFamily="system-ui">Server</text>
+                      <text x={8} y={26} fill="#334155" fontSize="6.5" fontFamily="system-ui">
+                        {mapMode === 'live' ? '● Real-time · 8s refresh' : '● Last 30 days'}
                       </text>
                     </g>
                   </svg>
@@ -1167,71 +1243,88 @@ export default function UserActivityPage() {
               })()}
             </div>
 
-            {/* Live Activity Feed */}
-            <div className="lg:w-72 border-t lg:border-t-0 lg:border-l border-zinc-800 flex flex-col">
-              <div className="px-3 py-2.5 border-b border-zinc-800 flex items-center justify-between">
-                <span className="text-white text-xs font-semibold flex items-center gap-1.5">
-                  {mapMode === 'live' && <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>}
-                  {mapMode === 'live' ? 'Live Feed' : 'Recent Activity'}
-                </span>
-                <span className="text-zinc-600 text-[10px]">{liveData?.activities?.length || 0} events</span>
+            {/* Activity Feed Sidebar */}
+            <div className="lg:w-80 border-t lg:border-t-0 lg:border-l border-zinc-800/40 flex flex-col bg-[#0c0c14]">
+              <div className="px-4 py-3 border-b border-zinc-800/40 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {mapMode === 'live' && (
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                  )}
+                  <span className="text-white/80 text-[11px] font-semibold tracking-wider uppercase">
+                    {mapMode === 'live' ? 'Live Feed' : 'Recent Events'}
+                  </span>
+                </div>
+                <span className="text-zinc-600 text-[10px] font-mono">{liveData?.activities?.length || 0}</span>
               </div>
-              <div className="flex-1 overflow-y-auto max-h-[380px] divide-y divide-zinc-800/50">
+
+              <div className="flex-1 overflow-y-auto max-h-[400px]">
                 {(liveData?.activities || []).slice(0, 30).map((act: any, i: number) => {
                   const acfg = ACTION_CONFIG[act.action] || { label: act.action, color: '#6b7280', icon: '📌' };
+                  const timeAgo = (() => {
+                    const diff = Date.now() - new Date(act.createdAt).getTime();
+                    const mins = Math.floor(diff / 60000);
+                    if (mins < 1) return 'just now';
+                    if (mins < 60) return `${mins}m ago`;
+                    const hrs = Math.floor(mins / 60);
+                    if (hrs < 24) return `${hrs}h ago`;
+                    return `${Math.floor(hrs / 24)}d ago`;
+                  })();
                   return (
-                    <div key={i} className="px-3 py-2 hover:bg-zinc-800/30 transition">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm flex-shrink-0">{acfg.icon}</span>
+                    <div key={i} className="px-4 py-2.5 border-b border-zinc-800/20 hover:bg-zinc-800/20 transition group">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+                          style={{ background: acfg.color + '15' }}>
+                          {acfg.icon}
+                        </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: acfg.color + '20', color: acfg.color }}>
-                              {acfg.label}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-semibold tracking-wide" style={{ color: acfg.color }}>
+                              {acfg.label.toUpperCase()}
                             </span>
-                            {act.amount > 0 && <span className="text-green-400 text-[10px] font-medium">€{act.amount}</span>}
+                            <span className="text-zinc-600 text-[9px] flex-shrink-0 font-mono">{timeAgo}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {act.countryCode && <span className="text-xs">{countryCodeToFlag(act.countryCode)}</span>}
-                            <span className="text-zinc-400 text-[10px] truncate">{act.city || act.country}</span>
-                            <span className="text-zinc-600 text-[10px]">•</span>
-                            <span className="text-zinc-500 text-[10px] truncate">{act.userName || act.userEmail || 'Anonymous'}</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-zinc-400 text-[10px] truncate">
+                              {act.userName || act.userEmail || 'Anonymous'}
+                            </span>
+                            {act.amount > 0 && (
+                              <span className="text-emerald-400 text-[10px] font-semibold">€{act.amount}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {act.countryCode && <span className="text-[10px]">{countryCodeToFlag(act.countryCode)}</span>}
+                            <span className="text-zinc-600 text-[10px]">{act.city || act.country}</span>
                           </div>
                         </div>
-                        <span className="text-zinc-600 text-[9px] flex-shrink-0 whitespace-nowrap">
-                          {(() => {
-                            const diff = Date.now() - new Date(act.createdAt).getTime();
-                            const mins = Math.floor(diff / 60000);
-                            if (mins < 1) return 'now';
-                            if (mins < 60) return `${mins}m`;
-                            const hrs = Math.floor(mins / 60);
-                            if (hrs < 24) return `${hrs}h`;
-                            return `${Math.floor(hrs / 24)}d`;
-                          })()}
-                        </span>
                       </div>
                     </div>
                   );
                 })}
                 {(!liveData?.activities || liveData.activities.length === 0) && (
-                  <div className="p-6 text-center">
-                    <Globe className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                    <p className="text-zinc-500 text-xs">{mapMode === 'live' ? 'No live activity yet' : 'No data available'}</p>
+                  <div className="p-8 text-center">
+                    <div className="w-10 h-10 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
+                      <Globe className="h-5 w-5 text-zinc-600" />
+                    </div>
+                    <p className="text-zinc-500 text-xs">{mapMode === 'live' ? 'Waiting for connections...' : 'No recent data'}</p>
                   </div>
                 )}
               </div>
 
-              {/* Country summary at bottom */}
+              {/* Country summary */}
               {liveData?.countries && liveData.countries.length > 0 && (
-                <div className="border-t border-zinc-800 px-3 py-2">
-                  <p className="text-zinc-500 text-[10px] mb-1.5">Top Sources</p>
-                  <div className="flex flex-wrap gap-1">
+                <div className="border-t border-zinc-800/40 px-4 py-3 bg-[#080810]">
+                  <p className="text-zinc-600 text-[9px] font-semibold tracking-wider uppercase mb-2">Top Sources</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {liveData.countries.slice(0, 8).map((c: any, i: number) => (
                       <button key={i} onClick={() => {
                         const cd = stats?.countryDetails?.find((x: any) => x.countryCode === c._id);
                         if (cd) openCountryDetail(cd);
                       }}
-                        className="text-[10px] bg-zinc-800 rounded-full px-2 py-0.5 text-zinc-300 hover:bg-zinc-700 transition flex items-center gap-1">
-                        {countryCodeToFlag(c._id)} {c.count}
+                        className="text-[10px] bg-zinc-800/60 border border-zinc-700/30 rounded-md px-2 py-1 text-zinc-400 hover:bg-zinc-700/50 hover:text-zinc-200 transition flex items-center gap-1 font-medium">
+                        {countryCodeToFlag(c._id)} <span className="text-zinc-500">{c.count}</span>
                       </button>
                     ))}
                   </div>

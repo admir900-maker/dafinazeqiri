@@ -1,1570 +1,1003 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useUser } from '@clerk/nextjs';
 import {
-  RefreshCw, Search, Filter, Download, Clock, User, Activity,
-  CheckCircle, XCircle, AlertCircle, Smartphone, Monitor, Tablet,
-  Chrome, CreditCard, Calendar, BarChart3, Eye, TrendingUp,
-  Trash2, ChevronDown, ChevronUp, Globe, Link2, Users, Target,
-  MapPin, Timer, ShoppingBag
+  Activity, Search, Filter, RefreshCw, ChevronDown, ChevronUp,
+  Eye, Clock, ShoppingBag, CreditCard, Users, Globe, MapPin,
+  Smartphone, Monitor, Tablet, TrendingUp, BarChart3, PieChart as PieChartIcon,
+  Calendar, FileText, ArrowUpDown, AlertTriangle, CheckCircle, XCircle,
+  ChevronLeft, ChevronRight, Trash2, Download, Star, Mail,
+  MousePointerClick, LogIn, LogOut, UserPlus, Share2, Heart,
+  MessageSquare, Bell, Timer, Flag, ArrowDown, ArrowUp
 } from 'lucide-react';
 import {
-  BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area
 } from 'recharts';
 
-interface UserActivity {
-  _id: string;
-  userId: string;
-  userEmail?: string;
-  userName?: string;
-  sessionId?: string;
-  action: string;
-  description: string;
-  eventId?: string;
-  eventTitle?: string;
-  ticketType?: string;
-  quantity?: number;
-  amount?: number;
-  currency?: string;
-  paymentMethod?: string;
-  status: 'success' | 'failed' | 'pending' | 'cancelled';
-  ipAddress?: string;
-  userAgent?: string;
-  device?: string;
-  browser?: string;
-  location?: string;
-  referrer?: string;
-  duration?: number;
-  metadata?: any;
-  errorMessage?: string;
-  createdAt: string;
-  updatedAt: string;
+// Country code to flag emoji
+function countryCodeToFlag(code: string): string {
+  if (!code || code.length !== 2) return '🌍';
+  const offset = 127397;
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => c.charCodeAt(0) + offset));
 }
 
-interface ActivityStatistics {
-  byAction: Array<{ _id: string; count: number }>;
-  byStatus: Array<{ _id: string; count: number }>;
-  byDevice: Array<{ _id: string; count: number }>;
-  byBrowser: Array<{ _id: string; count: number }>;
-  totalRevenue: number;
-  recentActivity: UserActivity[];
-  byReferrer: Array<{ _id: string; count: number; uniqueUsers: number }>;
-  topVisitors: Array<{ _id: string; email: string; name: string; totalActions: number; lastSeen: string; firstSeen: string }>;
-  entryIntents: Array<{ _id: string; count: number }>;
-  topBrowsedEvents: Array<{ _id: string; eventId: string; views: number; uniqueViewers: number }>;
-  topPages: Array<{ _id: string; count: number; uniqueUsers: number }>;
-  uniqueUsers: number;
-  uniqueSessions: number;
-  byCountry: Array<{ _id: string; count: number; uniqueUsers: number }>;
-  byCity: Array<{ _id: { city: string; country: string }; count: number; uniqueUsers: number }>;
-  avgSessionDuration: { avgDuration: number; totalDuration: number; count: number };
-  topBuyersByLocation: Array<{ _id: { city: string; country: string }; totalSpent: number; transactions: number; uniqueBuyers: number }>;
-}
-
-interface ActivityData {
-  activities: UserActivity[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-    limit: number;
-  };
-  statistics: ActivityStatistics;
-}
-
-const CHART_COLORS = ['#f97316', '#92400e', '#22c55e', '#ef4444', '#eab308', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
-
-const ACTION_LABELS: Record<string, string> = {
-  page_view: 'Page View',
-  event_view: 'Event View',
-  ticket_selection: 'Ticket Selection',
-  add_to_cart: 'Add to Cart',
-  remove_from_cart: 'Remove from Cart',
-  checkout_started: 'Checkout Started',
-  payment_method_selected: 'Payment Method Selected',
-  payment_setup_successful: 'Payment Setup Successful',
-  payment_redirect_successful: 'Payment Redirect Successful',
-  payment_attempted: 'Payment Attempted',
-  payment_successful: 'Payment Successful',
-  payment_failed: 'Payment Failed',
-  booking_created: 'Booking Created',
-  booking_cancelled: 'Booking Cancelled',
-  email_sent: 'Email Sent',
-  login: 'Login',
-  logout: 'Logout',
-  signup: 'Sign Up',
-  search: 'Search',
-  filter_applied: 'Filter Applied',
-  download_ticket: 'Download Ticket',
-  share_event: 'Share Event',
-  favorite_added: 'Favorite Added',
-  favorite_removed: 'Favorite Removed',
-  review_submitted: 'Review Submitted',
-  contact_form_submitted: 'Contact Form Submitted',
-  newsletter_signup: 'Newsletter Signup',
-  error_occurred: 'Error Occurred',
+// Action display config
+const ACTION_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
+  page_view: { label: 'Page View', color: '#3b82f6', icon: '👁️' },
+  event_view: { label: 'Event View', color: '#8b5cf6', icon: '🎫' },
+  ticket_selection: { label: 'Ticket Select', color: '#6366f1', icon: '🎟️' },
+  add_to_cart: { label: 'Add to Cart', color: '#10b981', icon: '🛒' },
+  remove_from_cart: { label: 'Remove Cart', color: '#ef4444', icon: '🗑️' },
+  checkout_started: { label: 'Checkout', color: '#f59e0b', icon: '💳' },
+  payment_method_selected: { label: 'Payment Method', color: '#f97316', icon: '💰' },
+  payment_setup_successful: { label: 'Payment Setup', color: '#22c55e', icon: '✅' },
+  payment_redirect_successful: { label: 'Pay Redirect', color: '#14b8a6', icon: '↗️' },
+  payment_attempted: { label: 'Pay Attempt', color: '#eab308', icon: '⏳' },
+  payment_successful: { label: 'Payment OK', color: '#22c55e', icon: '✅' },
+  payment_failed: { label: 'Payment Fail', color: '#ef4444', icon: '❌' },
+  booking_created: { label: 'Booking', color: '#06b6d4', icon: '📋' },
+  booking_cancelled: { label: 'Cancel', color: '#f43f5e', icon: '🚫' },
+  email_sent: { label: 'Email', color: '#a855f7', icon: '📧' },
+  login: { label: 'Login', color: '#22d3ee', icon: '🔑' },
+  logout: { label: 'Logout', color: '#94a3b8', icon: '🚪' },
+  signup: { label: 'Sign Up', color: '#4ade80', icon: '👤' },
+  search: { label: 'Search', color: '#60a5fa', icon: '🔍' },
+  filter_applied: { label: 'Filter', color: '#818cf8', icon: '🔧' },
+  download_ticket: { label: 'Download', color: '#2dd4bf', icon: '📥' },
+  share_event: { label: 'Share', color: '#fb923c', icon: '📤' },
+  favorite_added: { label: 'Fav Added', color: '#f472b6', icon: '❤️' },
+  favorite_removed: { label: 'Fav Removed', color: '#9ca3af', icon: '💔' },
+  review_submitted: { label: 'Review', color: '#fbbf24', icon: '⭐' },
+  contact_form_submitted: { label: 'Contact', color: '#34d399', icon: '✉️' },
+  newsletter_signup: { label: 'Newsletter', color: '#c084fc', icon: '📰' },
+  error_occurred: { label: 'Error', color: '#dc2626', icon: '⚠️' },
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-black/90 border border-orange-500/30 rounded-lg p-3 shadow-lg">
-        <p className="text-orange-100 font-medium text-sm">{label || payload[0]?.name}</p>
-        <p className="text-orange-500 text-sm">{payload[0]?.value} activities</p>
-      </div>
-    );
-  }
-  return null;
-};
+const ACTION_GROUPS = [
+  { label: 'Navigation', actions: ['page_view', 'event_view', 'search', 'filter_applied'] },
+  { label: 'Cart & Purchase', actions: ['ticket_selection', 'add_to_cart', 'remove_from_cart', 'checkout_started'] },
+  { label: 'Payment', actions: ['payment_method_selected', 'payment_setup_successful', 'payment_redirect_successful', 'payment_attempted', 'payment_successful', 'payment_failed'] },
+  { label: 'Booking', actions: ['booking_created', 'booking_cancelled'] },
+  { label: 'Account', actions: ['login', 'logout', 'signup'] },
+  { label: 'Engagement', actions: ['download_ticket', 'share_event', 'favorite_added', 'favorite_removed', 'review_submitted', 'contact_form_submitted', 'newsletter_signup'] },
+  { label: 'System', actions: ['email_sent', 'error_occurred'] },
+];
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const CHART_COLORS = ['#f97316', '#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1', '#84cc16', '#e11d48'];
 
 export default function UserActivityPage() {
-  const { formatPrice } = useCurrency();
-  const [data, setData] = useState<ActivityData | null>(null);
+  const { user } = useUser();
+  const [activities, setActivities] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filters
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [actionFilter, setActionFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [userIdFilter, setUserIdFilter] = useState('');
+  const [deviceFilter, setDeviceFilter] = useState('');
+  const [browserFilter, setBrowserFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const [deviceFilter, setDeviceFilter] = useState('');
-  const [browserFilter, setBrowserFilter] = useState('');
-
-  // UI state
-  const [expandedActivity, setExpandedActivity] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  // Panels
   const [showCharts, setShowCharts] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showGeo, setShowGeo] = useState(false);
-  const [userDemographics, setUserDemographics] = useState<any>(null);
+  const [showReports, setShowReports] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+
+  // Drill-down
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [expandedActivity, setExpandedActivity] = useState<string | null>(null);
+
+  // User demographics from Clerk
+  const [userDemographics, setUserDemographics] = useState<any[]>([]);
   const [loadingDemographics, setLoadingDemographics] = useState(false);
 
-  const fetchActivities = async (page = 1) => {
+  const fetchActivities = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '20'
-      });
-
-      if (searchTerm) params.append('search', searchTerm);
+      const params = new URLSearchParams({ page: currentPage.toString(), limit: '50' });
       if (actionFilter) params.append('action', actionFilter);
       if (statusFilter) params.append('status', statusFilter);
-      if (userIdFilter) params.append('userId', userIdFilter);
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
       if (deviceFilter) params.append('device', deviceFilter);
       if (browserFilter) params.append('browser', browserFilter);
+      if (searchTerm) params.append('search', searchTerm);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
 
-      const response = await fetch(`/api/admin/user-activity?${params}`);
-      const result = await response.json();
-
-      if (result.success) {
-        setData(result.data);
-        setCurrentPage(page);
-      } else {
-        setError(result.error || 'Failed to fetch user activities');
+      const res = await fetch(`/api/admin/user-activity?${params}`);
+      const data = await res.json();
+      if (data.success) {
+        setActivities(data.data.activities);
+        setStats(data.data.statistics);
+        setPagination(data.data.pagination);
       }
-    } catch (error) {
-      console.error('Error fetching user activities:', error);
-      setError('Failed to fetch user activities');
+    } catch (err) {
+      console.error('Failed to fetch activities:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, actionFilter, statusFilter, deviceFilter, browserFilter, searchTerm, startDate, endDate]);
 
-  const clearOldActivities = async (days: number) => {
-    if (!confirm(`Are you sure you want to delete activities older than ${days} days? This action cannot be undone.`)) {
-      return;
-    }
-
+  const fetchDemographics = async () => {
     try {
-      const response = await fetch(`/api/admin/user-activity?days=${days}`, {
-        method: 'DELETE'
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        alert(`Successfully deleted ${result.data.deletedCount} old activities`);
-        fetchActivities(currentPage);
-      } else {
-        alert(`Failed to delete activities: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Error deleting activities:', error);
-      alert('Failed to delete activities');
-    }
-  };
-
-  const exportActivities = () => {
-    if (!data) return;
-
-    const exportData = {
-      activities: data.activities,
-      statistics: data.statistics,
-      exportDate: new Date().toISOString(),
-      filters: {
-        searchTerm,
-        actionFilter,
-        statusFilter,
-        userIdFilter,
-        startDate,
-        endDate
-      }
-    };
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `user-activities-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  useEffect(() => {
-    fetchActivities();
-  }, []);
-
-  // Fetch user demographics from Clerk via admin users API
-  const fetchUserDemographics = async () => {
-    if (userDemographics) return; // already fetched
-    setLoadingDemographics(true);
-    try {
-      const res = await fetch('/api/admin/users?limit=100&offset=0');
-      const result = await res.json();
-      if (result.success && result.users) {
-        const users = result.users;
-        // Calculate demographics
-        const now = new Date();
-        const registrationByMonth: Record<string, number> = {};
-        let totalSpent = 0;
-        let totalBookings = 0;
-        const topBuyers: Array<{ email: string; name: string; spent: number; bookings: number }> = [];
-
-        users.forEach((u: any) => {
-          const created = new Date(u.createdAt);
-          const monthKey = `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}`;
-          registrationByMonth[monthKey] = (registrationByMonth[monthKey] || 0) + 1;
-          totalSpent += u.bookingStats?.totalSpent || 0;
-          totalBookings += u.bookingStats?.totalBookings || 0;
-          topBuyers.push({
-            email: u.emailAddress,
-            name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
-            spent: u.bookingStats?.totalSpent || 0,
-            bookings: u.bookingStats?.totalBookings || 0
-          });
-        });
-
-        topBuyers.sort((a, b) => b.spent - a.spent);
-
-        const registrationTrend = Object.entries(registrationByMonth)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .slice(-12)
-          .map(([month, count]) => ({ month, count }));
-
-        setUserDemographics({
-          totalUsers: result.totalCount,
-          totalSpent,
-          totalBookings,
-          avgSpentPerUser: users.length > 0 ? totalSpent / users.length : 0,
-          topBuyers: topBuyers.slice(0, 10),
-          registrationTrend
-        });
-      }
+      setLoadingDemographics(true);
+      const res = await fetch('/api/admin/users?limit=100');
+      const data = await res.json();
+      if (data.users) setUserDemographics(data.users);
     } catch (err) {
-      console.error('Failed to fetch user demographics:', err);
+      console.error('Failed to fetch demographics:', err);
     } finally {
       setLoadingDemographics(false);
     }
   };
 
-  useEffect(() => {
-    if (showGeo) {
-      fetchUserDemographics();
-    }
-  }, [showGeo]);
+  useEffect(() => { fetchActivities(); }, [fetchActivities]);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-green-400" />;
-      case 'failed': return <XCircle className="w-4 h-4 text-red-400" />;
-      case 'pending': return <Clock className="w-4 h-4 text-orange-500" />;
-      case 'cancelled': return <AlertCircle className="w-4 h-4 text-gray-400" />;
-      default: return <Activity className="w-4 h-4 text-orange-500" />;
-    }
+  const resetFilters = () => {
+    setActionFilter(''); setStatusFilter(''); setDeviceFilter('');
+    setBrowserFilter(''); setSearchTerm(''); setStartDate(''); setEndDate('');
+    setCurrentPage(1);
   };
 
-  const getDeviceIcon = (device: string) => {
-    switch (device) {
-      case 'mobile': return <Smartphone className="w-4 h-4 text-orange-500" />;
-      case 'tablet': return <Tablet className="w-4 h-4 text-amber-700" />;
-      case 'desktop': return <Monitor className="w-4 h-4 text-green-400" />;
-      default: return <Monitor className="w-4 h-4 text-gray-400" />;
-    }
+  const formatDate = (d: string) => new Date(d).toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+
+  const formatDuration = (ms: number) => {
+    if (!ms) return '—';
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${s % 60}s`;
+    return `${Math.floor(m / 60)}h ${m % 60}m`;
   };
 
-  const getBrowserIcon = (browser: string) => {
-    switch (browser) {
-      case 'Chrome': return <Chrome className="w-4 h-4 text-orange-500" />;
-      case 'Firefox': return <Globe className="w-4 h-4 text-orange-400" />;
-      case 'Safari': return <Globe className="w-4 h-4 text-orange-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-400" />;
-    }
+  // Get cities for selected country from cityDetails  
+  const getCitiesForCountry = (country: string) => {
+    if (!stats?.cityDetails) return [];
+    return stats.cityDetails.filter((c: any) => c._id?.country === country);
   };
 
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case 'payment_successful':
-      case 'payment_setup_successful':
-      case 'payment_redirect_successful':
-      case 'booking_created':
-        return 'text-green-400';
-      case 'payment_failed':
-      case 'error_occurred':
-      case 'booking_cancelled':
-        return 'text-red-400';
-      case 'checkout_started':
-      case 'payment_attempted':
-      case 'payment_method_selected':
-        return 'text-orange-500';
-      case 'page_view':
-      case 'event_view':
-      case 'search':
-      case 'filter_applied':
-        return 'text-blue-400';
-      case 'add_to_cart':
-      case 'ticket_selection':
-        return 'text-amber-400';
-      case 'remove_from_cart':
-        return 'text-orange-400';
-      case 'login':
-      case 'signup':
-        return 'text-emerald-400';
-      case 'logout':
-        return 'text-gray-400';
-      case 'favorite_added':
-      case 'share_event':
-      case 'review_submitted':
-      case 'newsletter_signup':
-        return 'text-pink-400';
-      case 'favorite_removed':
-        return 'text-gray-400';
-      case 'download_ticket':
-        return 'text-cyan-400';
-      case 'email_sent':
-      case 'contact_form_submitted':
-        return 'text-violet-400';
-      default:
-        return 'text-white';
-    }
+  // Conversion funnel data
+  const getFunnelData = () => {
+    if (!stats?.conversionFunnel) return [];
+    const order = ['page_view', 'event_view', 'add_to_cart', 'checkout_started', 'payment_successful'];
+    const funnelMap = new Map(stats.conversionFunnel.map((f: any) => [f._id, f.count]));
+    return order.map(action => ({
+      name: ACTION_CONFIG[action]?.label || action,
+      count: funnelMap.get(action) || 0,
+    }));
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  // Top days data  
+  const getDayData = () => {
+    if (!stats?.byDayOfWeek) return [];
+    return stats.byDayOfWeek.map((d: any) => ({
+      name: DAY_NAMES[d._id - 1] || `Day ${d._id}`,
+      activities: d.count,
+      users: d.uniqueUsers
+    })).sort((a: any, b: any) => DAY_NAMES.indexOf(a.name) - DAY_NAMES.indexOf(b.name));
   };
 
-  const formatDuration = (duration?: number) => {
-    if (!duration) return 'N/A';
-    if (duration < 1000) return `${duration}ms`;
-    if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`;
-    return `${(duration / 60000).toFixed(1)}m`;
+  // Hour data
+  const getHourData = () => {
+    if (!stats?.byHourOfDay) return [];
+    return stats.byHourOfDay.map((h: any) => ({
+      name: `${h._id.toString().padStart(2, '0')}:00`,
+      activities: h.count,
+      users: h.uniqueUsers
+    }));
   };
 
-  if (loading && !data) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">User Activity Logs</h1>
-          </div>
-          <div className="flex items-center justify-center min-h-96 text-orange-100">
-            <div className="text-center">
-              <Activity className="w-12 h-12 mx-auto mb-4 text-orange-500 animate-pulse" />
-              <p className="text-lg">Loading user activities...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900">User Activity Logs</h1>
-          <Card className="bg-black/60 border-2 border-orange-500/30">
-            <CardContent className="p-8 text-center">
-              <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-orange-100 mb-2">Error Loading Activities</h2>
-              <p className="text-red-400 mb-6">{error}</p>
-              <Button onClick={() => fetchActivities()} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Try Again
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // Month data
+  const getMonthData = () => {
+    if (!stats?.byMonth) return [];
+    return stats.byMonth.map((m: any) => ({
+      name: `${MONTH_NAMES[m._id.month - 1]} ${m._id.year}`,
+      activities: m.count,
+      users: m.uniqueUsers,
+      revenue: m.revenue || 0
+    })).reverse();
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">User Activity Logs</h1>
-            <p className="text-orange-100/50">
-              Monitor user behavior and track ticket purchasing activities
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>
-            <Button
-              onClick={() => setShowCharts(!showCharts)}
-              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              {showCharts ? 'Hide Charts' : 'Charts'}
-            </Button>
-            <Button
-              onClick={() => setShowInsights(!showInsights)}
-              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              {showInsights ? 'Hide Insights' : 'Insights'}
-            </Button>
-            <Button
-              onClick={() => setShowGeo(!showGeo)}
-              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-            >
-              <MapPin className="w-4 h-4 mr-2" />
-              {showGeo ? 'Hide Geo' : 'Geo & Users'}
-            </Button>
-            <Button onClick={exportActivities} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <Button onClick={() => fetchActivities(currentPage)} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+            <Activity className="h-7 w-7 text-orange-500" /> User Activity
+          </h1>
+          <p className="text-zinc-400 mt-1">
+            {pagination ? `${pagination.totalCount.toLocaleString()} total activities` : 'Loading...'}
+            {stats?.uniqueUsers ? ` • ${stats.uniqueUsers} unique users` : ''}
+            {stats?.uniqueSessions ? ` • ${stats.uniqueSessions} sessions` : ''}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setShowFilters(!showFilters)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showFilters ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <Filter className="h-4 w-4" /> Filters
+          </button>
+          <button onClick={() => setShowCharts(!showCharts)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showCharts ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <BarChart3 className="h-4 w-4" /> Charts
+          </button>
+          <button onClick={() => setShowInsights(!showInsights)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showInsights ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <TrendingUp className="h-4 w-4" /> Insights
+          </button>
+          <button onClick={() => { setShowGeo(!showGeo); if (!showGeo && userDemographics.length === 0) fetchDemographics(); }}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showGeo ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <Globe className="h-4 w-4" /> Geo & Users
+          </button>
+          <button onClick={() => setShowReports(!showReports)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showReports ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <FileText className="h-4 w-4" /> Reports
+          </button>
+          <button onClick={() => setShowTimeline(!showTimeline)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition ${showTimeline ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+            <Calendar className="h-4 w-4" /> Timeline
+          </button>
+          <button onClick={() => { setCurrentPage(1); fetchActivities(); }}
+            className="px-3 py-2 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 flex items-center gap-1 transition">
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">Search</label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-zinc-500" />
+                <input type="text" value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  placeholder="Email, name, event..."
+                  className="w-full pl-8 pr-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">Action</label>
+              <select value={actionFilter} onChange={e => { setActionFilter(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none">
+                <option value="">All Actions</option>
+                {ACTION_GROUPS.map(group => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.actions.map(a => (
+                      <option key={a} value={a}>{ACTION_CONFIG[a]?.icon} {ACTION_CONFIG[a]?.label || a}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">Status</label>
+              <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none">
+                <option value="">All</option>
+                <option value="success">✅ Success</option>
+                <option value="failed">❌ Failed</option>
+                <option value="pending">⏳ Pending</option>
+                <option value="cancelled">🚫 Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">Device</label>
+              <select value={deviceFilter} onChange={e => { setDeviceFilter(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none">
+                <option value="">All</option>
+                <option value="desktop">🖥️ Desktop</option>
+                <option value="mobile">📱 Mobile</option>
+                <option value="tablet">📟 Tablet</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">Browser</label>
+              <select value={browserFilter} onChange={e => { setBrowserFilter(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none">
+                <option value="">All</option>
+                <option value="Chrome">Chrome</option>
+                <option value="Safari">Safari</option>
+                <option value="Firefox">Firefox</option>
+                <option value="Edge">Edge</option>
+                <option value="Opera">Opera</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">From</label>
+              <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none" />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1">To</label>
+              <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:border-orange-500 focus:outline-none" />
+            </div>
+            <div className="flex items-end">
+              <button onClick={resetFilters} className="px-4 py-2 bg-zinc-700 text-zinc-300 rounded-lg text-sm hover:bg-zinc-600 transition">
+                Reset All
+              </button>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Statistics Dashboard */}
-        {data && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-black/60 border-2 border-orange-500/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100/70 text-sm font-medium">Total Activities</p>
-                      <p className="text-2xl font-bold text-orange-100">
-                        {data.pagination.totalCount.toLocaleString()}
-                      </p>
-                    </div>
-                    <Activity className="w-8 h-8 text-orange-500" />
+      {/* Charts Panel */}
+      {showCharts && stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Actions by Status Pie */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <PieChartIcon className="h-4 w-4 text-orange-500" /> Status Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={stats.byStatus?.filter((s: any) => s._id) || []} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={80}
+                  label={(props: any) => `${props._id}: ${(props.percent * 100).toFixed(0)}%`}>
+                  {(stats.byStatus || []).map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Device Distribution Pie */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Smartphone className="h-4 w-4 text-blue-500" /> Device Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={stats.byDevice?.filter((d: any) => d._id) || []} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={80}
+                  label={(props: any) => `${props._id}: ${(props.percent * 100).toFixed(0)}%`}>
+                  {(stats.byDevice || []).map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Browser Distribution Pie */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Globe className="h-4 w-4 text-purple-500" /> Browser Distribution
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={stats.byBrowser?.filter((b: any) => b._id) || []} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={80}
+                  label={(props: any) => `${props._id}: ${(props.percent * 100).toFixed(0)}%`}>
+                  {(stats.byBrowser || []).map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Top Actions Bar */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-green-500" /> Top Actions
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={(stats.byAction || []).slice(0, 10).map((a: any) => ({
+                name: ACTION_CONFIG[a._id]?.label || a._id,
+                count: a.count
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+                <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Insights Panel */}
+      {showInsights && stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {/* Conversion Funnel */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-orange-500" /> Conversion Funnel
+            </h3>
+            {getFunnelData().map((step: any, i: number) => {
+              const maxCount = Number(getFunnelData()[0]?.count) || 1;
+              const pct = ((Number(step.count) / maxCount) * 100).toFixed(1);
+              return (
+                <div key={i} className="mb-2">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-zinc-300">{step.name}</span>
+                    <span className="text-zinc-400">{step.count.toLocaleString()} ({pct}%)</span>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-black/60 border-2 border-orange-500/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100/70 text-sm font-medium">Revenue from Activities</p>
-                      <p className="text-2xl font-bold text-orange-100">
-                        {formatPrice(data.statistics.totalRevenue)}
-                      </p>
-                    </div>
-                    <CreditCard className="w-8 h-8 text-green-400" />
+                  <div className="w-full bg-zinc-800 rounded-full h-2">
+                    <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: CHART_COLORS[i] }} />
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-black/60 border-2 border-orange-500/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100/70 text-sm font-medium">Success Rate</p>
-                      <p className="text-2xl font-bold text-orange-100">
-                        {data.statistics.byStatus.find(s => s._id === 'success')?.count ?
-                          Math.round((data.statistics.byStatus.find(s => s._id === 'success')!.count / data.pagination.totalCount) * 100) : 0}%
-                      </p>
-                    </div>
-                    <CheckCircle className="w-8 h-8 text-green-400" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-black/60 border-2 border-orange-500/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100/70 text-sm font-medium">Top Device</p>
-                      <p className="text-2xl font-bold text-orange-100">
-                        {data.statistics.byDevice[0]?._id || 'N/A'}
-                      </p>
-                    </div>
-                    {getDeviceIcon(data.statistics.byDevice[0]?._id || 'unknown')}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Statistics Charts */}
-            {showCharts && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Activity by Status */}
-                <Card className="bg-black/60 border-2 border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-orange-100 text-lg">Activity by Status</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={data.statistics.byStatus.filter(s => s._id).map(s => ({ name: s._id?.charAt(0).toUpperCase() + s._id?.slice(1), value: s.count }))}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
-                          outerRadius={90}
-                          dataKey="value"
-                        >
-                          {data.statistics.byStatus.map((_, index) => (
-                            <Cell key={`status-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Activity by Device */}
-                <Card className="bg-black/60 border-2 border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-orange-100 text-lg">Activity by Device</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={data.statistics.byDevice.filter(d => d._id).map(d => ({ name: d._id?.charAt(0).toUpperCase() + d._id?.slice(1), value: d.count }))}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
-                          outerRadius={90}
-                          dataKey="value"
-                        >
-                          {data.statistics.byDevice.map((_, index) => (
-                            <Cell key={`device-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Top Actions */}
-                <Card className="bg-black/60 border-2 border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-orange-100 text-lg">Top Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart
-                        data={data.statistics.byAction.slice(0, 8).map(a => ({ name: ACTION_LABELS[a._id] || a._id, count: a.count }))}
-                        layout="vertical"
-                        margin={{ left: 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                        <XAxis type="number" tick={{ fill: '#fed7aa', fontSize: 12 }} />
-                        <YAxis type="category" dataKey="name" tick={{ fill: '#fed7aa', fontSize: 11 }} width={130} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="count" fill="#f97316" radius={[0, 4, 4, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Activity by Browser */}
-                <Card className="bg-black/60 border-2 border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-orange-100 text-lg">Activity by Browser</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={data.statistics.byBrowser.filter(b => b._id).map(b => ({ name: b._id || 'Unknown', value: b.count }))}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
-                          outerRadius={90}
-                          dataKey="value"
-                        >
-                          {data.statistics.byBrowser.map((_, index) => (
-                            <Cell key={`browser-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* User Insights */}
-            {showInsights && (
-              <div className="space-y-4">
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Unique Users</p>
-                          <p className="text-2xl font-bold text-orange-100">{data.statistics.uniqueUsers?.toLocaleString() || 0}</p>
-                        </div>
-                        <Users className="w-8 h-8 text-orange-500" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Unique Sessions</p>
-                          <p className="text-2xl font-bold text-orange-100">{data.statistics.uniqueSessions?.toLocaleString() || 0}</p>
-                        </div>
-                        <Globe className="w-8 h-8 text-blue-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Avg Actions/User</p>
-                          <p className="text-2xl font-bold text-orange-100">
-                            {data.statistics.uniqueUsers ? (data.pagination.totalCount / data.statistics.uniqueUsers).toFixed(1) : '0'}
-                          </p>
-                        </div>
-                        <Target className="w-8 h-8 text-emerald-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Referral Sources */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <Link2 className="w-5 h-5 text-orange-500" />
-                        Referral Sources
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {data.statistics.byReferrer && data.statistics.byReferrer.length > 0 ? (
-                        <div className="space-y-3">
-                          {data.statistics.byReferrer.map((ref, i) => {
-                            const maxCount = data.statistics.byReferrer[0]?.count || 1;
-                            const domain = (() => {
-                              try {
-                                const url = ref._id.startsWith('http') ? ref._id : `https://${ref._id}`;
-                                return new URL(url).hostname;
-                              } catch { return ref._id; }
-                            })();
-                            return (
-                              <div key={i} className="group">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-orange-100 text-sm truncate max-w-[200px]" title={ref._id}>{domain}</span>
-                                  <div className="flex items-center gap-3 text-sm">
-                                    <span className="text-orange-100/50">{ref.uniqueUsers} users</span>
-                                    <span className="text-orange-500 font-medium">{ref.count} visits</span>
-                                  </div>
-                                </div>
-                                <div className="w-full bg-orange-500/10 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-orange-500 to-amber-700 h-2 rounded-full transition-all"
-                                    style={{ width: `${(ref.count / maxCount) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No referral data available yet</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Entry Intents - What brought users to the site */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <Target className="w-5 h-5 text-orange-500" />
-                        Entry Intents
-                      </CardTitle>
-                      <p className="text-orange-100/40 text-sm">First action users take when entering</p>
-                    </CardHeader>
-                    <CardContent>
-                      {data.statistics.entryIntents && data.statistics.entryIntents.length > 0 ? (
-                        <div className="space-y-3">
-                          {data.statistics.entryIntents.filter(i => i._id).map((intent, i) => {
-                            const maxCount = data.statistics.entryIntents[0]?.count || 1;
-                            const total = data.statistics.entryIntents.reduce((sum, i) => sum + i.count, 0);
-                            const pct = ((intent.count / total) * 100).toFixed(1);
-                            return (
-                              <div key={i}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className={`text-sm font-medium ${getActionColor(intent._id)}`}>
-                                    {ACTION_LABELS[intent._id] || intent._id}
-                                  </span>
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-orange-100/50">{pct}%</span>
-                                    <span className="text-orange-500 font-medium">{intent.count}</span>
-                                  </div>
-                                </div>
-                                <div className="w-full bg-orange-500/10 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-orange-500 to-amber-700 h-2 rounded-full transition-all"
-                                    style={{ width: `${(intent.count / maxCount) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No session data available yet</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Top Visitors */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <Users className="w-5 h-5 text-orange-500" />
-                        Most Active Users
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      {data.statistics.topVisitors && data.statistics.topVisitors.length > 0 ? (
-                        <div className="divide-y divide-orange-500/10">
-                          {data.statistics.topVisitors.slice(0, 10).map((visitor, i) => (
-                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
-                                <div>
-                                  <p className="text-orange-100 text-sm font-medium">
-                                    {visitor.email || visitor.name || visitor._id?.slice(0, 12) + '...'}
-                                  </p>
-                                  <p className="text-orange-100/40 text-xs">
-                                    First: {new Date(visitor.firstSeen).toLocaleDateString()} &middot; Last: {new Date(visitor.lastSeen).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-orange-500 font-bold text-sm">{visitor.totalActions}</p>
-                                <p className="text-orange-100/40 text-xs">actions</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No visitor data available yet</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Most Browsed Events */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <Eye className="w-5 h-5 text-orange-500" />
-                        Most Browsed Events
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      {data.statistics.topBrowsedEvents && data.statistics.topBrowsedEvents.length > 0 ? (
-                        <div className="divide-y divide-orange-500/10">
-                          {data.statistics.topBrowsedEvents.map((event, i) => (
-                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
-                                <p className="text-orange-100 text-sm font-medium">{event._id}</p>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="text-right">
-                                  <p className="text-blue-400 font-medium">{event.uniqueViewers}</p>
-                                  <p className="text-orange-100/40 text-xs">unique</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-orange-500 font-bold">{event.views}</p>
-                                  <p className="text-orange-100/40 text-xs">views</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No event view data yet</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Most Viewed Pages */}
-                <Card className="bg-black/60 border-2 border-orange-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                      <Globe className="w-5 h-5 text-orange-500" />
-                      Most Viewed Pages
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {data.statistics.topPages && data.statistics.topPages.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {data.statistics.topPages.map((page, i) => {
-                          const maxCount = data.statistics.topPages[0]?.count || 1;
-                          const pagePath = page._id?.replace('User viewed page: ', '') || page._id;
-                          return (
-                            <div key={i} className="p-3 bg-black/30 rounded-lg">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-orange-100 text-sm font-medium truncate max-w-[250px]" title={pagePath}>
-                                  {pagePath}
-                                </span>
-                                <div className="flex items-center gap-2 text-xs shrink-0">
-                                  <span className="text-blue-400">{page.uniqueUsers} users</span>
-                                  <span className="text-orange-500 font-bold">{page.count} views</span>
-                                </div>
-                              </div>
-                              <div className="w-full bg-orange-500/10 rounded-full h-1.5">
-                                <div
-                                  className="bg-gradient-to-r from-orange-500 to-amber-700 h-1.5 rounded-full"
-                                  style={{ width: `${(page.count / maxCount) * 100}%` }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-orange-100/40 text-center py-6">No page view data yet</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Geo & Demographics */}
-            {showGeo && (
-              <div className="space-y-4">
-                {/* Geo Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Top Country</p>
-                          <p className="text-2xl font-bold text-orange-100">
-                            {data.statistics.byCountry?.[0]?._id || 'N/A'}
-                          </p>
-                          <p className="text-orange-100/40 text-xs mt-1">
-                            {data.statistics.byCountry?.[0]?.uniqueUsers || 0} users
-                          </p>
-                        </div>
-                        <Globe className="w-8 h-8 text-orange-500" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Top City</p>
-                          <p className="text-2xl font-bold text-orange-100">
-                            {data.statistics.byCity?.[0]?._id?.city || 'N/A'}
-                          </p>
-                          <p className="text-orange-100/40 text-xs mt-1">
-                            {data.statistics.byCity?.[0]?._id?.country || ''}
-                          </p>
-                        </div>
-                        <MapPin className="w-8 h-8 text-blue-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Avg Session Time</p>
-                          <p className="text-2xl font-bold text-orange-100">
-                            {data.statistics.avgSessionDuration?.avgDuration
-                              ? data.statistics.avgSessionDuration.avgDuration < 1000
-                                ? `${Math.round(data.statistics.avgSessionDuration.avgDuration)}ms`
-                                : data.statistics.avgSessionDuration.avgDuration < 60000
-                                  ? `${(data.statistics.avgSessionDuration.avgDuration / 1000).toFixed(1)}s`
-                                  : `${(data.statistics.avgSessionDuration.avgDuration / 60000).toFixed(1)}m`
-                              : 'N/A'}
-                          </p>
-                          <p className="text-orange-100/40 text-xs mt-1">
-                            {data.statistics.avgSessionDuration?.count || 0} tracked
-                          </p>
-                        </div>
-                        <Timer className="w-8 h-8 text-emerald-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100/70 text-sm font-medium">Countries</p>
-                          <p className="text-2xl font-bold text-orange-100">
-                            {data.statistics.byCountry?.length || 0}
-                          </p>
-                          <p className="text-orange-100/40 text-xs mt-1">
-                            {data.statistics.byCity?.length || 0} cities
-                          </p>
-                        </div>
-                        <MapPin className="w-8 h-8 text-pink-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Traffic by Country */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-orange-500" />
-                        Traffic by Country
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {data.statistics.byCountry && data.statistics.byCountry.length > 0 ? (
-                        <div className="space-y-3">
-                          {data.statistics.byCountry.map((c, i) => {
-                            const maxCount = data.statistics.byCountry[0]?.count || 1;
-                            return (
-                              <div key={i}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-orange-100 text-sm font-medium">{c._id}</span>
-                                  <div className="flex items-center gap-3 text-sm">
-                                    <span className="text-orange-100/50">{c.uniqueUsers} users</span>
-                                    <span className="text-orange-500 font-medium">{c.count} visits</span>
-                                  </div>
-                                </div>
-                                <div className="w-full bg-orange-500/10 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-orange-500 to-amber-700 h-2 rounded-full transition-all"
-                                    style={{ width: `${(c.count / maxCount) * 100}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No geolocation data yet. Data will populate as users interact with the site.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Traffic by City */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-orange-500" />
-                        Traffic by City
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      {data.statistics.byCity && data.statistics.byCity.length > 0 ? (
-                        <div className="divide-y divide-orange-500/10">
-                          {data.statistics.byCity.map((c, i) => (
-                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
-                                <div>
-                                  <p className="text-orange-100 text-sm font-medium">{c._id.city}</p>
-                                  <p className="text-orange-100/40 text-xs">{c._id.country}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="text-right">
-                                  <p className="text-blue-400 font-medium">{c.uniqueUsers}</p>
-                                  <p className="text-orange-100/40 text-xs">users</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-orange-500 font-bold">{c.count}</p>
-                                  <p className="text-orange-100/40 text-xs">visits</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No city data yet</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Top Buyers by Location */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <ShoppingBag className="w-5 h-5 text-orange-500" />
-                        Top Buying Locations
-                      </CardTitle>
-                      <p className="text-orange-100/40 text-sm">Where the most purchases come from</p>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      {data.statistics.topBuyersByLocation && data.statistics.topBuyersByLocation.length > 0 ? (
-                        <div className="divide-y divide-orange-500/10">
-                          {data.statistics.topBuyersByLocation.map((loc, i) => (
-                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
-                                <div>
-                                  <p className="text-orange-100 text-sm font-medium">{loc._id.city || 'Unknown City'}</p>
-                                  <p className="text-orange-100/40 text-xs">{loc._id.country || 'Unknown'}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="text-right">
-                                  <p className="text-blue-400 font-medium">{loc.uniqueBuyers}</p>
-                                  <p className="text-orange-100/40 text-xs">buyers</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-emerald-400 font-medium">{loc.transactions}</p>
-                                  <p className="text-orange-100/40 text-xs">orders</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-orange-500 font-bold">{formatPrice(loc.totalSpent)}</p>
-                                  <p className="text-orange-100/40 text-xs">spent</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No purchase location data yet</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* User Demographics from Clerk */}
-                  <Card className="bg-black/60 border-2 border-orange-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-orange-100 text-lg flex items-center gap-2">
-                        <Users className="w-5 h-5 text-orange-500" />
-                        Top Buyers Overall
-                      </CardTitle>
-                      <p className="text-orange-100/40 text-sm">Users who spend the most on tickets</p>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      {loadingDemographics ? (
-                        <div className="flex items-center justify-center py-8">
-                          <Activity className="w-6 h-6 text-orange-500 animate-pulse" />
-                          <span className="text-orange-100/50 ml-2">Loading user data...</span>
-                        </div>
-                      ) : userDemographics?.topBuyers && userDemographics.topBuyers.length > 0 ? (
-                        <div className="divide-y divide-orange-500/10">
-                          {userDemographics.topBuyers.filter((b: any) => b.spent > 0).map((buyer: any, i: number) => (
-                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-black/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <span className="text-orange-500 font-bold text-sm w-6">#{i + 1}</span>
-                                <div>
-                                  <p className="text-orange-100 text-sm font-medium">{buyer.name || buyer.email}</p>
-                                  {buyer.name && <p className="text-orange-100/40 text-xs">{buyer.email}</p>}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="text-right">
-                                  <p className="text-blue-400 font-medium">{buyer.bookings}</p>
-                                  <p className="text-orange-100/40 text-xs">bookings</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-orange-500 font-bold">{formatPrice(buyer.spent)}</p>
-                                  <p className="text-orange-100/40 text-xs">total</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-orange-100/40 text-center py-6">No buyer data available</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Registration Trend & Overall Stats */}
-                {userDemographics && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <Card className="bg-black/60 border-2 border-orange-500/30">
-                      <CardHeader>
-                        <CardTitle className="text-orange-100 text-lg">User Registrations Over Time</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {userDemographics.registrationTrend.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={userDemographics.registrationTrend}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                              <XAxis dataKey="month" tick={{ fill: '#fed7aa', fontSize: 11 }} />
-                              <YAxis tick={{ fill: '#fed7aa', fontSize: 12 }} />
-                              <Tooltip content={<CustomTooltip />} />
-                              <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <p className="text-orange-100/40 text-center py-6">No registration data</p>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-black/60 border-2 border-orange-500/30">
-                      <CardHeader>
-                        <CardTitle className="text-orange-100 text-lg">Platform Overview</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="p-4 bg-black/30 rounded-lg text-center">
-                            <p className="text-3xl font-bold text-orange-500">{userDemographics.totalUsers}</p>
-                            <p className="text-orange-100/50 text-sm mt-1">Total Users</p>
-                          </div>
-                          <div className="p-4 bg-black/30 rounded-lg text-center">
-                            <p className="text-3xl font-bold text-emerald-400">{userDemographics.totalBookings}</p>
-                            <p className="text-orange-100/50 text-sm mt-1">Total Bookings</p>
-                          </div>
-                          <div className="p-4 bg-black/30 rounded-lg text-center">
-                            <p className="text-3xl font-bold text-blue-400">{formatPrice(userDemographics.totalSpent)}</p>
-                            <p className="text-orange-100/50 text-sm mt-1">Total Revenue</p>
-                          </div>
-                          <div className="p-4 bg-black/30 rounded-lg text-center">
-                            <p className="text-3xl font-bold text-pink-400">{formatPrice(userDemographics.avgSpentPerUser)}</p>
-                            <p className="text-orange-100/50 text-sm mt-1">Avg Spend/User</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Filters */}
-            {showFilters && (
-              <Card className="bg-black/60 border-2 border-orange-500/30">
-                <CardHeader>
-                  <CardTitle>Filters</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">Search</label>
-                      <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search users, events..."
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">Action</label>
-                      <select
-                        value={actionFilter}
-                        onChange={(e) => setActionFilter(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="">All Actions</option>
-                        <optgroup label="Browsing">
-                          <option value="page_view">Page View</option>
-                          <option value="event_view">Event View</option>
-                          <option value="search">Search</option>
-                          <option value="filter_applied">Filter Applied</option>
-                        </optgroup>
-                        <optgroup label="Tickets & Cart">
-                          <option value="ticket_selection">Ticket Selection</option>
-                          <option value="add_to_cart">Add to Cart</option>
-                          <option value="remove_from_cart">Remove from Cart</option>
-                          <option value="download_ticket">Download Ticket</option>
-                        </optgroup>
-                        <optgroup label="Checkout & Payments">
-                          <option value="checkout_started">Checkout Started</option>
-                          <option value="payment_method_selected">Payment Method Selected</option>
-                          <option value="payment_setup_successful">Payment Setup Successful</option>
-                          <option value="payment_redirect_successful">Payment Redirect Successful</option>
-                          <option value="payment_attempted">Payment Attempted</option>
-                          <option value="payment_successful">Payment Successful</option>
-                          <option value="payment_failed">Payment Failed</option>
-                        </optgroup>
-                        <optgroup label="Bookings">
-                          <option value="booking_created">Booking Created</option>
-                          <option value="booking_cancelled">Booking Cancelled</option>
-                        </optgroup>
-                        <optgroup label="Account">
-                          <option value="login">Login</option>
-                          <option value="logout">Logout</option>
-                          <option value="signup">Sign Up</option>
-                        </optgroup>
-                        <optgroup label="Engagement">
-                          <option value="share_event">Share Event</option>
-                          <option value="favorite_added">Favorite Added</option>
-                          <option value="favorite_removed">Favorite Removed</option>
-                          <option value="review_submitted">Review Submitted</option>
-                          <option value="contact_form_submitted">Contact Form Submitted</option>
-                          <option value="newsletter_signup">Newsletter Signup</option>
-                        </optgroup>
-                        <optgroup label="System">
-                          <option value="email_sent">Email Sent</option>
-                          <option value="error_occurred">Error Occurred</option>
-                        </optgroup>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">Status</label>
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="">All Status</option>
-                        <option value="success">Success</option>
-                        <option value="failed">Failed</option>
-                        <option value="pending">Pending</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">User ID</label>
-                      <input
-                        type="text"
-                        value={userIdFilter}
-                        onChange={(e) => setUserIdFilter(e.target.value)}
-                        placeholder="Filter by user ID"
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">Start Date</label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">End Date</label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">Device</label>
-                      <select
-                        value={deviceFilter}
-                        onChange={(e) => setDeviceFilter(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="">All Devices</option>
-                        <option value="desktop">Desktop</option>
-                        <option value="mobile">Mobile</option>
-                        <option value="tablet">Tablet</option>
-                        <option value="unknown">Unknown</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-orange-100/70 text-sm mb-2">Browser</label>
-                      <select
-                        value={browserFilter}
-                        onChange={(e) => setBrowserFilter(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="">All Browsers</option>
-                        <option value="Chrome">Chrome</option>
-                        <option value="Firefox">Firefox</option>
-                        <option value="Safari">Safari</option>
-                        <option value="Edge">Edge</option>
-                        <option value="Opera">Opera</option>
-                        <option value="Samsung Internet">Samsung Internet</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mt-4">
-                    <Button onClick={() => fetchActivities(1)} className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
-                      <Search className="w-4 h-4 mr-2" />
-                      Apply Filters
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setSearchTerm('');
-                        setActionFilter('');
-                        setStatusFilter('');
-                        setUserIdFilter('');
-                        setStartDate('');
-                        setEndDate('');
-                        setDeviceFilter('');
-                        setBrowserFilter('');
-                        fetchActivities(1);
-                      }}
-                      className="bg-black/40 border border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
-                    >
-                      Clear All
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Activities List */}
-            <Card className="bg-black/60 border-2 border-orange-500/30">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>User Activities</span>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => clearOldActivities(30)}
-                      className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 text-sm"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Clear 30d+
-                    </Button>
-                    <Button
-                      onClick={() => clearOldActivities(90)}
-                      className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 text-sm"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Clear 90d+
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {data.activities.length > 0 ? (
-                  <div className="divide-y divide-orange-500/10">
-                    {data.activities.map((activity) => (
-                      <div key={activity._id} className="p-4 hover:bg-black/40 transition-colors">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              {getStatusIcon(activity.status)}
-                              <span className={`font-medium ${getActionColor(activity.action)}`}>
-                                {ACTION_LABELS[activity.action] || activity.action.replace(/_/g, ' ').toUpperCase()}
-                              </span>
-                              <span className="text-orange-100/40 text-sm">
-                                {formatDate(activity.createdAt)}
-                              </span>
-                              {activity.duration && (
-                                <span className="text-orange-100/40 text-sm">
-                                  ({formatDuration(activity.duration)})
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="text-orange-100 mb-2">{activity.description}</p>
-
-                            <div className="flex flex-wrap gap-4 text-sm text-orange-100/70">
-                              {activity.userEmail && (
-                                <span className="flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  {activity.userEmail}
-                                </span>
-                              )}
-                              {activity.eventTitle && (
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  {activity.eventTitle}
-                                </span>
-                              )}
-                              {activity.amount && (
-                                <span className="flex items-center gap-1">
-                                  <CreditCard className="w-3 h-3" />
-                                  {formatPrice(activity.amount)}
-                                </span>
-                              )}
-                              {activity.device && (
-                                <span className="flex items-center gap-1">
-                                  {getDeviceIcon(activity.device)}
-                                  {activity.device}
-                                </span>
-                              )}
-                              {activity.browser && (
-                                <span className="flex items-center gap-1">
-                                  {getBrowserIcon(activity.browser)}
-                                  {activity.browser}
-                                </span>
-                              )}
-                            </div>
-
-                            {activity.errorMessage && (
-                              <div className="mt-2 p-2 bg-red-600/20 border border-red-600/30 rounded text-red-400 text-sm">
-                                {activity.errorMessage}
-                              </div>
-                            )}
-                          </div>
-
-                          <Button
-                            onClick={() => setExpandedActivity(
-                              expandedActivity === activity._id ? null : activity._id
-                            )}
-                            className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-100/70 p-2"
-                          >
-                            {expandedActivity === activity._id ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-
-                        {expandedActivity === activity._id && (
-                          <div className="mt-4 p-4 bg-black/40 rounded-lg">
-                            <h4 className="text-white font-medium mb-3">Detailed Information</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <strong className="text-orange-100/80">Session ID:</strong>
-                                <span className="text-orange-100/50 ml-2">{activity.sessionId || 'N/A'}</span>
-                              </div>
-                              <div>
-                                <strong className="text-orange-100/80">IP Address:</strong>
-                                <span className="text-orange-100/50 ml-2">{activity.ipAddress || 'N/A'}</span>
-                              </div>
-                              <div>
-                                <strong className="text-orange-100/80">Location:</strong>
-                                <span className="text-orange-100/50 ml-2">{activity.location || 'N/A'}</span>
-                              </div>
-                              <div>
-                                <strong className="text-orange-100/80">Referrer:</strong>
-                                <span className="text-orange-100/50 ml-2">{activity.referrer || 'N/A'}</span>
-                              </div>
-                              {activity.paymentMethod && (
-                                <div>
-                                  <strong className="text-orange-100/80">Payment Method:</strong>
-                                  <span className="text-orange-100/50 ml-2">{activity.paymentMethod}</span>
-                                </div>
-                              )}
-                              {activity.ticketType && (
-                                <div>
-                                  <strong className="text-orange-100/80">Ticket Type:</strong>
-                                  <span className="text-orange-100/50 ml-2">{activity.ticketType}</span>
-                                </div>
-                              )}
-                              {activity.quantity && (
-                                <div>
-                                  <strong className="text-orange-100/80">Quantity:</strong>
-                                  <span className="text-orange-100/50 ml-2">{activity.quantity}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {activity.metadata && Object.keys(activity.metadata).length > 0 && (
-                              <div className="mt-4">
-                                <strong className="text-orange-100/80">Metadata:</strong>
-                                <pre className="mt-2 p-3 bg-black/30 rounded text-orange-100/70 text-xs overflow-auto">
-                                  {JSON.stringify(activity.metadata, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-orange-100/50">
-                    <Activity className="w-12 h-12 mx-auto mb-4 text-orange-100/30" />
-                    <p>No user activities found</p>
-                    <p className="text-sm mt-2">Activities will appear here as users interact with the platform</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Pagination */}
-            {data.pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <div className="text-orange-100/50 text-sm">
-                  Showing {((data.pagination.currentPage - 1) * data.pagination.limit) + 1} to {Math.min(data.pagination.currentPage * data.pagination.limit, data.pagination.totalCount)} of {data.pagination.totalCount} activities
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => fetchActivities(data.pagination.currentPage - 1)}
-                    disabled={!data.pagination.hasPrevPage}
-                    className="bg-orange-500/10 hover:bg-orange-500/20 disabled:opacity-50"
-                  >
-                    Previous
-                  </Button>
-
-                  <span className="flex items-center px-4 py-2 text-orange-100">
-                    Page {data.pagination.currentPage} of {data.pagination.totalPages}
+          {/* Referral Sources */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-blue-500" /> Referral Sources
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {(stats.byReferrer || []).map((r: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-300 truncate max-w-[200px]" title={r._id}>
+                    {(() => { try { return new URL(r._id).hostname; } catch { return r._id; } })()}
                   </span>
-
-                  <Button
-                    onClick={() => fetchActivities(data.pagination.currentPage + 1)}
-                    disabled={!data.pagination.hasNextPage}
-                    className="bg-orange-500/10 hover:bg-orange-500/20 disabled:opacity-50"
-                  >
-                    Next
-                  </Button>
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-orange-400">{r.count} hits</span>
+                    <span className="text-zinc-500">{r.uniqueUsers} users</span>
+                  </div>
                 </div>
+              ))}
+              {(!stats.byReferrer || stats.byReferrer.length === 0) && <p className="text-zinc-500 text-sm">No referral data</p>}
+            </div>
+          </div>
+
+          {/* Entry Intents */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <MousePointerClick className="h-4 w-4 text-green-500" /> Entry Intents
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(stats.entryIntents || []).map((e: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-300">{ACTION_CONFIG[e._id]?.icon} {ACTION_CONFIG[e._id]?.label || e._id}</span>
+                  <span className="text-orange-400">{e.count} sessions</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Most Active Users (fixed — shows name/email) */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Users className="h-4 w-4 text-purple-500" /> Most Active Users
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(stats.topVisitors || []).map((v: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-sm bg-zinc-800/50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-orange-400 font-mono text-xs w-5">#{i + 1}</span>
+                    <div className="min-w-0">
+                      <p className="text-zinc-200 truncate text-xs font-medium">{v.name || v.email || v._id?.slice(0, 12) + '...'}</p>
+                      {v.email && v.name && <p className="text-zinc-500 truncate text-[10px]">{v.email}</p>}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <p className="text-orange-400 font-semibold text-xs">{v.totalActions}</p>
+                    <p className="text-zinc-500 text-[10px]">{formatDate(v.lastSeen)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Browsed Events */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Star className="h-4 w-4 text-yellow-500" /> Top Events
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(stats.topBrowsedEvents || []).map((e: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-300 truncate max-w-[180px]">{e._id}</span>
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-orange-400">{e.views} views</span>
+                    <span className="text-zinc-500">{e.uniqueViewers} users</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Pages */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Eye className="h-4 w-4 text-cyan-500" /> Top Pages
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(stats.topPages || []).map((p: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-300 truncate max-w-[180px]">{p._id}</span>
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-orange-400">{p.count} views</span>
+                    <span className="text-zinc-500">{p.uniqueUsers} users</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Geo & Users Panel */}
+      {showGeo && stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {/* Countries with drill-down */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 lg:col-span-2">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Globe className="h-4 w-4 text-orange-500" /> Traffic by Country
+              <span className="text-zinc-500 text-xs ml-auto">Click to expand</span>
+            </h3>
+            <div className="space-y-1 max-h-[450px] overflow-y-auto pr-1">
+              {(stats.countryDetails || stats.byCountry || []).map((c: any, i: number) => {
+                const countryName = c._id;
+                const code = c.countryCode;
+                const isExpanded = selectedCountry === countryName;
+                const cities = getCitiesForCountry(countryName);
+                return (
+                  <div key={i}>
+                    <button onClick={() => setSelectedCountry(isExpanded ? null : countryName)}
+                      className={`w-full flex items-center justify-between text-sm px-3 py-2.5 rounded-lg transition ${isExpanded ? 'bg-orange-900/30 border border-orange-800/50' : 'bg-zinc-800/40 hover:bg-zinc-800'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{countryCodeToFlag(code)}</span>
+                        <span className="text-zinc-200 font-medium">{countryName}</span>
+                        {c.purchases > 0 && <span className="text-green-400 text-xs">💰 {c.purchases} sales</span>}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="text-orange-400">{c.count} hits</span>
+                        <span className="text-zinc-500">{c.uniqueUsers} users</span>
+                        {c.revenue > 0 && <span className="text-green-400">€{c.revenue?.toFixed(0)}</span>}
+                        {c.citiesCount > 0 && <span className="text-zinc-600">{c.citiesCount} cities</span>}
+                        {isExpanded ? <ChevronUp className="h-3 w-3 text-zinc-400" /> : <ChevronDown className="h-3 w-3 text-zinc-400" />}
+                      </div>
+                    </button>
+                    {isExpanded && cities.length > 0 && (
+                      <div className="ml-8 mt-1 mb-2 space-y-1">
+                        {cities.map((city: any, j: number) => (
+                          <div key={j} className="flex items-center justify-between text-xs px-3 py-2 bg-zinc-800/60 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3 w-3 text-orange-400" />
+                              <span className="text-zinc-300">{city._id?.city || 'Unknown'}</span>
+                            </div>
+                            <div className="flex gap-3">
+                              <span className="text-orange-400">{city.count} hits</span>
+                              <span className="text-zinc-500">{city.uniqueUsers} users</span>
+                              {city.purchases > 0 && <span className="text-green-400">{city.purchases} sales (€{city.revenue?.toFixed(0)})</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {isExpanded && cities.length === 0 && (
+                      <p className="ml-8 mt-1 mb-2 text-zinc-500 text-xs px-3">No city data available</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Top Buyers by Location */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-green-500" /> Top Buyers by Location
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(stats.topBuyersByLocation || []).map((b: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-sm bg-zinc-800/50 rounded-lg px-3 py-2">
+                  <span className="text-zinc-300 truncate">
+                    <MapPin className="h-3 w-3 inline mr-1 text-orange-400" />
+                    {b._id?.city || 'Unknown'}, {b._id?.country || ''}
+                  </span>
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-green-400">€{b.totalSpent?.toFixed(0)}</span>
+                    <span className="text-zinc-500">{b.transactions} txns</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Platform Overview */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-blue-500" /> Platform Overview
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-orange-400">{stats.uniqueUsers || 0}</p>
+                <p className="text-zinc-500 text-xs">Total Users</p>
               </div>
-            )}
-          </>
+              <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-blue-400">{stats.uniqueSessions || 0}</p>
+                <p className="text-zinc-500 text-xs">Sessions</p>
+              </div>
+              <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-green-400">€{(stats.totalRevenue || 0).toFixed(0)}</p>
+                <p className="text-zinc-500 text-xs">Revenue</p>
+              </div>
+              <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-purple-400">{formatDuration(stats.avgSessionDuration?.avgDuration || 0)}</p>
+                <p className="text-zinc-500 text-xs">Avg Session</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Registration Trends */}
+          {userDemographics.length > 0 && (
+            <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-green-500" /> Recent Signups
+              </h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {userDemographics.slice(0, 10).map((u: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-sm bg-zinc-800/50 rounded-lg px-3 py-2">
+                    {u.imageUrl && <img src={u.imageUrl} alt="" className="h-6 w-6 rounded-full" />}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-zinc-200 truncate text-xs">{u.firstName} {u.lastName}</p>
+                      <p className="text-zinc-500 truncate text-[10px]">{u.emailAddress}</p>
+                    </div>
+                    <span className="text-zinc-500 text-[10px]">{formatDate(u.createdAt)}</span>
+                  </div>
+                ))}
+                {loadingDemographics && <p className="text-zinc-500 text-xs text-center">Loading...</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Top Buyers Overall */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-yellow-500" /> Top Buyers
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {userDemographics
+                .filter((u: any) => u.bookingStats?.totalSpent > 0)
+                .sort((a: any, b: any) => (b.bookingStats?.totalSpent || 0) - (a.bookingStats?.totalSpent || 0))
+                .slice(0, 10)
+                .map((u: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between text-sm bg-zinc-800/50 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-orange-400 font-mono text-xs">#{i + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-zinc-200 truncate text-xs">{u.firstName} {u.lastName}</p>
+                        <p className="text-zinc-500 truncate text-[10px]">{u.emailAddress}</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className="text-green-400 font-semibold text-xs">€{u.bookingStats?.totalSpent?.toFixed(0)}</p>
+                      <p className="text-zinc-500 text-[10px]">{u.bookingStats?.totalBookings} bookings</p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reports Panel */}
+      {showReports && stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {/* Behavior Report */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 lg:col-span-2">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-orange-500" /> User Behavior Report
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {(() => {
+                const funnel = getFunnelData();
+                const visitors = Number(funnel[0]?.count) || 0;
+                const viewers = Number(funnel[1]?.count) || 0;
+                const carters = Number(funnel[2]?.count) || 0;
+                const buyers = Number(funnel[4]?.count) || 0;
+                return (
+                  <>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-blue-400">{visitors.toLocaleString()}</p>
+                      <p className="text-zinc-500 text-[10px]">Page Views</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-purple-400">{viewers.toLocaleString()}</p>
+                      <p className="text-zinc-500 text-[10px]">Event Views</p>
+                      <p className="text-zinc-600 text-[9px]">{visitors > 0 ? ((viewers / visitors) * 100).toFixed(1) : 0}% of visitors</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-orange-400">{carters.toLocaleString()}</p>
+                      <p className="text-zinc-500 text-[10px]">Add to Cart</p>
+                      <p className="text-zinc-600 text-[9px]">{viewers > 0 ? ((carters / viewers) * 100).toFixed(1) : 0}% of viewers</p>
+                    </div>
+                    <div className="bg-zinc-800/60 rounded-lg p-3 text-center">
+                      <p className="text-xl font-bold text-green-400">{buyers.toLocaleString()}</p>
+                      <p className="text-zinc-500 text-[10px]">Purchases</p>
+                      <p className="text-zinc-600 text-[9px]">{visitors > 0 ? ((buyers / visitors) * 100).toFixed(1) : 0}% conversion</p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            {/* Funnel visualization */}
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={getFunnelData()} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" width={100} tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                  {getFunnelData().map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Purchases by Country */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Globe className="h-4 w-4 text-green-500" /> Visitors vs Buyers by Country
+            </h3>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {(stats.countryDetails || []).map((c: any, i: number) => {
+                const conversionRate = c.count > 0 ? ((c.purchases / c.count) * 100).toFixed(1) : '0';
+                return (
+                  <div key={i} className="bg-zinc-800/50 rounded-lg px-3 py-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-zinc-200">{countryCodeToFlag(c.countryCode)} {c._id}</span>
+                      <span className="text-zinc-500 text-xs">{conversionRate}% conv.</span>
+                    </div>
+                    <div className="flex gap-3 text-xs mt-1">
+                      <span className="text-blue-400">{c.count} visits</span>
+                      <span className="text-green-400">{c.purchases} buys</span>
+                      {c.revenue > 0 && <span className="text-yellow-400">€{c.revenue?.toFixed(0)}</span>}
+                    </div>
+                    <div className="w-full bg-zinc-700 rounded-full h-1.5 mt-1">
+                      <div className="h-1.5 rounded-full bg-green-500" style={{ width: `${conversionRate}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Top Days of Week */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-blue-500" /> Top Days of Week
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={getDayData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+                <Bar dataKey="activities" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Activities" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Top Hours */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-purple-500" /> Activity by Hour
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={getHourData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 9 }} interval={2} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+                <Area type="monotone" dataKey="activities" stroke="#8b5cf6" fill="#8b5cf680" name="Activities" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Monthly Trends */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-yellow-500" /> Monthly Trends
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={getMonthData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 9 }} angle={-30} textAnchor="end" height={50} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+                <Bar dataKey="activities" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Activities" />
+                <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} name="Revenue (€)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Timeline Panel - Daily Trend */}
+      {showTimeline && stats && (
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-orange-500" /> 30-Day Activity Timeline
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={(stats.dailyTrend || []).map((d: any) => ({
+              date: new Date(d._id).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+              activities: d.count,
+              users: d.uniqueUsers,
+              purchases: d.purchases
+            }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+              <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} />
+              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff' }} />
+              <Legend />
+              <Area type="monotone" dataKey="activities" stroke="#f97316" fill="#f9731640" name="All Activities" />
+              <Area type="monotone" dataKey="users" stroke="#3b82f6" fill="#3b82f640" name="Unique Users" />
+              <Area type="monotone" dataKey="purchases" stroke="#22c55e" fill="#22c55e40" name="Purchases" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Activity List */}
+      <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+          <h3 className="text-white font-semibold flex items-center gap-2">
+            <Activity className="h-4 w-4 text-orange-500" /> Activity Log
+          </h3>
+          <span className="text-zinc-500 text-xs">{pagination?.totalCount || 0} total</span>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center">
+            <RefreshCw className="h-6 w-6 text-orange-500 animate-spin mx-auto mb-2" />
+            <p className="text-zinc-400 text-sm">Loading activities...</p>
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="p-8 text-center">
+            <Activity className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
+            <p className="text-zinc-400">No activities found</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-800/50">
+            {activities.map((a: any) => {
+              const cfg = ACTION_CONFIG[a.action] || { label: a.action, color: '#6b7280', icon: '📌' };
+              const isExpanded = expandedActivity === a._id;
+              return (
+                <div key={a._id}>
+                  <button onClick={() => setExpandedActivity(isExpanded ? null : a._id)}
+                    className="w-full text-left px-4 py-3 hover:bg-zinc-800/30 transition flex items-start gap-3">
+                    {/* Action icon */}
+                    <span className="text-lg flex-shrink-0 mt-0.5">{cfg.icon}</span>
+
+                    {/* Main content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: cfg.color + '20', color: cfg.color }}>
+                          {cfg.label}
+                        </span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${a.status === 'success' ? 'bg-green-900/30 text-green-400' :
+                          a.status === 'failed' ? 'bg-red-900/30 text-red-400' :
+                            a.status === 'pending' ? 'bg-yellow-900/30 text-yellow-400' :
+                              'bg-zinc-800 text-zinc-400'
+                          }`}>{a.status}</span>
+                        {a.amount > 0 && <span className="text-green-400 text-xs font-medium">€{a.amount}</span>}
+                      </div>
+                      <p className="text-zinc-400 text-xs mt-0.5 truncate">{a.description}</p>
+                      <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-500 flex-wrap">
+                        {/* User */}
+                        <span>{a.userName || a.userEmail || a.userId?.slice(0, 10) + '...'}</span>
+                        {/* Geo flag + city */}
+                        {(a.country || a.countryCode) && (
+                          <span className="flex items-center gap-0.5">
+                            {countryCodeToFlag(a.countryCode)}
+                            {a.city && <span>{a.city}</span>}
+                            {!a.city && a.country && <span>{a.country}</span>}
+                          </span>
+                        )}
+                        {/* Device */}
+                        {a.device && (
+                          <span className="flex items-center gap-0.5">
+                            {a.device === 'mobile' ? <Smartphone className="h-3 w-3" /> : a.device === 'tablet' ? <Tablet className="h-3 w-3" /> : <Monitor className="h-3 w-3" />}
+                            {a.browser}
+                          </span>
+                        )}
+                        {/* Time */}
+                        <span>{formatDate(a.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    <ChevronDown className={`h-4 w-4 text-zinc-500 flex-shrink-0 transition ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="px-4 pb-3 ml-9 space-y-2">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        {a.eventTitle && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">Event</p>
+                            <p className="text-zinc-200 truncate">{a.eventTitle}</p>
+                          </div>
+                        )}
+                        {a.ticketType && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">Ticket</p>
+                            <p className="text-zinc-200">{a.ticketType}{a.quantity ? ` x${a.quantity}` : ''}</p>
+                          </div>
+                        )}
+                        {a.paymentMethod && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">Payment</p>
+                            <p className="text-zinc-200">{a.paymentMethod}</p>
+                          </div>
+                        )}
+                        {a.ipAddress && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">IP</p>
+                            <p className="text-zinc-200 font-mono text-[10px]">{a.ipAddress}</p>
+                          </div>
+                        )}
+                        {a.country && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">Location</p>
+                            <p className="text-zinc-200">{countryCodeToFlag(a.countryCode)} {a.city}{a.city && a.region ? ', ' : ''}{a.region}, {a.country}</p>
+                          </div>
+                        )}
+                        {a.referrer && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">Referrer</p>
+                            <p className="text-zinc-200 truncate text-[10px]">{a.referrer}</p>
+                          </div>
+                        )}
+                        {a.duration > 0 && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2">
+                            <p className="text-zinc-500">Duration</p>
+                            <p className="text-zinc-200">{formatDuration(a.duration)}</p>
+                          </div>
+                        )}
+                        {a.userAgent && (
+                          <div className="bg-zinc-800/60 rounded-lg p-2 col-span-2">
+                            <p className="text-zinc-500">User Agent</p>
+                            <p className="text-zinc-200 truncate text-[10px]">{a.userAgent}</p>
+                          </div>
+                        )}
+                        {a.errorMessage && (
+                          <div className="bg-red-900/20 border border-red-800/30 rounded-lg p-2 col-span-2">
+                            <p className="text-red-400">Error</p>
+                            <p className="text-red-300 text-[10px]">{a.errorMessage}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-zinc-800 flex items-center justify-between">
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={!pagination.hasPrevPage}
+              className="px-3 py-1.5 rounded-lg text-sm bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition">
+              <ChevronLeft className="h-4 w-4" /> Prev
+            </button>
+            <span className="text-zinc-400 text-sm">
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </span>
+            <button onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))} disabled={!pagination.hasNextPage}
+              className="px-3 py-1.5 rounded-lg text-sm bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition">
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         )}
       </div>
     </div>

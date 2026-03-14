@@ -22,6 +22,7 @@ export interface IUserActivity extends Document {
   location?: string;
   city?: string;
   country?: string;
+  countryCode?: string;
   region?: string;
   referrer?: string;
   duration?: number; // in milliseconds
@@ -145,6 +146,9 @@ const UserActivitySchema: Schema = new Schema({
   country: {
     type: String,
     index: true
+  },
+  countryCode: {
+    type: String
   },
   region: {
     type: String

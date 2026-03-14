@@ -192,6 +192,73 @@ export async function GET(request: NextRequest) {
             { $project: { _id: 1, totalSpent: 1, transactions: 1, uniqueBuyers: { $size: '$uniqueBuyers' } } },
             { $sort: { totalSpent: -1 } },
             { $limit: 10 }
+          ],
+          // Top days of week (0=Sunday, 6=Saturday)
+          byDayOfWeek: [
+            { $group: { _id: { $dayOfWeek: '$createdAt' }, count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+            { $sort: { count: -1 } }
+          ],
+          // Top hours of day
+          byHourOfDay: [
+            { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' } } },
+            { $sort: { _id: 1 } }
+          ],
+          // Top months
+          byMonth: [
+            { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' }, revenue: { $sum: { $cond: [{ $eq: ['$action', 'payment_successful'] }, '$amount', 0] } } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' }, revenue: 1 } },
+            { $sort: { '_id.year': -1, '_id.month': -1 } },
+            { $limit: 12 }
+          ],
+          // Daily activity trend (last 30 days)
+          dailyTrend: [
+            { $match: { createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
+            { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' }, purchases: { $sum: { $cond: [{ $eq: ['$action', 'payment_successful'] }, 1, 0] } } } },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' }, purchases: 1 } },
+            { $sort: { _id: 1 } }
+          ],
+          // Conversion funnel
+          conversionFunnel: [
+            { $group: { _id: '$action', count: { $sum: 1 } } },
+            { $match: { _id: { $in: ['page_view', 'event_view', 'add_to_cart', 'checkout_started', 'payment_successful'] } } },
+            { $sort: { count: -1 } }
+          ],
+          // Country details with countryCode
+          countryDetails: [
+            { $match: { country: { $exists: true, $nin: ['', null] } } },
+            {
+              $group: {
+                _id: '$country',
+                countryCode: { $first: '$countryCode' },
+                count: { $sum: 1 },
+                uniqueUsers: { $addToSet: '$userId' },
+                purchases: { $sum: { $cond: [{ $eq: ['$action', 'payment_successful'] }, 1, 0] } },
+                revenue: { $sum: { $cond: [{ $eq: ['$action', 'payment_successful'] }, '$amount', 0] } },
+                cities: { $addToSet: '$city' }
+              }
+            },
+            { $project: { _id: 1, countryCode: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' }, purchases: 1, revenue: 1, citiesCount: { $size: '$cities' } } },
+            { $sort: { count: -1 } },
+            { $limit: 30 }
+          ],
+          // City details with country info  
+          cityDetails: [
+            { $match: { city: { $exists: true, $nin: ['', null] } } },
+            {
+              $group: {
+                _id: { city: '$city', country: '$country', countryCode: '$countryCode' },
+                count: { $sum: 1 },
+                uniqueUsers: { $addToSet: '$userId' },
+                purchases: { $sum: { $cond: [{ $eq: ['$action', 'payment_successful'] }, 1, 0] } },
+                revenue: { $sum: { $cond: [{ $eq: ['$action', 'payment_successful'] }, '$amount', 0] } },
+                topActions: { $push: '$action' }
+              }
+            },
+            { $project: { _id: 1, count: 1, uniqueUsers: { $size: '$uniqueUsers' }, purchases: 1, revenue: 1 } },
+            { $sort: { count: -1 } },
+            { $limit: 30 }
           ]
         }
       }
@@ -231,7 +298,14 @@ export async function GET(request: NextRequest) {
           byCountry: stats[0].byCountry,
           byCity: stats[0].byCity,
           avgSessionDuration: stats[0].avgSessionDuration[0] || { avgDuration: 0, totalDuration: 0, count: 0 },
-          topBuyersByLocation: stats[0].topBuyersByLocation
+          topBuyersByLocation: stats[0].topBuyersByLocation,
+          byDayOfWeek: stats[0].byDayOfWeek,
+          byHourOfDay: stats[0].byHourOfDay,
+          byMonth: stats[0].byMonth,
+          dailyTrend: stats[0].dailyTrend,
+          conversionFunnel: stats[0].conversionFunnel,
+          countryDetails: stats[0].countryDetails,
+          cityDetails: stats[0].cityDetails
         }
       }
     });

@@ -5,20 +5,20 @@ import { connectToDatabase } from '@/lib/mongodb';
 import UserActivity from '@/models/UserActivity';
 
 // Helper to get geolocation from IP (uses free ip-api.com)
-async function getGeoFromIP(ip: string): Promise<{ city?: string; country?: string; region?: string }> {
+async function getGeoFromIP(ip: string): Promise<{ city?: string; country?: string; countryCode?: string; region?: string }> {
   if (!ip || ip === 'unknown' || ip === '127.0.0.1' || ip === '::1') {
     return {};
   }
   try {
     // Use the first IP if multiple are provided (comma-separated)
     const cleanIP = ip.split(',')[0].trim();
-    const res = await fetch(`http://ip-api.com/json/${cleanIP}?fields=city,country,regionName`, {
+    const res = await fetch(`http://ip-api.com/json/${cleanIP}?fields=city,country,countryCode,regionName`, {
       signal: AbortSignal.timeout(2000) // 2s timeout - don't block logging
     });
     if (res.ok) {
       const data = await res.json();
       if (data.city || data.country) {
-        return { city: data.city, country: data.country, region: data.regionName };
+        return { city: data.city, country: data.country, countryCode: data.countryCode, region: data.regionName };
       }
     }
   } catch {
@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
       location,
       city: geo.city,
       country: geo.country,
+      countryCode: geo.countryCode,
       region: geo.region,
       referrer,
       duration,

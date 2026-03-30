@@ -42,9 +42,11 @@ export async function POST(request: NextRequest) {
     const previousRole = (targetUser.publicMetadata as any)?.role || 'user';
 
     // Update user metadata in Clerk
+    // Use null to remove the role field (undefined is ignored by Clerk's merge)
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
-        role: role || undefined
+        ...targetUser.publicMetadata,
+        role: role || null
       }
     });
 

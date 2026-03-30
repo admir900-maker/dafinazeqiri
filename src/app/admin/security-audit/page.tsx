@@ -293,13 +293,13 @@ export default function SecurityAuditPage() {
         {data && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-              <SummaryCard label="Total Threats" value={data.summary.totalThreats} icon={ShieldAlert} color={data.summary.totalThreats > 0 ? 'red' : 'green'} />
-              <SummaryCard label="Critical" value={data.summary.critical} icon={AlertCircle} color="red" />
-              <SummaryCard label="High" value={data.summary.high} icon={AlertTriangle} color="orange" />
-              <SummaryCard label="Medium" value={data.summary.medium} icon={Info} color="yellow" />
-              <SummaryCard label="Suspects" value={data.summary.suspiciousUsers} icon={UserX} color="purple" />
-              <SummaryCard label="Fraud Bookings" value={data.summary.fraudulentBookings} icon={CreditCard} color="red" />
-              <SummaryCard label="Orphan Tickets" value={data.summary.orphanTickets} icon={Ticket} color="orange" />
+              <SummaryCard label="Total Threats" value={data.summary.totalThreats} icon={ShieldAlert} color={data.summary.totalThreats > 0 ? 'red' : 'green'} onClick={() => { setFilterSeverity('all'); setFilterType('all'); setActiveTab('threats'); }} />
+              <SummaryCard label="Critical" value={data.summary.critical} icon={AlertCircle} color="red" onClick={() => { setFilterSeverity('critical'); setFilterType('all'); setActiveTab('threats'); }} />
+              <SummaryCard label="High" value={data.summary.high} icon={AlertTriangle} color="orange" onClick={() => { setFilterSeverity('high'); setFilterType('all'); setActiveTab('threats'); }} />
+              <SummaryCard label="Medium" value={data.summary.medium} icon={Info} color="yellow" onClick={() => { setFilterSeverity('medium'); setFilterType('all'); setActiveTab('threats'); }} />
+              <SummaryCard label="Suspects" value={data.summary.suspiciousUsers} icon={UserX} color="purple" onClick={() => { setActiveTab('users'); }} />
+              <SummaryCard label="Fraud Bookings" value={data.summary.fraudulentBookings} icon={CreditCard} color="red" onClick={() => { setFilterType('payment_fraud'); setFilterSeverity('all'); setActiveTab('threats'); }} />
+              <SummaryCard label="Orphan Tickets" value={data.summary.orphanTickets} icon={Ticket} color="orange" onClick={() => { setFilterType('ticket_fraud'); setFilterSeverity('all'); setActiveTab('threats'); }} />
             </div>
 
             {/* Status Banner */}
@@ -535,7 +535,7 @@ export default function SecurityAuditPage() {
 }
 
 // ─── Component: Summary Card ────────────────────────────────────────────
-function SummaryCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: any; color: string }) {
+function SummaryCard({ label, value, icon: Icon, color, onClick }: { label: string; value: number; icon: any; color: string; onClick?: () => void }) {
   const colorMap: Record<string, string> = {
     red: 'bg-red-500/20 border-red-500/40 text-red-400',
     orange: 'bg-orange-500/20 border-orange-500/40 text-orange-400',
@@ -545,7 +545,10 @@ function SummaryCard({ label, value, icon: Icon, color }: { label: string; value
   };
 
   return (
-    <div className={`p-4 rounded-xl border ${colorMap[color] || colorMap.orange}`}>
+    <div
+      onClick={onClick}
+      className={`p-4 rounded-xl border cursor-pointer transition hover:scale-105 hover:brightness-125 ${colorMap[color] || colorMap.orange}`}
+    >
       <Icon className="w-5 h-5 mb-2 opacity-70" />
       <div className="text-2xl font-black">{value}</div>
       <div className="text-xs opacity-60 mt-1">{label}</div>

@@ -56,6 +56,7 @@ interface UserData {
   imageUrl: string;
   createdAt: string;
   lastSignInAt: string;
+  banned?: boolean;
   publicMetadata: {
     role?: string;
   };
@@ -254,13 +255,12 @@ export default function UsersManagementPage() {
         body: JSON.stringify({ userId, role })
       });
 
+      const data = await response.json();
       if (response.ok) {
-        await fetchUsers(currentPage);
-        const data = await response.json();
         alert(data.message || 'User role updated successfully');
+        await fetchUsers(currentPage);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to update user role');
+        alert(data.error || 'Failed to update user role');
       }
     } catch (error) {
       console.error('Error promoting user:', error);
@@ -269,6 +269,7 @@ export default function UsersManagementPage() {
   };
 
   const banUser = async (userId: string, ban = true) => {
+    if (!confirm(`Are you sure you want to ${ban ? 'ban' : 'unban'} this user?`)) return;
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
@@ -293,15 +294,12 @@ export default function UsersManagementPage() {
     if (isLoaded && user) {
       fetchUsers(1);
     }
-  }, [isLoaded, user, searchTerm, roleFilter, sortBy, sortOrder]);
+  }, [isLoaded, user, roleFilter, sortBy, sortOrder]);
 
   useEffect(() => {
     const delayedSearch = setTimeout(() => {
-      if (currentPage === 1) {
-        fetchUsers(1);
-      } else {
-        setCurrentPage(1);
-      }
+      setCurrentPage(1);
+      fetchUsers(1);
     }, 300);
 
     return () => clearTimeout(delayedSearch);
@@ -600,6 +598,13 @@ export default function UsersManagementPage() {
                           {userData.publicMetadata.role || 'User'}
                         </Badge>
 
+                        {userData.banned && (
+                          <Badge className="bg-red-600 text-white">
+                            <Ban className="w-3 h-3 mr-1" />
+                            Banned
+                          </Badge>
+                        )}
+
                         <div className="flex gap-2">
                           <Button
                             onClick={() => fetchUserDetails(userData.id)}
@@ -662,15 +667,26 @@ export default function UsersManagementPage() {
                                 </Button>
                               )}
 
-                              <Button
-                                onClick={() => banUser(userData.id, true)}
-                                size="sm"
-                                variant="destructive"
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                <Ban className="w-3 h-3 mr-1" />
-                                Ban
-                              </Button>
+                              {userData.banned ? (
+                                <Button
+                                  onClick={() => banUser(userData.id, false)}
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                  <UserCheck className="w-3 h-3 mr-1" />
+                                  Unban
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => banUser(userData.id, true)}
+                                  size="sm"
+                                  variant="destructive"
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  <Ban className="w-3 h-3 mr-1" />
+                                  Ban
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>

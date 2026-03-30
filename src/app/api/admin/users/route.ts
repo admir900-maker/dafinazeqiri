@@ -27,24 +27,11 @@ export async function GET(request: NextRequest) {
 
     // Get users from Clerk
     const client = await clerkClient();
-    let query: any = {
-      limit: Math.min(limit, 100), // Cap at 100 for performance
-      offset,
-      orderBy: sortOrder === 'desc' ? `-${sortBy}` : sortBy
-    };
-
-    // Add search if provided
-    if (search) {
-      query.query = search;
-    }
-
-    const response = await client.users.getUserList(query);
 
     // Connect to database to get booking statistics
     await connectToDatabase();
 
-    const usersWithStats = await Promise.all(response.data.map(async (user: any) => {
-      // Get booking statistics for each user
+    const mapUserWithStats = async (user: any) => {
       const bookingStats = await Booking.aggregate([
         { $match: { userId: user.id } },
         {
@@ -72,18 +59,69 @@ export async function GET(request: NextRequest) {
         createdAt: user.createdAt,
         lastSignInAt: user.lastSignInAt,
         publicMetadata: user.publicMetadata,
+        banned: user.banned || false,
         bookingStats: stats
       };
-    }));
+    };
 
-    // Filter by role if specified
-    let filteredUsers = usersWithStats;
+    let resultUsers: any[] = [];
+    let totalFiltered = 0;
+
     if (role) {
-      if (role === 'user') {
-        filteredUsers = usersWithStats.filter(u => !u.publicMetadata.role);
-      } else {
-        filteredUsers = usersWithStats.filter(u => u.publicMetadata.role === role);
+      // When filtering by role, we must iterate Clerk users because Clerk
+      // doesn't support filtering by publicMetadata
+      const matchesRole = (u: any) => {
+        const r = (u.publicMetadata as any)?.role;
+        return role === 'user' ? !r : r === role;
+      };
+
+      let collected: any[] = [];
+      let batchOffset = 0;
+      const batchLimit = 500;
+
+      while (true) {
+        const batchQuery: any = { limit: batchLimit, offset: batchOffset };
+        if (search) batchQuery.query = search;
+        const batch = await client.users.getUserList(batchQuery);
+
+        for (const u of batch.data) {
+          if (matchesRole(u)) {
+            collected.push(u);
+          }
+        }
+        if (batch.data.length < batchLimit) break;
+        batchOffset += batchLimit;
       }
+
+      totalFiltered = collected.length;
+
+      // Sort collected users
+      collected.sort((a: any, b: any) => {
+        const field = sortBy === 'created_at' ? 'createdAt' :
+          sortBy === 'last_sign_in_at' ? 'lastSignInAt' :
+          sortBy === 'first_name' ? 'firstName' : 'lastName';
+        const aVal = a[field] || '';
+        const bVal = b[field] || '';
+        return sortOrder === 'desc'
+          ? (aVal > bVal ? -1 : aVal < bVal ? 1 : 0)
+          : (aVal < bVal ? -1 : aVal > bVal ? 1 : 0);
+      });
+
+      // Paginate
+      const pageUsers = collected.slice(offset, offset + limit);
+      resultUsers = await Promise.all(pageUsers.map(mapUserWithStats));
+    } else {
+      // No role filter: use Clerk's built-in pagination
+      const query: any = {
+        limit: Math.min(limit, 100),
+        offset,
+        orderBy: sortOrder === 'desc' ? `-${sortBy}` : sortBy
+      };
+      if (search) query.query = search;
+
+      const response = await client.users.getUserList(query);
+      resultUsers = await Promise.all(response.data.map(mapUserWithStats));
+      totalFiltered = response.totalCount;
     }
 
     // Get role counts from MongoDB cache (avoids iterating all Clerk users on every request)
@@ -127,7 +165,7 @@ export async function GET(request: NextRequest) {
           roleCounts = cached.counts;
         } else {
           // Last resort: count from current page
-          for (const u of usersWithStats) {
+          for (const u of resultUsers) {
             const r = u.publicMetadata?.role;
             if (r && r in roleCounts) {
               (roleCounts as any)[r]++;
@@ -141,13 +179,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      users: filteredUsers,
-      totalCount: response.totalCount,
+      users: resultUsers,
+      totalCount: totalFiltered,
       roleCounts,
       pagination: {
         limit,
         offset,
-        hasMore: offset + limit < response.totalCount
+        hasMore: offset + limit < totalFiltered
       }
     });
 

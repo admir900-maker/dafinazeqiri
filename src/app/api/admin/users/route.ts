@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       collected.sort((a: any, b: any) => {
         const field = sortBy === 'created_at' ? 'createdAt' :
           sortBy === 'last_sign_in_at' ? 'lastSignInAt' :
-          sortBy === 'first_name' ? 'firstName' : 'lastName';
+            sortBy === 'first_name' ? 'firstName' : 'lastName';
         const aVal = a[field] || '';
         const bVal = b[field] || '';
         return sortOrder === 'desc'

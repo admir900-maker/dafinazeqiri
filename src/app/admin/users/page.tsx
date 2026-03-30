@@ -483,8 +483,8 @@ export default function UsersManagementPage() {
                   setCurrentPage(1);
                 }}
                 className={`bg-black/60 border-2 cursor-pointer transition-all ${isActive
-                    ? 'border-orange-500 ring-2 ring-orange-500/30'
-                    : 'border-orange-500/30 hover:border-orange-500/60'
+                  ? 'border-orange-500 ring-2 ring-orange-500/30'
+                  : 'border-orange-500/30 hover:border-orange-500/60'
                   }`}
               >
                 <CardContent className="p-4 flex items-center gap-3">

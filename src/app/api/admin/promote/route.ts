@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { isUserAdmin } from '@/lib/admin';
+import { connectToDatabase } from '@/lib/mongodb';
+import UserActivity from '@/models/UserActivity';
 
 // POST /api/admin/promote - Promote user role (admin only)
 export async function POST(request: NextRequest) {
@@ -33,11 +35,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
 
-    // Update user metadata in Clerk
+    // Get previous role for audit trail
     const client = await clerkClient();
+    const targetUser = await client.users.getUser(userId);
+    const previousRole = (targetUser.publicMetadata as any)?.role || 'user';
+
+    // Update user metadata in Clerk
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
         role: role || undefined
+      }
+    });
+
+    // Log the role change for forensics
+    await connectToDatabase();
+    await UserActivity.create({
+      userId: adminUserId,
+      action: 'admin_action',
+      description: `Role change: ${targetUser.emailAddresses?.[0]?.emailAddress || userId} from "${previousRole}" to "${role || 'user'}"`,
+      status: 'success',
+      metadata: {
+        targetUserId: userId,
+        targetEmail: targetUser.emailAddresses?.[0]?.emailAddress,
+        targetName: `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim(),
+        previousRole,
+        newRole: role || 'user',
+        action: 'role_change',
       }
     });
 

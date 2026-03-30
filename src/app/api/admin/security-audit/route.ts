@@ -5,6 +5,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import Ticket from '@/models/Ticket';
 import UserActivity from '@/models/UserActivity';
+import GiftTicket from '@/models/GiftTicket';
 
 // GET /api/admin/security-audit — Analyze for exploitation attempts
 export async function GET() {
@@ -103,6 +104,78 @@ export async function GET() {
       }
     } catch (e) {
       console.error('Error checking Clerk users:', e);
+    }
+
+    // ═══════════════════════════════════════════════════
+    // 1b. ROLE CHANGE FORENSICS
+    // Detect all role changes logged in UserActivity
+    // ═══════════════════════════════════════════════════
+    const roleChangeActivities = await UserActivity.find({
+      action: 'admin_action',
+      'metadata.action': 'role_change',
+    }).sort({ createdAt: -1 }).limit(100).lean();
+
+    for (const activity of roleChangeActivities) {
+      const meta = activity.metadata as any;
+      const isEscalation = meta?.newRole === 'admin';
+      threats.push({
+        id: `role-${activity._id}`,
+        type: isEscalation ? 'privilege_escalation' : 'role_change',
+        severity: isEscalation ? 'critical' : 'medium',
+        title: isEscalation ? 'Admin Role Granted' : 'User Role Changed',
+        description: `Admin "${activity.userId}" changed role of "${meta?.targetEmail || meta?.targetUserId}" from "${meta?.previousRole || 'user'}" to "${meta?.newRole || 'user'}" on ${new Date(activity.createdAt).toLocaleString()}.`,
+        userId: meta?.targetUserId,
+        email: meta?.targetEmail,
+        name: meta?.targetName,
+        changedBy: activity.userId,
+        previousRole: meta?.previousRole,
+        newRole: meta?.newRole,
+        createdAt: activity.createdAt,
+        evidence: [{
+          action: 'role_change',
+          description: activity.description,
+          ip: activity.ipAddress,
+          userAgent: activity.userAgent,
+          country: activity.country,
+          city: activity.city,
+          timestamp: activity.createdAt,
+        }],
+      });
+
+      if (meta?.targetUserId) {
+        trackUser(meta.targetUserId, {
+          email: meta?.targetEmail,
+          name: meta?.targetName,
+        });
+      }
+    }
+
+    // Also detect bulk role changes
+    const bulkRoleChanges = await UserActivity.find({
+      action: 'admin_action',
+      'metadata.bulkAction': 'updateRole',
+    }).sort({ createdAt: -1 }).limit(50).lean();
+
+    for (const activity of bulkRoleChanges) {
+      const meta = activity.metadata as any;
+      threats.push({
+        id: `bulk-role-${activity._id}`,
+        type: 'role_change',
+        severity: meta?.role === 'admin' ? 'critical' : 'high',
+        title: 'Bulk Role Change Detected',
+        description: `Admin "${activity.userId}" performed bulk role change to "${meta?.role}" affecting ${meta?.targetUserIds?.length || 0} users. ${meta?.successCount || 0} successful, ${meta?.errorCount || 0} failed.`,
+        changedBy: activity.userId,
+        newRole: meta?.role,
+        affectedUsers: meta?.targetUserIds?.length || 0,
+        targetUserIds: meta?.targetUserIds,
+        createdAt: activity.createdAt,
+        evidence: [{
+          action: 'bulk_role_change',
+          description: activity.description,
+          ip: activity.ipAddress,
+          timestamp: activity.createdAt,
+        }],
+      });
     }
 
     // ═══════════════════════════════════════════════════
@@ -231,6 +304,72 @@ export async function GET() {
           city: firstActivity?.city,
         });
       }
+    }
+
+    // ═══════════════════════════════════════════════════
+    // 3b. GIFT TICKET FORENSICS
+    // Detect suspicious gift ticket creation patterns
+    // ═══════════════════════════════════════════════════
+    const allGiftTickets = await GiftTicket.find({}).sort({ createdAt: -1 }).lean();
+
+    // Group gift tickets by adminUserId to find bulk creators
+    const giftsByAdmin: Record<string, any[]> = {};
+    for (const gt of allGiftTickets) {
+      const adminId = gt.adminUserId || 'unknown';
+      if (!giftsByAdmin[adminId]) giftsByAdmin[adminId] = [];
+      giftsByAdmin[adminId].push(gt);
+    }
+
+    // Flag suspicious gift patterns
+    for (const [adminId, gifts] of Object.entries(giftsByAdmin)) {
+      // Get unique recipients
+      const recipients = new Set(gifts.map(g => g.recipientEmail));
+      const totalValue = gifts.reduce((sum, g) => sum + (g.price || 0), 0);
+
+      // Flag if: high volume, high value, or recently created in bulk
+      const last7Days = gifts.filter(g => Date.now() - new Date(g.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000);
+
+      if (gifts.length >= 5 || totalValue > 500 || last7Days.length >= 3) {
+        threats.push({
+          id: `gift-${adminId}`,
+          type: 'ticket_fraud',
+          severity: gifts.length >= 20 || totalValue > 2000 ? 'critical' : last7Days.length >= 3 ? 'high' : 'medium',
+          title: 'Suspicious Gift Ticket Activity',
+          description: `Admin "${adminId}" created ${gifts.length} gift ticket(s) worth €${totalValue.toFixed(2)} total, sent to ${recipients.size} unique recipient(s). ${last7Days.length} created in last 7 days.`,
+          userId: adminId,
+          giftCount: gifts.length,
+          totalValue,
+          uniqueRecipients: recipients.size,
+          recentCount: last7Days.length,
+          recipients: Array.from(recipients),
+          evidence: gifts.slice(0, 15).map(g => ({
+            action: 'gift_ticket_created',
+            description: `${g.ticketType} for "${g.recipientEmail}" (${g.customerName}) — ${g.eventTitle} — €${g.price} — Status: ${g.status}`,
+            ip: '',
+            timestamp: g.createdAt,
+          })),
+        });
+
+        trackUser(adminId, { name: `Admin ${adminId}` });
+      }
+    }
+
+    // Also list ALL gift tickets as evidence for review
+    if (allGiftTickets.length > 0) {
+      threats.push({
+        id: 'gift-all',
+        type: 'ticket_fraud',
+        severity: 'low',
+        title: `All Gift Tickets (${allGiftTickets.length} total)`,
+        description: `Complete list of all ${allGiftTickets.length} gift ticket(s) for forensic review. Total value: €${allGiftTickets.reduce((s, g) => s + (g.price || 0), 0).toFixed(2)}.`,
+        giftCount: allGiftTickets.length,
+        evidence: allGiftTickets.map(g => ({
+          action: 'gift_ticket',
+          description: `[${g.ticketId}] ${g.ticketType} → ${g.recipientEmail} (${g.customerName}) | ${g.eventTitle} ${new Date(g.eventDate).toLocaleDateString()} | €${g.price} | Status: ${g.status} | Validated: ${g.isValidated ? 'YES' : 'No'}`,
+          ip: g.adminUserId || '',
+          timestamp: g.createdAt,
+        })),
+      });
     }
 
     // ═══════════════════════════════════════════════════

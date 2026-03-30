@@ -70,6 +70,7 @@ const THREAT_TYPE_CONFIG: Record<string, { label: string; icon: any; color: stri
   brute_force: { label: 'Brute Force', icon: Activity, color: 'text-purple-400' },
   suspicious_ip: { label: 'Suspicious IP', icon: Globe, color: 'text-cyan-400' },
   unauthorized_access: { label: 'Unauthorized Access', icon: Lock, color: 'text-red-500' },
+  role_change: { label: 'Role Change', icon: User, color: 'text-blue-400' },
 };
 
 export default function SecurityAuditPage() {
@@ -334,8 +335,8 @@ export default function SecurityAuditPage() {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 transition ${activeTab === tab.key
-                      ? 'border-orange-500 text-orange-400'
-                      : 'border-transparent text-orange-100/50 hover:text-orange-100/80'
+                    ? 'border-orange-500 text-orange-400'
+                    : 'border-transparent text-orange-100/50 hover:text-orange-100/80'
                     }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -365,6 +366,7 @@ export default function SecurityAuditPage() {
                     <option value="critical">Critical</option>
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
+                    <option value="low">Low</option>
                   </select>
                   <select
                     value={filterType}

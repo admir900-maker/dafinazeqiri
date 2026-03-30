@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { isUserAdmin } from '@/lib/admin';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 
@@ -11,12 +12,9 @@ export async function GET(request: NextRequest) {
     const { userId: authUserId } = await auth();
     userId = authUserId;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId || !(await isUserAdmin())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    // TODO: Add admin role check
-    // For now, allowing any authenticated user
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -87,10 +85,41 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Fetch ALL users to get accurate role counts (Clerk doesn't support metadata-based counting)
+    let roleCounts = { admin: 0, manager: 0, staff: 0, validator: 0, user: 0 };
+    try {
+      let countOffset = 0;
+      const countLimit = 100;
+      while (true) {
+        const batch = await client.users.getUserList({ limit: countLimit, offset: countOffset });
+        for (const u of batch.data) {
+          const r = (u.publicMetadata as any)?.role;
+          if (r && r in roleCounts) {
+            (roleCounts as any)[r]++;
+          } else {
+            roleCounts.user++;
+          }
+        }
+        if (batch.data.length < countLimit) break;
+        countOffset += countLimit;
+      }
+    } catch (e) {
+      // Fallback: count from current page only
+      for (const u of usersWithStats) {
+        const r = u.publicMetadata?.role;
+        if (r && r in roleCounts) {
+          (roleCounts as any)[r]++;
+        } else {
+          roleCounts.user++;
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       users: filteredUsers,
       totalCount: response.totalCount,
+      roleCounts,
       pagination: {
         limit,
         offset,

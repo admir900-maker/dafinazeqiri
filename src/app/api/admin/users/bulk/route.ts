@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { isUserAdmin } from '@/lib/admin';
+import { connectToDatabase } from '@/lib/mongodb';
+import UserActivity from '@/models/UserActivity';
 
 // POST /api/admin/users/bulk - Bulk operations on users (admin only)
 export async function POST(request: NextRequest) {
@@ -78,6 +80,26 @@ export async function POST(request: NextRequest) {
           action
         });
       }
+    }
+
+    // Log bulk action for forensics
+    try {
+      await connectToDatabase();
+      await UserActivity.create({
+        userId: adminUserId,
+        action: 'admin_action',
+        description: `Bulk ${action}: ${results.length} success, ${errors.length} failed on ${userIds.length} users`,
+        status: 'success',
+        metadata: {
+          bulkAction: action,
+          targetUserIds: userIds,
+          role: data?.role,
+          successCount: results.length,
+          errorCount: errors.length,
+        }
+      });
+    } catch (e) {
+      console.error('Failed to log bulk action:', e);
     }
 
     return NextResponse.json({

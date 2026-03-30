@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { isUserAdmin } from '@/lib/admin';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 
@@ -11,8 +12,8 @@ export async function GET(request: NextRequest) {
     const { userId: authUserId } = await auth();
     adminUserId = authUserId;
 
-    if (!adminUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!adminUserId || !(await isUserAdmin())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

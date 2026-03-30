@@ -41,21 +41,18 @@ export async function POST(request: NextRequest) {
     const targetUser = await client.users.getUser(userId);
     const previousRole = (targetUser.publicMetadata as any)?.role || 'user';
 
-    // Update user metadata in Clerk
-    // Build new publicMetadata: spread existing, then set or delete role
-    const newMetadata = { ...(targetUser.publicMetadata as Record<string, any>) };
-    if (role) {
-      newMetadata.role = role;
-    } else {
-      delete newMetadata.role;
-    }
+    // Connect to DB early so mongoose is ready for logging + cache
+    await connectToDatabase();
 
+    // Update user metadata in Clerk
+    // updateUserMetadata does a shallow merge — set role to null to remove it
     await client.users.updateUserMetadata(userId, {
-      publicMetadata: newMetadata
+      publicMetadata: {
+        role: role || null
+      }
     });
 
     // Log the role change for forensics
-    await connectToDatabase();
     await UserActivity.create({
       userId: adminUserId,
       action: 'admin_action',
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
     console.error('Error promoting user:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to update user role'
+      error: error?.message || 'Failed to update user role'
     }, { status: 500 });
   }
 }

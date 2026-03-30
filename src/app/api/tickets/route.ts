@@ -53,8 +53,15 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase();
     const body = await request.json();
+
+    // SECURITY: Whitelist allowed fields to prevent mass assignment
+    const { eventId, ticketName } = body;
+    if (!eventId || !ticketName) {
+      return NextResponse.json({ error: 'eventId and ticketName are required' }, { status: 400 });
+    }
+
     const qrCode = generateTicketCode();
-    const ticket = new Ticket({ ...body, userId, qrCode });
+    const ticket = new Ticket({ eventId, ticketName, userId, qrCode });
     await ticket.save();
     return NextResponse.json(ticket, { status: 201 });
   } catch {

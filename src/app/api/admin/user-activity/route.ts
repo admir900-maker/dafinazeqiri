@@ -66,15 +66,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (browser) {
-      query.browser = { $regex: browser, $options: 'i' };
+      query.browser = { $regex: browser.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
     }
 
     if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { description: { $regex: search, $options: 'i' } },
-        { userEmail: { $regex: search, $options: 'i' } },
-        { userName: { $regex: search, $options: 'i' } },
-        { eventTitle: { $regex: search, $options: 'i' } }
+        { description: { $regex: escaped, $options: 'i' } },
+        { userEmail: { $regex: escaped, $options: 'i' } },
+        { userName: { $regex: escaped, $options: 'i' } },
+        { eventTitle: { $regex: escaped, $options: 'i' } }
       ];
     }
 

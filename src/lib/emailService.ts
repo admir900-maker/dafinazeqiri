@@ -82,8 +82,7 @@ class EmailService {
           pass: smtpConfig.smtpPass,
         },
         tls: {
-          rejectUnauthorized: false, // Accept self-signed certificates
-          ciphers: 'SSLv3'
+          rejectUnauthorized: process.env.NODE_ENV === 'production', // Verify TLS in production
         }
       });
     } else {
@@ -101,8 +100,7 @@ class EmailService {
         secure: envSecure,
         auth: envUser && envPass ? { user: envUser, pass: envPass } : undefined,
         tls: {
-          // For ZeptoMail and common providers, STARTTLS on 587 works; allow relaxed TLS in dev
-          rejectUnauthorized: false
+          rejectUnauthorized: process.env.NODE_ENV === 'production'
         }
       });
     }

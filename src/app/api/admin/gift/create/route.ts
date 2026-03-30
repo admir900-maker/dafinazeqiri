@@ -9,7 +9,8 @@ import nodemailer from 'nodemailer';
 import PaymentSettings from '@/models/PaymentSettings';
 
 function randomId(len = 12) {
-  return Array.from({ length: len }, () => Math.floor(Math.random() * 36).toString(36)).join('').toUpperCase();
+  const crypto = require('crypto');
+  return crypto.randomBytes(Math.ceil(len / 2)).toString('hex').slice(0, len).toUpperCase();
 }
 
 export async function POST(request: NextRequest) {

@@ -9,11 +9,24 @@ import { getSetting } from '@/lib/settings';
  * RaiAccept Webhook Handler
  * Receives payment notifications from RaiAccept and updates booking status
  * 
+ * SECURITY: Webhook secret verification via RAIACCEPT_WEBHOOK_SECRET env var
  * Documentation: https://docs.raiaccept.com/code-integration.html#webhooks
  */
 export async function POST(request: NextRequest) {
   try {
     console.log('📨 RaiAccept webhook received');
+
+    // SECURITY: Webhook secret is mandatory — reject if not configured
+    const webhookSecret = process.env.RAIACCEPT_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('❌ RAIACCEPT_WEBHOOK_SECRET not configured — rejecting webhook');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+    }
+    const providedSecret = request.headers.get('x-webhook-secret');
+    if (!providedSecret || providedSecret !== webhookSecret) {
+      console.error('❌ Invalid or missing webhook secret');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const body = await request.json();
     console.log('Webhook payload:', JSON.stringify(body, null, 2));
@@ -67,6 +80,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📋 Found booking:', booking.bookingReference);
+
+    // Verify payment amount matches booking total (prevent partial payment attacks)
+    if (transactionAmount != null && statusCode === '0000') {
+      // RaiAccept sends amount in cents, booking stores in standard units
+      const paidAmount = typeof transactionAmount === 'number' ? transactionAmount : parseFloat(transactionAmount);
+      const expectedAmount = booking.totalAmount * 100; // Convert to cents
+      if (Math.abs(paidAmount - expectedAmount) > 1) {
+        console.error('❌ Amount mismatch! Paid:', paidAmount, 'Expected:', expectedAmount);
+        return NextResponse.json({ error: 'Payment amount mismatch' }, { status: 400 });
+      }
+    }
 
     // Update booking based on payment status
     // Status code 0000 = successful transaction
@@ -187,12 +211,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Handle GET requests for webhook verification (if RaiAccept uses this)
-export async function GET(request: NextRequest) {
-  return NextResponse.json({
-    status: 'ok',
-    message: 'RaiAccept webhook endpoint',
-  });
 }

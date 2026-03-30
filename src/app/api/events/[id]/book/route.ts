@@ -66,16 +66,9 @@ export async function POST(
     console.log('📦 Event found:', event ? 'Yes' : 'No');
 
     if (!event) {
-      // List some events for debugging
-      const allEvents = await Event.find({}).limit(3).select('_id title');
-      console.log('📋 Sample events in database:', allEvents.map(e => ({ id: e._id, title: e.title })));
-
+      // SECURITY: Don't leak database contents in error responses
       return NextResponse.json({
-        error: 'Event not found',
-        debug: {
-          searchedId: eventId,
-          sampleEvents: allEvents.map(e => ({ id: e._id, title: e.title }))
-        }
+        error: 'Event not found'
       }, { status: 404 });
     }
 
@@ -179,10 +172,9 @@ export async function POST(
     try {
       console.log('💾 Creating booking record...');
 
-      // Generate booking reference manually
-      const timestamp = Date.now().toString(36).toUpperCase();
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const bookingReference = `BKNG${timestamp}${random}`;
+      // SECURITY: Use crypto.randomBytes for unpredictable booking references
+      const crypto = require('crypto');
+      const bookingReference = `BKNG-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 
       console.log('📝 Generated booking reference:', bookingReference);
 

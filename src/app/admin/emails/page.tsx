@@ -269,472 +269,472 @@ export default function EmailClientPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-black p-2 md:p-8">
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">Email Client</h1>
-          <p className="text-orange-100/70">Manage incoming emails and send replies</p>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-900 mb-2">Email Client</h1>
+            <p className="text-orange-100/70">Manage incoming emails and send replies</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleCompose}
+              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Compose
+            </Button>
+            <Button
+              onClick={fetchEmails}
+              disabled={loading}
+              className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleCompose}
-            className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Compose
-          </Button>
-          <Button
-            onClick={fetchEmails}
-            disabled={loading}
-            className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-      {/* Tip: the first load can take up to ~60s while connecting to IMAP; subsequent loads are fast due to caching */}
+        {/* Tip: the first load can take up to ~60s while connecting to IMAP; subsequent loads are fast due to caching */}
 
-      {/* Error / Guidance Panel */}
-      {error && (
-        <Card className="bg-black/60 border-2 border-orange-500/30">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3 text-orange-400">
-              <AlertCircle className="w-5 h-5 mt-0.5" />
-              <div>
-                {(() => {
-                  const e = (error || '').toLowerCase();
-                  const isUnauthorized = e.includes('unauthorized') || e.includes('401');
-                  const isNotConfigured = e.includes('not configured') || e.includes('imap');
-                  const title = isUnauthorized
-                    ? 'Please sign in to view emails'
-                    : isNotConfigured
-                      ? 'Email Client Configuration Required'
-                      : 'Unable to load emails';
-                  return (
-                    <>
-                      <p className="font-semibold">{title}</p>
-                      <p className="text-sm text-orange-100/70 mt-1 break-all">{error}</p>
-                      {isUnauthorized ? (
-                        <div className="mt-3">
-                          <Button asChild className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
-                            <a href="/auth/signin">Go to Sign In</a>
-                          </Button>
-                        </div>
-                      ) : isNotConfigured ? (
-                        <p className="text-xs text-orange-100/50 mt-2">
-                          Add IMAP credentials to your .env.local file and restart the server:<br />
-                          IMAP_USER=your-email@domain.com<br />
-                          IMAP_PASSWORD=your-password<br />
-                          IMAP_HOST=imap.gmail.com (or your provider)<br />
-                          IMAP_PORT=993
-                        </p>
-                      ) : null}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Mailboxes + Email List Sidebar */}
-        <div className="lg:col-span-4">
+        {/* Error / Guidance Panel */}
+        {error && (
           <Card className="bg-black/60 border-2 border-orange-500/30">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Inbox className="w-5 h-5 text-orange-500" />
-                  {selectedMailbox} ({filteredEmails.length})
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setLimit((prev) => {
-                    if (prev === 'all') return 'all';
-                    const n = parseInt(prev || '20', 10);
-                    return String(Math.min(2000, n + 20));
-                  })} disabled={loading}>
-                    +20
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setLimit('20')} disabled={loading}>
-                    Reset
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setLimit('all')} disabled={loading}>
-                    All
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              {/* Mailboxes */}
-              <div className="p-2 border-b border-orange-500/20 max-h-40 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-1">
-                  {mailboxes.map((mb) => (
-                    <button
-                      key={mb.path}
-                      onClick={() => { setSelectedMailbox(mb.path); setSelectedEmail(null); setLimit('20'); }}
-                      className={`text-left text-xs px-2 py-1 rounded ${selectedMailbox === mb.path ? 'bg-orange-500/20 text-orange-100 font-medium' : 'text-orange-100/70 hover:bg-orange-500/10'}`}
-                    >
-                      {mb.path}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {/* Search */}
-              <div className="p-4 border-b border-orange-500/20">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-500/50" />
-                  <input
-                    type="text"
-                    placeholder="Search emails..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  />
-                </div>
-              </div>
-
-              {/* Email List */}
-              <div className="max-h-[600px] overflow-y-auto">
-                {loading ? (
-                  <div className="p-8 text-center text-orange-100/50">
-                    <Loader2 className="w-8 h-8 mx-auto mb-3 text-orange-500 animate-spin" />
-                    <p>Fetching emails...</p>
-                    <p className="text-xs text-orange-100/40 mt-2">First load may take up to a minute while connecting to the mail server.</p>
-                  </div>
-                ) : filteredEmails.length === 0 ? (
-                  <div className="p-8 text-center text-orange-100/50">
-                    <Mail className="w-12 h-12 mx-auto mb-3 text-orange-500/50" />
-                    <p>No emails found</p>
-                  </div>
-                ) : (
-                  filteredEmails.map((email) => (
-                    <div
-                      key={email.id}
-                      onClick={() => { setSelectedEmail(email); fetchEmailBody(email); }}
-                      className={`p-4 border-b border-orange-500/20 cursor-pointer transition-colors hover:bg-black/40 ${selectedEmail?.id === email.id ? 'bg-orange-500/20' : ''
-                        }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-orange-100 font-medium text-sm truncate">
-                            {email.from.split('<')[0].trim() || email.from}
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3 text-orange-400">
+                <AlertCircle className="w-5 h-5 mt-0.5" />
+                <div>
+                  {(() => {
+                    const e = (error || '').toLowerCase();
+                    const isUnauthorized = e.includes('unauthorized') || e.includes('401');
+                    const isNotConfigured = e.includes('not configured') || e.includes('imap');
+                    const title = isUnauthorized
+                      ? 'Please sign in to view emails'
+                      : isNotConfigured
+                        ? 'Email Client Configuration Required'
+                        : 'Unable to load emails';
+                    return (
+                      <>
+                        <p className="font-semibold">{title}</p>
+                        <p className="text-sm text-orange-100/70 mt-1 break-all">{error}</p>
+                        {isUnauthorized ? (
+                          <div className="mt-3">
+                            <Button asChild className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold">
+                              <a href="/auth/signin">Go to Sign In</a>
+                            </Button>
+                          </div>
+                        ) : isNotConfigured ? (
+                          <p className="text-xs text-orange-100/50 mt-2">
+                            Add IMAP credentials to your .env.local file and restart the server:<br />
+                            IMAP_USER=your-email@domain.com<br />
+                            IMAP_PASSWORD=your-password<br />
+                            IMAP_HOST=imap.gmail.com (or your provider)<br />
+                            IMAP_PORT=993
                           </p>
-                          <p className="text-orange-100/70 text-xs truncate">
-                            {email.subject}
-                          </p>
-                        </div>
-                        <span className="text-orange-100/40 text-xs ml-2 whitespace-nowrap">
-                          {formatDate(email.date)}
-                        </span>
-                      </div>
-                      <p className="text-orange-100/50 text-xs truncate">
-                        {email.body ? getEmailPreview(email.body) : 'Open to view message'}
-                      </p>
-                    </div>
-                  ))
-                )}
+                        ) : null}
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        )}
 
-        {/* Email Content / Compose */}
-        <div className="lg:col-span-8">
-          {showCompose ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Mailboxes + Email List Sidebar */}
+          <div className="lg:col-span-4">
             <Card className="bg-black/60 border-2 border-orange-500/30">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardTitle className="flex items-center gap-2">
-                    <Send className="w-5 h-5 text-[#cd7f32]" />
-                    {replyTo ? 'Reply to Email' : 'Compose New Email'}
+                    <Inbox className="w-5 h-5 text-orange-500" />
+                    {selectedMailbox} ({filteredEmails.length})
                   </CardTitle>
-                  <Button
-                    onClick={() => {
-                      setShowCompose(false);
-                      setReplyTo(null);
-                    }}
-                    variant="ghost"
-                    className="text-orange-100/70 hover:text-orange-100"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
-                    Back
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setLimit((prev) => {
+                      if (prev === 'all') return 'all';
+                      const n = parseInt(prev || '20', 10);
+                      return String(Math.min(2000, n + 20));
+                    })} disabled={loading}>
+                      +20
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setLimit('20')} disabled={loading}>
+                      Reset
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setLimit('all')} disabled={loading}>
+                      All
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-orange-100/70 text-sm mb-2 font-medium">To</label>
-                    <input
-                      type="email"
-                      value={composeTo}
-                      onChange={(e) => setComposeTo(e.target.value)}
-                      placeholder="recipient@example.com"
-                      className="w-full px-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
+              <CardContent className="p-0">
+                {/* Mailboxes */}
+                <div className="p-2 border-b border-orange-500/20 max-h-40 overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-1">
+                    {mailboxes.map((mb) => (
+                      <button
+                        key={mb.path}
+                        onClick={() => { setSelectedMailbox(mb.path); setSelectedEmail(null); setLimit('20'); }}
+                        className={`text-left text-xs px-2 py-1 rounded ${selectedMailbox === mb.path ? 'bg-orange-500/20 text-orange-100 font-medium' : 'text-orange-100/70 hover:bg-orange-500/10'}`}
+                      >
+                        {mb.path}
+                      </button>
+                    ))}
                   </div>
-
-                  <div>
-                    <label className="block text-orange-100/70 text-sm mb-2 font-medium">Subject</label>
+                </div>
+                {/* Search */}
+                <div className="p-4 border-b border-orange-500/20">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-orange-500/50" />
                     <input
                       type="text"
-                      value={composeSubject}
-                      onChange={(e) => setComposeSubject(e.target.value)}
-                      placeholder="Email subject"
-                      className="w-full px-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="Search emails..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-orange-100/70 text-sm mb-2 font-medium">Message</label>
-                    <textarea
-                      value={composeBody}
-                      onChange={(e) => setComposeBody(e.target.value)}
-                      placeholder="Type your message here..."
-                      rows={12}
-                      className="w-full px-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4">
-                    <div className="text-orange-100/50 text-sm">
-                      {replyTo && (
-                        <span className="flex items-center gap-2">
-                          <Reply className="w-4 h-4" />
-                          Replying to: {replyTo.from.split('<')[0].trim()}
-                        </span>
-                      )}
+                {/* Email List */}
+                <div className="max-h-[600px] overflow-y-auto">
+                  {loading ? (
+                    <div className="p-8 text-center text-orange-100/50">
+                      <Loader2 className="w-8 h-8 mx-auto mb-3 text-orange-500 animate-spin" />
+                      <p>Fetching emails...</p>
+                      <p className="text-xs text-orange-100/40 mt-2">First load may take up to a minute while connecting to the mail server.</p>
                     </div>
+                  ) : filteredEmails.length === 0 ? (
+                    <div className="p-8 text-center text-orange-100/50">
+                      <Mail className="w-12 h-12 mx-auto mb-3 text-orange-500/50" />
+                      <p>No emails found</p>
+                    </div>
+                  ) : (
+                    filteredEmails.map((email) => (
+                      <div
+                        key={email.id}
+                        onClick={() => { setSelectedEmail(email); fetchEmailBody(email); }}
+                        className={`p-4 border-b border-orange-500/20 cursor-pointer transition-colors hover:bg-black/40 ${selectedEmail?.id === email.id ? 'bg-orange-500/20' : ''
+                          }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-orange-100 font-medium text-sm truncate">
+                              {email.from.split('<')[0].trim() || email.from}
+                            </p>
+                            <p className="text-orange-100/70 text-xs truncate">
+                              {email.subject}
+                            </p>
+                          </div>
+                          <span className="text-orange-100/40 text-xs ml-2 whitespace-nowrap">
+                            {formatDate(email.date)}
+                          </span>
+                        </div>
+                        <p className="text-orange-100/50 text-xs truncate">
+                          {email.body ? getEmailPreview(email.body) : 'Open to view message'}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Email Content / Compose */}
+          <div className="lg:col-span-8">
+            {showCompose ? (
+              <Card className="bg-black/60 border-2 border-orange-500/30">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Send className="w-5 h-5 text-[#cd7f32]" />
+                      {replyTo ? 'Reply to Email' : 'Compose New Email'}
+                    </CardTitle>
+                    <Button
+                      onClick={() => {
+                        setShowCompose(false);
+                        setReplyTo(null);
+                      }}
+                      variant="ghost"
+                      className="text-orange-100/70 hover:text-orange-100"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Back
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-orange-100/70 text-sm mb-2 font-medium">To</label>
+                      <input
+                        type="email"
+                        value={composeTo}
+                        onChange={(e) => setComposeTo(e.target.value)}
+                        placeholder="recipient@example.com"
+                        className="w-full px-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-orange-100/70 text-sm mb-2 font-medium">Subject</label>
+                      <input
+                        type="text"
+                        value={composeSubject}
+                        onChange={(e) => setComposeSubject(e.target.value)}
+                        placeholder="Email subject"
+                        className="w-full px-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-orange-100/70 text-sm mb-2 font-medium">Message</label>
+                      <textarea
+                        value={composeBody}
+                        onChange={(e) => setComposeBody(e.target.value)}
+                        placeholder="Type your message here..."
+                        rows={12}
+                        className="w-full px-4 py-2 bg-black/40 border border-orange-500/30 rounded-lg text-orange-100 placeholder:text-orange-100/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center pt-4">
+                      <div className="text-orange-100/50 text-sm">
+                        {replyTo && (
+                          <span className="flex items-center gap-2">
+                            <Reply className="w-4 h-4" />
+                            Replying to: {replyTo.from.split('<')[0].trim()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            setShowCompose(false);
+                            setReplyTo(null);
+                          }}
+                          variant="ghost"
+                          className="text-orange-100/70 hover:text-orange-100"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleSendEmail}
+                          disabled={sending || !composeTo || !composeSubject || !composeBody}
+                          className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                        >
+                          {sending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Send Email
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : selectedEmail ? (
+              <Card className="bg-black/60 border-2 border-orange-500/30">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-orange-500" />
+                      Email Details
+                    </CardTitle>
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => {
-                          setShowCompose(false);
-                          setReplyTo(null);
-                        }}
+                        onClick={() => handleReply(selectedEmail)}
+                        className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                      >
+                        <Reply className="w-4 h-4 mr-2" />
+                        Reply
+                      </Button>
+                      <Button
+                        onClick={() => setSelectedEmail(null)}
                         variant="ghost"
                         className="text-orange-100/70 hover:text-orange-100"
                       >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSendEmail}
-                        disabled={sending || !composeTo || !composeSubject || !composeBody}
-                        className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-                      >
-                        {sending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4 mr-2" />
-                            Send Email
-                          </>
-                        )}
+                        <ChevronLeft className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : selectedEmail ? (
-            <Card className="bg-black/60 border-2 border-orange-500/30">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-orange-500" />
-                    Email Details
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleReply(selectedEmail)}
-                      className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-                    >
-                      <Reply className="w-4 h-4 mr-2" />
-                      Reply
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedEmail(null)}
-                      variant="ghost"
-                      className="text-orange-100/70 hover:text-orange-100"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {/* Email Header */}
-                  <div className="pb-4 border-b border-orange-500/20">
-                    <h2 className="text-xl font-bold text-orange-100 mb-4">
-                      {selectedEmail.subject}
-                    </h2>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {/* Email Header */}
+                    <div className="pb-4 border-b border-orange-500/20">
+                      <h2 className="text-xl font-bold text-orange-100 mb-4">
+                        {selectedEmail.subject}
+                      </h2>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 text-sm">
-                        <User className="w-4 h-4 text-orange-500/50" />
-                        <span className="text-orange-100/50">From:</span>
-                        <span className="text-orange-100">{selectedEmail.from}</span>
-                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 text-sm">
+                          <User className="w-4 h-4 text-orange-500/50" />
+                          <span className="text-orange-100/50">From:</span>
+                          <span className="text-orange-100">{selectedEmail.from}</span>
+                        </div>
 
-                      <div className="flex items-center gap-3 text-sm">
-                        <Mail className="w-4 h-4 text-orange-500/50" />
-                        <span className="text-orange-100/50">To:</span>
-                        <span className="text-orange-100">{selectedEmail.to}</span>
-                      </div>
+                        <div className="flex items-center gap-3 text-sm">
+                          <Mail className="w-4 h-4 text-orange-500/50" />
+                          <span className="text-orange-100/50">To:</span>
+                          <span className="text-orange-100">{selectedEmail.to}</span>
+                        </div>
 
-                      <div className="flex items-center gap-3 text-sm">
-                        <Clock className="w-4 h-4 text-orange-500/50" />
-                        <span className="text-orange-100/50">Date:</span>
-                        <span className="text-orange-100">
-                          {new Date(selectedEmail.date).toLocaleString()}
-                        </span>
+                        <div className="flex items-center gap-3 text-sm">
+                          <Clock className="w-4 h-4 text-orange-500/50" />
+                          <span className="text-orange-100/50">Date:</span>
+                          <span className="text-orange-100">
+                            {new Date(selectedEmail.date).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Email Body */}
-                  <div className="py-4">
-                    {selectedEmail.html ? (
-                      <div
-                        className="text-orange-100 prose max-w-none"
-                        dangerouslySetInnerHTML={{ __html: selectedEmail.html }}
-                      />
-                    ) : (
-                      <div className="text-orange-100 whitespace-pre-wrap">
-                        {selectedEmail.body}
+                    {/* Email Body */}
+                    <div className="py-4">
+                      {selectedEmail.html ? (
+                        <div
+                          className="text-orange-100 prose max-w-none"
+                          dangerouslySetInnerHTML={{ __html: selectedEmail.html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/on\w+\s*=\s*["'][^"']*["']/gi, '').replace(/javascript:/gi, '') }}
+                        />
+                      ) : (
+                        <div className="text-orange-100 whitespace-pre-wrap">
+                          {selectedEmail.body}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Attachments */}
+                    {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
+                      <div className="pt-4 border-t border-orange-500/20">
+                        <h4 className="text-orange-100 font-semibold mb-3 text-sm">Attachments</h4>
+                        <ul className="space-y-3">
+                          {selectedEmail.attachments.map((att) => {
+                            const isPdf = (att.contentType || '').toLowerCase().includes('pdf');
+                            const baseUrl = `/api/admin/emails/attachment?mailbox=${encodeURIComponent(selectedMailbox)}&uid=${encodeURIComponent(selectedEmail.uid || selectedEmail.id)}&index=${att.index}`;
+                            const downloadUrl = baseUrl;
+                            const previewUrl = `${baseUrl}&disposition=inline`;
+                            const isPreviewing = previewAttachmentIndex === att.index;
+                            return (
+                              <li key={att.index} className="text-sm">
+                                <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-orange-500/20">
+                                  <div className="min-w-0 flex-1">
+                                    <span className="text-orange-100 font-medium truncate block">{att.filename}</span>
+                                    <span className="text-orange-100/50 text-xs">{att.contentType} {formatBytes(att.size) ? `· ${formatBytes(att.size)}` : ''}</span>
+                                  </div>
+                                  <div className="flex gap-2 shrink-0">
+                                    {isPdf && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="bg-black/40 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
+                                          onClick={() => window.open(previewUrl, '_blank')}
+                                        >
+                                          Open PDF
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="bg-black/40 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
+                                          onClick={() => setPreviewAttachmentIndex(isPreviewing ? null : att.index)}
+                                        >
+                                          {isPreviewing ? 'Close Preview' : 'Preview Here'}
+                                        </Button>
+                                      </>
+                                    )}
+                                    <a
+                                      href={downloadUrl}
+                                      className="text-orange-500 hover:text-orange-400 hover:underline font-medium inline-flex items-center px-3 py-1"
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      Download
+                                    </a>
+                                  </div>
+                                </div>
+                                {isPdf && isPreviewing && (
+                                  <div className="mt-3 border border-orange-500/30 rounded overflow-hidden bg-black/40 ">
+                                    <object
+                                      data={previewUrl}
+                                      type="application/pdf"
+                                      className="w-full"
+                                      style={{ height: '600px' }}
+                                    >
+                                      <div className="p-8 text-center">
+                                        <p className="text-orange-100/50 mb-4">
+                                          Unable to display PDF preview in browser.
+                                        </p>
+                                        <a
+                                          href={downloadUrl}
+                                          className="text-orange-500 hover:text-orange-400 hover:underline font-medium"
+                                          target="_blank"
+                                          rel="noreferrer"
+                                        >
+                                          Click here to download and view the PDF
+                                        </a>
+                                      </div>
+                                    </object>
+                                  </div>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
                       </div>
                     )}
-                  </div>
 
-                  {/* Attachments */}
-                  {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
-                    <div className="pt-4 border-t border-orange-500/20">
-                      <h4 className="text-orange-100 font-semibold mb-3 text-sm">Attachments</h4>
-                      <ul className="space-y-3">
-                        {selectedEmail.attachments.map((att) => {
-                          const isPdf = (att.contentType || '').toLowerCase().includes('pdf');
-                          const baseUrl = `/api/admin/emails/attachment?mailbox=${encodeURIComponent(selectedMailbox)}&uid=${encodeURIComponent(selectedEmail.uid || selectedEmail.id)}&index=${att.index}`;
-                          const downloadUrl = baseUrl;
-                          const previewUrl = `${baseUrl}&disposition=inline`;
-                          const isPreviewing = previewAttachmentIndex === att.index;
-                          return (
-                            <li key={att.index} className="text-sm">
-                              <div className="flex items-center justify-between gap-3 bg-black/40 p-3 rounded-lg border border-orange-500/20">
-                                <div className="min-w-0 flex-1">
-                                  <span className="text-orange-100 font-medium truncate block">{att.filename}</span>
-                                  <span className="text-orange-100/50 text-xs">{att.contentType} {formatBytes(att.size) ? `· ${formatBytes(att.size)}` : ''}</span>
-                                </div>
-                                <div className="flex gap-2 shrink-0">
-                                  {isPdf && (
-                                    <>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="bg-black/40 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
-                                        onClick={() => window.open(previewUrl, '_blank')}
-                                      >
-                                        Open PDF
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="bg-black/40 border-orange-500/30 text-orange-100 hover:bg-orange-500/10"
-                                        onClick={() => setPreviewAttachmentIndex(isPreviewing ? null : att.index)}
-                                      >
-                                        {isPreviewing ? 'Close Preview' : 'Preview Here'}
-                                      </Button>
-                                    </>
-                                  )}
-                                  <a
-                                    href={downloadUrl}
-                                    className="text-orange-500 hover:text-orange-400 hover:underline font-medium inline-flex items-center px-3 py-1"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    Download
-                                  </a>
-                                </div>
-                              </div>
-                              {isPdf && isPreviewing && (
-                                <div className="mt-3 border border-orange-500/30 rounded overflow-hidden bg-black/40 ">
-                                  <object
-                                    data={previewUrl}
-                                    type="application/pdf"
-                                    className="w-full"
-                                    style={{ height: '600px' }}
-                                  >
-                                    <div className="p-8 text-center">
-                                      <p className="text-orange-100/50 mb-4">
-                                        Unable to display PDF preview in browser.
-                                      </p>
-                                      <a
-                                        href={downloadUrl}
-                                        className="text-orange-500 hover:text-orange-400 hover:underline font-medium"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                      >
-                                        Click here to download and view the PDF
-                                      </a>
-                                    </div>
-                                  </object>
-                                </div>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
+                    {/* Quick Actions */}
+                    <div className="pt-4 border-t border-orange-500/20 flex gap-2">
+                      <Button
+                        onClick={() => handleReply(selectedEmail)}
+                        className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                      >
+                        <Reply className="w-4 h-4 mr-2" />
+                        Reply
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="text-orange-100/70 hover:text-orange-100"
+                      >
+                        <Forward className="w-4 h-4 mr-2" />
+                        Forward
+                      </Button>
                     </div>
-                  )}
-
-                  {/* Quick Actions */}
-                  <div className="pt-4 border-t border-orange-500/20 flex gap-2">
-                    <Button
-                      onClick={() => handleReply(selectedEmail)}
-                      className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-                    >
-                      <Reply className="w-4 h-4 mr-2" />
-                      Reply
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="text-orange-100/70 hover:text-orange-100"
-                    >
-                      <Forward className="w-4 h-4 mr-2" />
-                      Forward
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-black/60 border-2 border-orange-500/30">
-              <CardContent className="p-16 text-center">
-                <Mail className="w-16 h-16 mx-auto mb-4 text-orange-500/50" />
-                <h3 className="text-xl font-semibold text-orange-100 mb-2">
-                  No Email Selected
-                </h3>
-                <p className="text-orange-100/50 mb-6">
-                  Select an email from the list to view its contents
-                </p>
-                <Button
-                  onClick={handleCompose}
-                  className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Compose New Email
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-black/60 border-2 border-orange-500/30">
+                <CardContent className="p-16 text-center">
+                  <Mail className="w-16 h-16 mx-auto mb-4 text-orange-500/50" />
+                  <h3 className="text-xl font-semibold text-orange-100 mb-2">
+                    No Email Selected
+                  </h3>
+                  <p className="text-orange-100/50 mb-6">
+                    Select an email from the list to view its contents
+                  </p>
+                  <Button
+                    onClick={handleCompose}
+                    className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Compose New Email
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

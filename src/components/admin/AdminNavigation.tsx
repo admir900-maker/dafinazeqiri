@@ -18,7 +18,8 @@ import {
   Activity,
   Mail,
   Menu,
-  X
+  X,
+  ShieldAlert
 } from 'lucide-react';
 
 interface NavItem {
@@ -118,6 +119,12 @@ const adminNavItems: NavItem[] = [
     label: 'Settings',
     icon: Settings,
     description: 'System configuration'
+  },
+  {
+    href: '/admin/security-audit',
+    label: 'Security Audit',
+    icon: ShieldAlert,
+    description: 'Forensic analysis & threat detection'
   }
 ];
 

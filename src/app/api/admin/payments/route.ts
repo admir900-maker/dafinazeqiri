@@ -37,10 +37,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { customerEmail: { $regex: search, $options: 'i' } },
-        { customerName: { $regex: search, $options: 'i' } },
-        { bookingReference: { $regex: search, $options: 'i' } }
+        { customerEmail: { $regex: escaped, $options: 'i' } },
+        { customerName: { $regex: escaped, $options: 'i' } },
+        { bookingReference: { $regex: escaped, $options: 'i' } }
       ];
     }
 

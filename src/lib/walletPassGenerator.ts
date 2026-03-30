@@ -184,7 +184,13 @@ export class WalletPassGenerator {
       expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
       maxDistance: 1000,
       webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL}/api/wallet`,
-      authenticationToken: Buffer.from(`${ticketData.bookingId}:${ticketData.ticketId}:${ticketData.userId}`).toString('base64')
+      // SECURITY: Use HMAC-signed token instead of plaintext base64
+      authenticationToken: (() => {
+        const crypto = require('crypto');
+        const data = `${ticketData.bookingId}:${ticketData.ticketId}:${ticketData.userId}`;
+        const secret = process.env.WALLET_PASS_SECRET || process.env.CLERK_SECRET_KEY || 'wallet-pass-secret';
+        return crypto.createHmac('sha256', secret).update(data).digest('hex');
+      })()
     };
   }
 

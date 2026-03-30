@@ -53,15 +53,16 @@ export async function GET(request: NextRequest) {
       }
     ];
 
-    // Add search filter if provided
+    // Add search filter if provided (escape regex to prevent ReDoS)
     if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       pipeline.push({
         $match: {
           $or: [
-            { bookingReference: { $regex: search, $options: 'i' } },
-            { customerEmail: { $regex: search, $options: 'i' } },
-            { customerName: { $regex: search, $options: 'i' } },
-            { 'event.title': { $regex: search, $options: 'i' } }
+            { bookingReference: { $regex: escaped, $options: 'i' } },
+            { customerEmail: { $regex: escaped, $options: 'i' } },
+            { customerName: { $regex: escaped, $options: 'i' } },
+            { 'event.title': { $regex: escaped, $options: 'i' } }
           ]
         }
       });
@@ -165,10 +166,11 @@ export async function POST(request: NextRequest) {
     const totalAmount = tickets.reduce((sum: number, ticket: any) => sum + (ticket.price || 0), 0);
 
     // Generate unique QR codes for tickets
+    const crypto = require('crypto');
     const ticketsWithQR = tickets.map((ticket: any, index: number) => ({
       ...ticket,
       ticketId: `${Date.now()}-${index}`,
-      qrCode: `QR-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 8)}`,
+      qrCode: `QR-${crypto.randomBytes(8).toString('hex')}`,
       isUsed: false
     }));
 
@@ -182,7 +184,7 @@ export async function POST(request: NextRequest) {
       status: 'confirmed', // Admin created bookings are automatically confirmed
       paymentStatus: paymentMethod === 'direct' ? 'paid' : 'pending',
       paymentMethod,
-      bookingReference: `BK-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase(),
+      bookingReference: `BK-${crypto.randomBytes(6).toString('hex').toUpperCase()}`,
       customerEmail,
       customerName,
       paymentDate: paymentMethod === 'direct' ? new Date() : undefined,

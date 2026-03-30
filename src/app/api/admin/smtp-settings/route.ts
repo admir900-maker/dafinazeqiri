@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import PaymentSettings from '@/models/PaymentSettings';
+import { isUserAdmin } from '@/lib/admin';
 
 export async function GET() {
   try {
+    const admin = await isUserAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     await connectToDatabase();
 
     const settings = await PaymentSettings.findOne({});
@@ -25,7 +31,9 @@ export async function GET() {
       smtpPort: settings.smtpPort || 587,
       smtpSecure: settings.smtpSecure || false,
       smtpUser: settings.smtpUser || '',
-      smtpPass: settings.smtpPass || '',
+      // SECURITY: Mask SMTP password — never send plaintext to client
+      smtpPass: settings.smtpPass ? '••••••••' : '',
+      smtpPassSet: !!settings.smtpPass,
       senderEmail: settings.senderEmail || '',
       senderName: settings.senderName || 'SUPERNOVA'
     });
@@ -40,6 +48,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const admin = await isUserAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     await connectToDatabase();
 
     const {

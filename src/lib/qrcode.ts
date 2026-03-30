@@ -10,5 +10,7 @@ export async function generateQRCode(data: string): Promise<string> {
 }
 
 export function generateTicketCode(): string {
-  return `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // SECURITY: Use crypto.randomBytes instead of Math.random for unpredictable codes
+  const crypto = require('crypto');
+  return `TICKET-${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
 }

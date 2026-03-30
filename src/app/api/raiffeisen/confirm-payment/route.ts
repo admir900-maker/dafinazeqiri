@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import Event from '@/models/Event';
@@ -7,9 +8,15 @@ import { sendBookingConfirmationEmail } from '@/lib/emailService';
 /**
  * Confirm RaiAccept payment when user returns from payment page
  * This is a fallback in case webhook hasn't been received yet
+ * SECURITY: Requires authentication and booking ownership verification
  */
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { bookingId, sessionId } = await request.json();
 
     if (!bookingId) {
@@ -22,6 +29,17 @@ export async function POST(request: NextRequest) {
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    // Verify booking belongs to the authenticated user
+    if (booking.userId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Only allow confirmation for recent bookings (created within last 2 hours)
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    if (booking.createdAt < twoHoursAgo) {
+      return NextResponse.json({ error: 'Booking confirmation window expired' }, { status: 400 });
     }
 
     // If already confirmed, return success

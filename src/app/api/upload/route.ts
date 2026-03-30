@@ -28,9 +28,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // SECURITY: Validate file size (max 10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 10MB' }, { status: 400 });
+    }
+
+    // SECURITY: Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json({ error: 'Invalid file type. Only images are allowed' }, { status: 400 });
+    }
+
     // Get upload folder from settings
     const defaultFolder = await getUploadFolder();
-    const folder = requestedFolder || defaultFolder;
+    // SECURITY: Sanitize folder name to prevent path traversal
+    const sanitizedFolder = (requestedFolder || defaultFolder).replace(/\.\./g, '').replace(/[^a-zA-Z0-9_\-\/]/g, '');
+    const folder = sanitizedFolder || defaultFolder;
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();

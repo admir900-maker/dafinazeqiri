@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { isUserAdmin } from '@/lib/admin';
 
-// POST /api/admin/promote - Promote user role
+// POST /api/admin/promote - Promote user role (admin only)
 export async function POST(request: NextRequest) {
   let adminUserId: string | null = null;
 
@@ -13,8 +14,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // TODO: Add admin role check
-    // For now, allowing any authenticated user
+    // Verify the caller is an admin
+    const admin = await isUserAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
 
     const body = await request.json();
     const { userId, role } = body;

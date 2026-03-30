@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Ticket from '@/models/Ticket';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ qrCode: string }> }) {
   try {
+    // SECURITY: Require authentication for ticket validation
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectToDatabase();
     const { qrCode } = await params;
 

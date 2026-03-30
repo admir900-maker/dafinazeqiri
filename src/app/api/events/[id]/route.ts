@@ -77,15 +77,10 @@ export async function GET(
     return NextResponse.json(event);
   } catch (error: any) {
     console.error('❌ API ERROR:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
     logError('Error fetching event by ID', error, { action: 'events-api-get-by-id' });
+    // SECURITY: Don't leak error details to client
     return NextResponse.json({
-      error: 'Failed to fetch event',
-      details: error.message
+      error: 'Failed to fetch event'
     }, { status: 500 });
   }
 }

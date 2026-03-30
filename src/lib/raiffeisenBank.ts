@@ -152,7 +152,10 @@ export class RaiffeisenBankAPI {
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
       const expectedSignature = this.generateSignatureFromString(payload);
-      return expectedSignature === signature;
+      // SECURITY: Use timing-safe comparison to prevent timing attacks
+      const crypto = require('crypto');
+      if (expectedSignature.length !== signature.length) return false;
+      return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signature));
     } catch (error) {
       console.error('Webhook signature verification error:', error);
       return false;
@@ -167,9 +170,9 @@ export class RaiffeisenBankAPI {
     const sortedKeys = Object.keys(payload).sort();
     const signatureString = sortedKeys
       .map(key => `${key}=${payload[key]}`)
-      .join('&') + `&secret=${this.config.secretKey}`;
-
-    return crypto.createHash('sha256').update(signatureString).digest('hex');
+      .join('&');
+    // SECURITY: Use HMAC-SHA256 instead of plain hash to prevent length extension attacks
+    return crypto.createHmac('sha256', this.config.secretKey).update(signatureString).digest('hex');
   }
 
   /**
@@ -177,8 +180,8 @@ export class RaiffeisenBankAPI {
    */
   private generateSignatureFromString(payload: string): string {
     const crypto = require('crypto');
-    const signatureString = payload + this.config.secretKey;
-    return crypto.createHash('sha256').update(signatureString).digest('hex');
+    // SECURITY: Use HMAC-SHA256 instead of plain hash
+    return crypto.createHmac('sha256', this.config.secretKey).update(payload).digest('hex');
   }
 }
 

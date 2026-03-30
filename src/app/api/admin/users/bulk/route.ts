@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { isUserAdmin } from '@/lib/admin';
 
-// POST /api/admin/users/bulk - Bulk operations on users
+// POST /api/admin/users/bulk - Bulk operations on users (admin only)
 export async function POST(request: NextRequest) {
   let adminUserId: string | null = null;
 
@@ -11,6 +12,12 @@ export async function POST(request: NextRequest) {
 
     if (!adminUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify the caller is an admin
+    const admin = await isUserAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const body = await request.json();

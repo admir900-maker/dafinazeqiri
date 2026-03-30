@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import seedDatabase from '@/lib/seed-database';
+import { isUserAdmin } from '@/lib/admin';
 
 export async function POST() {
   try {
+    const admin = await isUserAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     console.log('🚀 Starting database seeding process...');
 
     const result = await seedDatabase();

@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     // If customer name search is provided, return all matching bookings with RaiAccept data
     if (customerName) {
-      const nameSearch = customerName.trim();
+      const nameSearch = customerName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const bookings = await Booking.find({
         customerName: { $regex: nameSearch, $options: 'i' },
         raiffeisenPaymentId: { $exists: true, $ne: null }

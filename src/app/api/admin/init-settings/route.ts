@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import PaymentSettings from '@/models/PaymentSettings';
+import { isUserAdmin } from '@/lib/admin';
 
 export async function POST() {
   try {
+    const admin = await isUserAdmin();
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     await connectToDatabase();
 
     // Check if settings already exist

@@ -175,10 +175,17 @@ export async function GET(request: NextRequest) {
     // Build query
     const query: any = {};
 
-    if (userIdParam) {
+    // SECURITY: Only allow viewing own activity unless admin
+    if (userIdParam && userIdParam !== userId) {
+      // Cross-user query requires admin role
+      const { isUserAdmin } = await import('@/lib/admin');
+      const admin = await isUserAdmin();
+      if (!admin) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
       query.userId = userIdParam;
     } else {
-      query.userId = userId; // Only show current user's activities for non-admin
+      query.userId = userIdParam || userId;
     }
 
     if (action) {

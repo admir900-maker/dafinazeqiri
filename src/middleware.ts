@@ -1,18 +1,57 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
-  // Skip maintenance check for admin routes and API endpoints
-  if (req.nextUrl.pathname.startsWith('/admin') ||
-    req.nextUrl.pathname.startsWith('/api') ||
-    req.nextUrl.pathname.startsWith('/_next') ||
-    req.nextUrl.pathname === '/maintenance') {
+  const path = req.nextUrl.pathname;
+
+  // Skip Next.js internals and maintenance page
+  if (path.startsWith('/_next') || path === '/maintenance') {
     return;
   }
 
-  // Check maintenance mode via environment variable as fallback
-  // The main maintenance mode check will be done in the page components
+  // ADMIN API PROTECTION: Require admin role for all /api/admin/* routes
+  if (path.startsWith('/api/admin')) {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      if (user.publicMetadata?.role !== 'admin') {
+        return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      }
+    } catch {
+      return NextResponse.json({ error: 'Failed to verify admin status' }, { status: 500 });
+    }
+    return;
+  }
+
+  // ADMIN PAGE PROTECTION: Require admin role for /admin/* pages
+  if (path.startsWith('/admin')) {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.redirect(new URL('/auth/signin', req.url));
+    }
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      if (user.publicMetadata?.role !== 'admin') {
+        return NextResponse.redirect(new URL('/', req.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+    return;
+  }
+
+  // Skip other API routes and webhook endpoints
+  if (path.startsWith('/api')) {
+    return;
+  }
+
+  // Maintenance mode for public pages
   const envMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
 
   if (envMaintenanceMode) {

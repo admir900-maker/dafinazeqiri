@@ -106,8 +106,9 @@ export async function POST(
       }
     }
 
-    // Generate booking reference
-    const bookingReference = `BRA-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    // SECURITY: Use crypto.randomBytes for unpredictable booking references
+    const crypto = require('crypto');
+    const bookingReference = `BRA-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 
     // Create booking
     const booking = new Booking({

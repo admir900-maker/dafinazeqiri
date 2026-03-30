@@ -89,13 +89,10 @@ export class RaiAcceptAPI {
         throw new Error('Missing RAIACCEPT_USERNAME or RAIACCEPT_PASSWORD. Generate API credentials (username/password) in the Merchant Portal and set them in .env.local');
       }
 
-      // Debug: Log what we're about to send (mask password)
+      // SECURITY: Only log non-sensitive auth info
       console.log('🔍 Auth attempt:', {
         username: this.config.username,
-        passwordLength: this.config.password.length,
-        passwordFirstChar: this.config.password[0],
-        passwordLastChar: this.config.password[this.config.password.length - 1],
-        clientId: this.config.cognitoClientId,
+        clientIdPresent: Boolean(this.config.cognitoClientId),
       });
 
       // Use AWS Cognito InitiateAuth with USER_PASSWORD_AUTH

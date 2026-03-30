@@ -45,11 +45,15 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     // Update user metadata in Clerk
-    // updateUserMetadata does a shallow merge — set role to null to remove it
-    await client.users.updateUserMetadata(userId, {
-      publicMetadata: {
-        role: role || null
-      }
+    // updateUser replaces publicMetadata entirely (unlike updateUserMetadata which merges)
+    const existingMeta = { ...(targetUser.publicMetadata as Record<string, any>) };
+    if (role) {
+      existingMeta.role = role;
+    } else {
+      delete existingMeta.role;
+    }
+    await client.users.updateUser(userId, {
+      publicMetadata: existingMeta
     });
 
     // Log the role change for forensics

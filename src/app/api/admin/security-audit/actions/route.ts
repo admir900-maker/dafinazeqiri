@@ -40,8 +40,11 @@ export async function POST(request: NextRequest) {
           // Remove admin role if they have it
           const user = await client.users.getUser(targetUserId);
           if (user.publicMetadata?.role === 'admin') {
-            const newMeta = { ...(user.publicMetadata as Record<string, any>), role: 'user', blockedByAudit: true, blockedAt: new Date().toISOString() };
-            await client.users.updateUserMetadata(targetUserId, { publicMetadata: newMeta });
+            const existingMeta = { ...(user.publicMetadata as Record<string, any>) };
+            delete existingMeta.role;
+            existingMeta.blockedByAudit = true;
+            existingMeta.blockedAt = new Date().toISOString();
+            await client.users.updateUser(targetUserId, { publicMetadata: existingMeta });
             results.push(`Admin role removed from ${targetUserId}`);
           }
         } catch (e: any) {
@@ -200,12 +203,16 @@ export async function POST(request: NextRequest) {
 
         try {
           const user = await client.users.getUser(targetUserId);
-          if (user.publicMetadata?.role === 'admin') {
-            const newMeta = { ...(user.publicMetadata as Record<string, any>), role: 'user', demotedByAudit: true, demotedAt: new Date().toISOString() };
-            await client.users.updateUserMetadata(targetUserId, { publicMetadata: newMeta });
-            results.push(`Admin role removed from ${targetUserId}`);
+          const existingRole = user.publicMetadata?.role;
+          if (existingRole === 'admin' || existingRole === 'manager' || existingRole === 'staff' || existingRole === 'validator') {
+            const existingMeta = { ...(user.publicMetadata as Record<string, any>) };
+            delete existingMeta.role;
+            existingMeta.demotedByAudit = true;
+            existingMeta.demotedAt = new Date().toISOString();
+            await client.users.updateUser(targetUserId, { publicMetadata: existingMeta });
+            results.push(`Role '${existingRole}' removed from ${targetUserId}`);
           } else {
-            results.push('User is not an admin');
+            results.push('User has no special role');
           }
         } catch (e: any) {
           results.push(`Failed: ${e.message}`);

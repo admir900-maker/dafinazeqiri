@@ -82,7 +82,8 @@ const UserActivitySchema: Schema = new Schema({
       'review_submitted',
       'contact_form_submitted',
       'newsletter_signup',
-      'error_occurred'
+      'error_occurred',
+      'admin_action'
     ],
     index: true
   },

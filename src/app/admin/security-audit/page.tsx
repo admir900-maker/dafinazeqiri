@@ -709,7 +709,7 @@ function ThreatCard({
                     onClick={() => onAction('clean_bookings', { targetUserId: threat.userId!, threatId: threat.id })}
                   />
                 )}
-                {threat.type === 'ticket_fraud' && (
+                {threat.type === 'ticket_fraud' && !threat.id.startsWith('gift-') && (
                   <ActionButton
                     label="Delete Orphan Tickets"
                     icon={Trash2}
@@ -717,6 +717,16 @@ function ThreatCard({
                     loading={actionLoading === cleanTicketsKey}
                     done={!!actionResults[cleanTicketsKey]}
                     onClick={() => onAction('clean_tickets', { targetUserId: threat.userId!, threatId: threat.id })}
+                  />
+                )}
+                {threat.id.startsWith('gift-') && (
+                  <ActionButton
+                    label="Delete Gift Tickets"
+                    icon={Trash2}
+                    color="yellow"
+                    loading={actionLoading === `delete_gift_tickets-${threat.userId || 'all'}`}
+                    done={!!actionResults[`delete_gift_tickets-${threat.userId || 'all'}`]}
+                    onClick={() => onAction('delete_gift_tickets', { targetUserId: threat.userId || 'all', threatId: threat.id })}
                   />
                 )}
               </>

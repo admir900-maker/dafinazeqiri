@@ -4,6 +4,7 @@ import { isUserAdmin } from '@/lib/admin';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import Ticket from '@/models/Ticket';
+import GiftTicket from '@/models/GiftTicket';
 import UserActivity from '@/models/UserActivity';
 
 // POST /api/admin/security-audit/actions — Block user or clean fraudulent data
@@ -216,6 +217,32 @@ export async function POST(request: NextRequest) {
           description: `Security audit: Removed admin role from ${targetUserId}`,
           status: 'success',
           metadata: { targetUserId, threatId },
+        });
+
+        break;
+      }
+
+      case 'delete_gift_tickets': {
+        // Delete gift tickets — either for a specific admin or all
+        let deleteFilter: any = {};
+        if (targetUserId && targetUserId !== 'all') {
+          deleteFilter.adminUserId = targetUserId;
+        }
+
+        const giftCount = await GiftTicket.countDocuments(deleteFilter);
+        if (giftCount > 0) {
+          const deleteResult = await GiftTicket.deleteMany(deleteFilter);
+          results.push(`Deleted ${deleteResult.deletedCount} gift ticket(s)`);
+        } else {
+          results.push('No gift tickets found');
+        }
+
+        await UserActivity.create({
+          userId: adminId,
+          action: 'admin_action',
+          description: `Security audit: Deleted ${giftCount} gift ticket(s)${targetUserId ? ` for admin ${targetUserId}` : ''}`,
+          status: 'success',
+          metadata: { targetUserId, deletedGiftTickets: giftCount, threatId },
         });
 
         break;

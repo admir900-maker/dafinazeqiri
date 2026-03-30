@@ -3,6 +3,7 @@ import { auth, clerkClient } from '@clerk/nextjs/server';
 import { isUserAdmin } from '@/lib/admin';
 import { connectToDatabase } from '@/lib/mongodb';
 import UserActivity from '@/models/UserActivity';
+import mongoose from 'mongoose';
 
 // POST /api/admin/promote - Promote user role (admin only)
 export async function POST(request: NextRequest) {
@@ -63,6 +64,12 @@ export async function POST(request: NextRequest) {
         action: 'role_change',
       }
     });
+
+    // Invalidate role counts cache so next load picks up the change
+    try {
+      const db = mongoose.connection.db!;
+      await db.collection('system_cache').deleteOne({ key: 'roleCounts' });
+    } catch (_) { /* ignore */ }
 
     return NextResponse.json({
       success: true,

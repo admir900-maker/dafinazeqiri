@@ -3,6 +3,7 @@ import { auth, clerkClient } from '@clerk/nextjs/server';
 import { isUserAdmin } from '@/lib/admin';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import mongoose from 'mongoose';
 
 // GET /api/admin/users - Get all users with advanced filtering and pagination
 export async function GET(request: NextRequest) {
@@ -85,32 +86,55 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch ALL users to get accurate role counts (Clerk doesn't support metadata-based counting)
+    // Get role counts from MongoDB cache (avoids iterating all Clerk users on every request)
+    const db = mongoose.connection.db!;
+    const cacheCol = db.collection('system_cache');
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
     let roleCounts = { admin: 0, manager: 0, staff: 0, validator: 0, user: 0 };
-    try {
-      let countOffset = 0;
-      const countLimit = 100;
-      while (true) {
-        const batch = await client.users.getUserList({ limit: countLimit, offset: countOffset });
-        for (const u of batch.data) {
-          const r = (u.publicMetadata as any)?.role;
-          if (r && r in roleCounts) {
-            (roleCounts as any)[r]++;
-          } else {
-            roleCounts.user++;
+    const cached = await cacheCol.findOne({ key: 'roleCounts' });
+
+    if (cached && Date.now() - new Date(cached.updatedAt).getTime() < CACHE_TTL) {
+      roleCounts = cached.counts;
+    } else {
+      // Sync role counts from Clerk (use limit=500 to minimize API calls)
+      try {
+        const freshCounts = { admin: 0, manager: 0, staff: 0, validator: 0, user: 0 };
+        let countOffset = 0;
+        const countLimit = 500;
+        while (true) {
+          const batch = await client.users.getUserList({ limit: countLimit, offset: countOffset });
+          for (const u of batch.data) {
+            const r = (u.publicMetadata as any)?.role;
+            if (r && r in freshCounts) {
+              (freshCounts as any)[r]++;
+            } else {
+              freshCounts.user++;
+            }
           }
+          if (batch.data.length < countLimit) break;
+          countOffset += countLimit;
         }
-        if (batch.data.length < countLimit) break;
-        countOffset += countLimit;
-      }
-    } catch (e) {
-      // Fallback: count from current page only
-      for (const u of usersWithStats) {
-        const r = u.publicMetadata?.role;
-        if (r && r in roleCounts) {
-          (roleCounts as any)[r]++;
+        roleCounts = freshCounts;
+        await cacheCol.updateOne(
+          { key: 'roleCounts' },
+          { $set: { key: 'roleCounts', counts: freshCounts, updatedAt: new Date() } },
+          { upsert: true }
+        );
+      } catch (e) {
+        // If sync fails but we have stale cache, use it
+        if (cached) {
+          roleCounts = cached.counts;
         } else {
-          roleCounts.user++;
+          // Last resort: count from current page
+          for (const u of usersWithStats) {
+            const r = u.publicMetadata?.role;
+            if (r && r in roleCounts) {
+              (roleCounts as any)[r]++;
+            } else {
+              roleCounts.user++;
+            }
+          }
         }
       }
     }

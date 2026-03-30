@@ -469,17 +469,28 @@ export default function UsersManagementPage() {
         {/* User Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {[
-            { label: 'Total Users', value: totalCount, icon: Users },
-            { label: 'Admins', value: roleCounts.admin, icon: Crown },
-            { label: 'Managers', value: roleCounts.manager, icon: Shield },
-            { label: 'Validators', value: roleCounts.validator, icon: CheckCircle },
-            { label: 'Regular Users', value: roleCounts.user, icon: User }
+            { label: 'Total Users', value: totalCount, icon: Users, role: 'all' },
+            { label: 'Admins', value: roleCounts.admin, icon: Crown, role: 'admin' },
+            { label: 'Managers', value: roleCounts.manager, icon: Shield, role: 'manager' },
+            { label: 'Validators', value: roleCounts.validator, icon: CheckCircle, role: 'validator' },
+            { label: 'Regular Users', value: roleCounts.user, icon: User, role: 'user' }
           ].map((stat) => {
             const Icon = stat.icon;
+            const isActive = roleFilter === stat.role;
             return (
-              <Card key={stat.label} className="bg-black/60 border-2 border-orange-500/30">
+              <Card
+                key={stat.label}
+                onClick={() => {
+                  setRoleFilter(stat.role);
+                  setCurrentPage(1);
+                }}
+                className={`bg-black/60 border-2 cursor-pointer transition-all ${isActive
+                    ? 'border-orange-500 ring-2 ring-orange-500/30'
+                    : 'border-orange-500/30 hover:border-orange-500/60'
+                  }`}
+              >
                 <CardContent className="p-4 flex items-center gap-3">
-                  <Icon className="w-8 h-8 text-orange-100/70" />
+                  <Icon className={`w-8 h-8 ${isActive ? 'text-orange-500' : 'text-orange-100/70'}`} />
                   <div>
                     <p className="text-orange-100/70 text-sm">{stat.label}</p>
                     <p className="text-2xl font-black text-orange-500">{stat.value}</p>

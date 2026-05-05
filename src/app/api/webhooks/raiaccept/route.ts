@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
         message: 'Payment confirmed',
         bookingReference: booking.bookingReference,
       });
-    } else if (statusCode !== '0000' || transactionStatus === 'FAILED' || transactionStatus === 'DECLINED' || transactionStatus === 'ERROR') {
+    } else if (transactionStatus === 'FAILED' || transactionStatus === 'DECLINED' || transactionStatus === 'ERROR' || (statusCode && statusCode !== '0000')) {
       console.log('❌ Payment failed - updating booking');
       console.log('Status code:', statusCode, 'Status:', transactionStatus);
 

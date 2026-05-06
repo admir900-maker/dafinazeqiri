@@ -181,7 +181,7 @@ export async function POST(
       successUrl: `${baseUrl}/booking-success?bookingId=${booking._id}`,
       failureUrl: `${baseUrl}/checkout?error=payment_failed`,
       cancelUrl: `${baseUrl}/checkout?error=payment_cancelled`,
-      notificationUrl: `${baseUrl}/api/webhooks/raiaccept`
+      notificationUrl: `${baseUrl}/api/webhooks/raiaccept?secret=${encodeURIComponent(process.env.RAIACCEPT_WEBHOOK_SECRET || '')}`
     });
 
     console.log('Payment result:', paymentResult);

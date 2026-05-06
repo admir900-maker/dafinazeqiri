@@ -16,15 +16,17 @@ export async function POST(request: NextRequest) {
   try {
     console.log('📨 RaiAccept webhook received');
 
-    // SECURITY: Webhook secret is mandatory — reject if not configured
+    // SECURITY: Webhook secret passed as query param in notificationUrl
+    // RaiAccept does not support custom request headers, so the secret is
+    // embedded in the URL: /api/webhooks/raiaccept?secret=...
     const webhookSecret = process.env.RAIACCEPT_WEBHOOK_SECRET;
     if (!webhookSecret) {
       console.error('❌ RAIACCEPT_WEBHOOK_SECRET not configured — rejecting webhook');
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
     }
-    const providedSecret = request.headers.get('x-webhook-secret');
+    const providedSecret = request.nextUrl.searchParams.get('secret');
     if (!providedSecret || providedSecret !== webhookSecret) {
-      console.error('❌ Invalid or missing webhook secret');
+      console.error('❌ Invalid or missing webhook secret in query param');
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

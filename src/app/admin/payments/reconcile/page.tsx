@@ -185,15 +185,15 @@ export default function ReconcileRaiAcceptPage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 mt-4">
-                <Button onClick={check} disabled={loading} className="min-w-[140px]">
-                  {loading ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Checking...</>) : (<><Search className="h-4 w-4 mr-2" />Check</>)}
-                </Button>
-                <Button variant="outline" onClick={() => { setBookingId(''); setOrderId(''); setCustomerName(''); setResult(null); setCustomerResults([]); setMessage(null); }}>Clear</Button>
-                <Button variant="outline" onClick={scanPending} disabled={scanning}>
-                  {scanning
-                    ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />{scanProgress ? `Checking ${scanProgress.done}/${scanProgress.total}...` : 'Scanning...'}</>)
-                    : 'Scan all pending RaiAccept'}
-                </Button>
+              <Button onClick={check} disabled={loading} className="min-w-[140px]">
+                {loading ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Checking...</>) : (<><Search className="h-4 w-4 mr-2" />Check</>)}
+              </Button>
+              <Button variant="outline" onClick={() => { setBookingId(''); setOrderId(''); setCustomerName(''); setResult(null); setCustomerResults([]); setMessage(null); }}>Clear</Button>
+              <Button variant="outline" onClick={scanPending} disabled={scanning}>
+                {scanning
+                  ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />{scanProgress ? `Checking ${scanProgress.done}/${scanProgress.total}...` : 'Scanning...'}</>)
+                  : 'Scan all pending RaiAccept'}
+              </Button>
             </div>
           </CardContent>
         </Card>

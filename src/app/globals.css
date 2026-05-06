@@ -188,6 +188,16 @@ html {
   animation: slideIn 0.5s ease-out;
 }
 
+@keyframes scan-line {
+  0%   { top: 8%; }
+  50%  { top: 88%; }
+  100% { top: 8%; }
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
 /* Gradient backgrounds - Dafina Zeqiri Style */
 .gradient-primary {
   background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #b4530a 100%);

@@ -528,7 +528,7 @@ export default function ValidatorPage() {
       console.log('✅ Validation result:', result);
       setValidationResult(result);
 
-// In barcode mode, auto-clear result after 5s so scanner is ready immediately
+      // In barcode mode, auto-clear result after 5s so scanner is ready immediately
       if (scanMode === 'barcode') {
         setTimeout(() => setValidationResult(null), 5000);
       }
@@ -941,76 +941,136 @@ Please try:
               {/* Barcode Scanner Mode */}
               {scanMode === 'barcode' && (
                 <div className="space-y-4">
-                  <div
-                    className={`relative rounded-xl border-4 p-8 text-center transition-all cursor-pointer ${
-                      validationResult
-                        ? validationResult.success
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-red-500 bg-red-50'
-                        : barcodeScanning
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-dashed border-purple-300 bg-purple-50 hover:border-purple-500'
-                    }`}
-                    onClick={() => {
-                      if (validationResult) { setValidationResult(null); return; }
-                      setBarcodeScanning(true); barcodeInputRef.current?.focus();
-                    }}
-                  >
-                    {validationResult ? (
-                      /* ── Result state ── */
-                      <div className="flex flex-col items-center gap-3">
-                        {validationResult.success
-                          ? <CheckCircle className="w-20 h-20 text-green-500" />
-                          : <XCircle className="w-20 h-20 text-red-500" />}
-                        <p className={`text-2xl font-extrabold ${validationResult.success ? 'text-green-800' : 'text-red-800'}`}>
-                          {validationResult.success ? '✅ Valid Ticket' : '❌ Invalid Ticket'}
-                        </p>
-                        <p className={`text-sm font-medium ${validationResult.success ? 'text-green-700' : 'text-red-700'}`}>
-                          {validationResult.message || validationResult.error || 'Unknown error'}
-                        </p>
-                        {!validationResult.success && validationResult.error && validationResult.error !== validationResult.message && (
-                          <p className="text-xs text-red-500">{validationResult.error}</p>
-                        )}
-                        {!validationResult.success && validationResult.status && (
-                          <p className="text-xs text-red-400">Booking status: <strong>{validationResult.status}</strong></p>
-                        )}
-                        {!validationResult.success && validationResult.eventDate && (
-                          <p className="text-xs text-red-400">Event date: <strong>{new Date(validationResult.eventDate).toLocaleDateString()}</strong></p>
-                        )}
-                        {validationResult.success && validationResult.ticket && (
-                          <div className="text-sm text-green-700 space-y-0.5">
-                            <p><strong>Type:</strong> {validationResult.ticket.ticketName}</p>
-                            {validationResult.event && <p><strong>Event:</strong> {validationResult.event.title}</p>}
-                          </div>
-                        )}
-                        <p className="mt-2 text-xs text-gray-400">Tap to scan next ticket</p>
-                      </div>
-                    ) : (
-                      /* ── Idle / ready state ── */
+                  {/* Viewfinder — same aspect-square style as camera */}
+                  <div className="relative aspect-square bg-gray-900 rounded-xl overflow-hidden">
+
+                    {/* ── Idle: tap to activate ── */}
+                    {!barcodeScanning && !validationResult && (
+                      <button
+                        onClick={() => { setBarcodeScanning(true); barcodeInputRef.current?.focus(); }}
+                        className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-gray-400 hover:text-purple-300 transition-colors w-full"
+                      >
+                        <ScanLine className="w-20 h-20 text-purple-400" />
+                        <p className="text-xl font-bold text-gray-200">Tap to activate scanner</p>
+                        <p className="text-sm text-gray-400 px-8 text-center">Connect your Bluetooth barcode scanner, then tap here</p>
+                      </button>
+                    )}
+
+                    {/* ── Active: animated scan line + corner brackets ── */}
+                    {barcodeScanning && !validationResult && (
                       <>
-                        <ScanLine className={`w-20 h-20 mx-auto mb-4 ${barcodeScanning ? 'text-green-500 animate-pulse' : 'text-purple-400'}`} />
-                        <p className="text-xl font-bold text-gray-800 mb-1">
-                          {barcodeScanning ? 'Ready — Scan a ticket' : 'Tap to activate scanner'}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {barcodeScanning
-                            ? 'Point your Bluetooth barcode scanner at a ticket QR code'
-                            : 'Connect your Bluetooth barcode scanner, then tap here'}
-                        </p>
-                        {barcodeScanning && (
-                          <div className="mt-4 flex items-center justify-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                            <span className="text-green-600 font-semibold text-sm">Scanner active — ready to scan</span>
+                        {/* Dark background */}
+                        <div className="absolute inset-0 bg-gray-900" />
+
+                        {/* Corner brackets */}
+                        <div className="absolute inset-0">
+                          {/* top-left */}
+                          <div className="absolute top-8 left-8 w-10 h-10 border-t-4 border-l-4 border-purple-400 rounded-tl-lg" />
+                          {/* top-right */}
+                          <div className="absolute top-8 right-8 w-10 h-10 border-t-4 border-r-4 border-purple-400 rounded-tr-lg" />
+                          {/* bottom-left */}
+                          <div className="absolute bottom-8 left-8 w-10 h-10 border-b-4 border-l-4 border-purple-400 rounded-bl-lg" />
+                          {/* bottom-right */}
+                          <div className="absolute bottom-8 right-8 w-10 h-10 border-b-4 border-r-4 border-purple-400 rounded-br-lg" />
+                        </div>
+
+                        {/* Animated horizontal scan line */}
+                        <div className="animate-scan-line absolute left-8 right-8 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent shadow-[0_0_8px_2px_rgba(74,222,128,0.6)]" />
+
+                        {/* Status text */}
+                        <div className="absolute bottom-6 inset-x-0 flex flex-col items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-400 animate-ping" />
+                            <span className="text-green-400 font-semibold text-sm">Scanner active — ready to scan</span>
                           </div>
-                        )}
-                        {barcodeInput && (
-                          <div className="mt-3 px-3 py-2 bg-white border border-green-300 rounded-lg text-xs text-gray-500 font-mono text-left break-all">
-                            {barcodeInput}
-                          </div>
-                        )}
+                          {barcodeInput && (
+                            <div className="mx-6 px-3 py-1 bg-black bg-opacity-60 border border-green-500 rounded-lg text-xs text-green-300 font-mono text-center break-all max-w-xs">
+                              {barcodeInput}
+                            </div>
+                          )}
+                        </div>
                       </>
                     )}
-                    {/* Hidden input that captures barcode scanner keystrokes */}
+
+                    {/* ── Result overlay (same style as camera) ── */}
+                    {validationResult && (
+                      <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm overflow-auto">
+                        <div className="p-6 min-h-full flex flex-col justify-center">
+                          {/* Scan Next button at top */}
+                          <button
+                            onClick={() => setValidationResult(null)}
+                            className="mb-4 w-full bg-white text-gray-800 py-3 px-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
+                          >
+                            Scan Next Ticket
+                          </button>
+
+                          {/* Status banner */}
+                          <div className={`p-6 rounded-xl flex items-center gap-4 mb-4 ${validationResult.success ? 'bg-green-500' : 'bg-red-500'}`}>
+                            {validationResult.success
+                              ? <CheckCircle className="w-12 h-12 text-white flex-shrink-0 animate-bounce" />
+                              : <XCircle className="w-12 h-12 text-white flex-shrink-0" />}
+                            <div className="text-white">
+                              <p className="text-2xl font-bold">
+                                {validationResult.success ? 'Valid Ticket' : 'Invalid Ticket'}
+                              </p>
+                              <p className="text-lg opacity-90">{validationResult.message}</p>
+                            </div>
+                          </div>
+
+                          {/* Success: ticket + event details */}
+                          {validationResult.success && validationResult.ticket && validationResult.event && (
+                            <div className="space-y-3">
+                              <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                                <h3 className="font-bold text-gray-800 mb-3 text-lg">Event Details</h3>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex items-center gap-2 text-gray-700">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{new Date(validationResult.event.date).toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-gray-700">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>{validationResult.event.venue}, {validationResult.event.location}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                                <h3 className="font-bold text-gray-800 mb-3 text-lg">Ticket Details</h3>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between text-gray-700">
+                                    <span>Type:</span>
+                                    <span className="font-semibold">{validationResult.ticket.ticketName}</span>
+                                  </div>
+                                  <div className="flex justify-between text-gray-700">
+                                    <span>Price:</span>
+                                    <span className="font-semibold">{validationResult.ticket.price.toFixed(2)} EUR</span>
+                                  </div>
+                                  <div className="flex justify-between text-gray-700">
+                                    <span>Validated:</span>
+                                    <span className="font-semibold">{new Date(validationResult.ticket.usedAt).toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Error details */}
+                          {!validationResult.success && (
+                            <div className="p-4 bg-white bg-opacity-95 rounded-xl">
+                              <h3 className="font-bold text-red-800 mb-2">Error Details</h3>
+                              <div className="space-y-1 text-sm text-red-600">
+                                {validationResult.error && <p>Error: {validationResult.error}</p>}
+                                {validationResult.status && <p>Status: {validationResult.status}</p>}
+                                {validationResult.eventDate && <p>Event Date: {new Date(validationResult.eventDate).toLocaleDateString()}</p>}
+                                {validationResult.usedAt && <p>Previously Used: {new Date(validationResult.usedAt).toLocaleString()}</p>}
+                                {validationResult.validatedBy && <p>Validated By: {validationResult.validatedBy}</p>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Hidden input */}
                     <input
                       ref={barcodeInputRef}
                       type="text"
@@ -1033,6 +1093,26 @@ Please try:
                       aria-label="Barcode scanner input"
                     />
                   </div>
+
+                  {/* Stop button — mirrors camera's Stop Scanning button */}
+                  {barcodeScanning && (
+                    <button
+                      onClick={() => { setBarcodeScanning(false); barcodeBufferRef.current = ''; setBarcodeInput(''); }}
+                      className="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+                    >
+                      <ScanLine className="w-5 h-5" />
+                      Stop Scanner
+                    </button>
+                  )}
+                  {!barcodeScanning && (
+                    <button
+                      onClick={() => { setBarcodeScanning(true); barcodeInputRef.current?.focus(); }}
+                      className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+                    >
+                      <ScanLine className="w-5 h-5" />
+                      Start Scanner
+                    </button>
+                  )}
                 </div>
               )}
 

@@ -889,11 +889,13 @@ Please try:
                       value={barcodeInput}
                       onChange={(e) => setBarcodeInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && barcodeInput.trim()) {
-                          const data = barcodeInput.trim();
-                          setBarcodeInput('');
-                          setValidationResult(null);
-                          validateTicket(data);
+                        if (e.key === 'Enter') {
+                          const data = e.currentTarget.value.trim();
+                          if (data) {
+                            setBarcodeInput('');
+                            setValidationResult(null);
+                            validateTicket(data);
+                          }
                         }
                       }}
                       onFocus={() => setBarcodeScanning(true)}

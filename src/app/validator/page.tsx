@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Calendar, MapPin, Ticket, Upload, FileText, Eye, Activity, RefreshCw } from 'lucide-react';
+import { Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Calendar, MapPin, Ticket, Upload, FileText, Eye, Activity, RefreshCw, ScanLine } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/library';
 
 interface ValidationResult {
@@ -89,9 +89,13 @@ export default function ValidatorPage() {
   const [pendingQrData, setPendingQrData] = useState<string | null>(null);
   const [qrDetected, setQrDetected] = useState(false);
   const [detectedQrData, setDetectedQrData] = useState<string | null>(null);
+  const [scanMode, setScanMode] = useState<'camera' | 'barcode'>('camera');
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Validation logs state
@@ -827,19 +831,123 @@ Please try:
 
           {/* Scanner Section - Full Width */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
               <Camera className="w-6 h-6" />
               QR Scanner
             </h2>
 
+            {/* Mode Tabs */}
+            <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
+              <button
+                onClick={() => { setScanMode('camera'); setBarcodeScanning(false); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
+                  scanMode === 'camera' ? 'bg-white text-purple-700 shadow' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Camera className="w-4 h-4" />
+                Camera Scan
+              </button>
+              <button
+                onClick={() => { setScanMode('barcode'); stopScanning(); setTimeout(() => barcodeInputRef.current?.focus(), 100); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
+                  scanMode === 'barcode' ? 'bg-white text-purple-700 shadow' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <ScanLine className="w-4 h-4" />
+                Barcode Scanner
+              </button>
+            </div>
+
             <div className="space-y-4">
-              {/* Camera View */}
-              <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  style={{ display: isScanning ? 'block' : 'none' }}
-                />
+              {/* Barcode Scanner Mode */}
+              {scanMode === 'barcode' && (
+                <div className="space-y-4">
+                  <div
+                    className={`relative rounded-xl border-4 p-8 text-center transition-all cursor-pointer ${
+                      barcodeScanning
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-dashed border-purple-300 bg-purple-50 hover:border-purple-500'
+                    }`}
+                    onClick={() => { setBarcodeScanning(true); barcodeInputRef.current?.focus(); }}
+                  >
+                    <ScanLine className={`w-20 h-20 mx-auto mb-4 ${barcodeScanning ? 'text-green-500 animate-pulse' : 'text-purple-400'}`} />
+                    <p className="text-xl font-bold text-gray-800 mb-1">
+                      {barcodeScanning ? 'Ready — Scan a ticket' : 'Tap to activate scanner'}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {barcodeScanning
+                        ? 'Point your Bluetooth barcode scanner at a ticket QR code'
+                        : 'Connect your Bluetooth barcode scanner, then tap here'}
+                    </p>
+                    {barcodeScanning && (
+                      <div className="mt-4 flex items-center justify-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                        <span className="text-green-600 font-semibold text-sm">Scanner active</span>
+                      </div>
+                    )}
+                    {/* Hidden input that captures barcode scanner keystrokes */}
+                    <input
+                      ref={barcodeInputRef}
+                      type="text"
+                      value={barcodeInput}
+                      onChange={(e) => setBarcodeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && barcodeInput.trim()) {
+                          const data = barcodeInput.trim();
+                          setBarcodeInput('');
+                          setValidationResult(null);
+                          validateTicket(data);
+                        }
+                      }}
+                      onFocus={() => setBarcodeScanning(true)}
+                      onBlur={() => setBarcodeScanning(false)}
+                      className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                      autoComplete="off"
+                      aria-label="Barcode scanner input"
+                    />
+                  </div>
+
+                  {/* Validation Result for barcode mode */}
+                  {validationResult && (
+                    <div className={`p-5 rounded-xl flex items-start gap-4 ${validationResult.success ? 'bg-green-50 border-2 border-green-400' : 'bg-red-50 border-2 border-red-400'}`}>
+                      {validationResult.success
+                        ? <CheckCircle className="w-10 h-10 text-green-500 flex-shrink-0 mt-0.5" />
+                        : <XCircle className="w-10 h-10 text-red-500 flex-shrink-0 mt-0.5" />}
+                      <div>
+                        <p className={`text-xl font-bold ${validationResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                          {validationResult.success ? 'Valid Ticket' : 'Invalid Ticket'}
+                        </p>
+                        <p className={`text-sm ${validationResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {validationResult.message}
+                        </p>
+                        {validationResult.success && validationResult.ticket && (
+                          <div className="mt-2 text-sm text-green-700 space-y-0.5">
+                            <p><strong>Type:</strong> {validationResult.ticket.ticketName}</p>
+                            {validationResult.event && <p><strong>Event:</strong> {validationResult.event.title}</p>}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => { setValidationResult(null); barcodeInputRef.current?.focus(); }}
+                          className="mt-3 text-xs underline text-gray-500 hover:text-gray-700"
+                        >
+                          Clear & scan next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Camera Mode */}
+              {scanMode === 'camera' && (
+                <>
+                  {/* Camera View */}
+                  <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-cover"
+                      style={{ display: isScanning ? 'block' : 'none' }}
+                    />
 
                 {!isScanning && (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -1071,6 +1179,8 @@ Please try:
                   </p>
                 </div>
               )}
+                </>
+              )} {/* end scanMode === 'camera' */}
             </div>
           </div>
 

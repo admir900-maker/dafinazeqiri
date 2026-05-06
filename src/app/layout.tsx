@@ -20,34 +20,90 @@ const playfair = Playfair_Display({
   weight: ['400', '700', '900'],
 });
 
+const BASE_URL = process.env.NEXT_PUBLIC_DOMAIN || 'https://dafinazeqiri.tickets';
+
 // Generate dynamic metadata
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const siteConfig = await getSiteConfig();
+    const siteUrl = siteConfig.siteUrl || BASE_URL;
 
     return {
-      title: `${siteConfig.siteName} - Supernova 2026`,
-      description: `Supernova 2026 ${siteConfig.siteName}.`,
-      keywords: "concerts, tickets, music events, live performances, festivals",
-      authors: [{ name: `${siteConfig.siteName} Team` }],
+      metadataBase: new URL(siteUrl),
+      title: {
+        default: `Dafina Zeqiri — Bileta Zyrtare | ${siteConfig.siteName}`,
+        template: `%s | Dafina Zeqiri`,
+      },
+      description: `Blej bileta zyrtare për koncertet e Dafina Zeqirit. Dafina Zeqiri Supernova 2026 — biletat online, të sigurta dhe origjinale. Buy official Dafina Zeqiri concert tickets.`,
+      keywords: [
+        "Dafina Zeqiri",
+        "Dafina Zeqiri bileta",
+        "Dafina Zeqiri tickets",
+        "Dafina Zeqiri koncert",
+        "Dafina Zeqiri Supernova 2026",
+        "Dafina Zeqiri 2026",
+        "bileta koncert",
+        "bileta online Kosovë",
+        "Albanian pop concert tickets",
+        "Kosovo concerts",
+        "Supernova 2026",
+        "dafinazeqiri.tickets",
+      ],
+      authors: [{ name: "Dafina Zeqiri", url: siteUrl }],
+      creator: "Dafina Zeqiri",
+      publisher: siteConfig.siteName,
+      category: "music",
+      alternates: {
+        canonical: siteUrl,
+      },
       openGraph: {
-        title: `${siteConfig.siteName} - Supernova 2026`,
-        description: `Supernova 2026 ${siteConfig.siteName}.`,
+        title: `Dafina Zeqiri — Bileta Zyrtare | Supernova 2026`,
+        description: `Blej bileta zyrtare për koncertet e Dafina Zeqirit. Supernova 2026 — biletat online, të sigurta dhe origjinale.`,
+        url: siteUrl,
+        siteName: `Dafina Zeqiri | ${siteConfig.siteName}`,
         type: "website",
+        locale: "sq_AL",
+        images: siteConfig.logoUrl ? [{ url: siteConfig.logoUrl, alt: "Dafina Zeqiri" }] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `Dafina Zeqiri — Bileta Zyrtare | Supernova 2026`,
+        description: `Blej bileta zyrtare për koncertet e Dafina Zeqirit. Supernova 2026.`,
+        images: siteConfig.logoUrl ? [siteConfig.logoUrl] : [],
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
       },
     };
-  } catch (error) {
-    // Fallback metadata
+  } catch {
     return {
-      title: "Supernova 2026",
-      description: "Supernova 2026",
-      keywords: "concerts, tickets, music events, live performances, festivals",
-      authors: [{ name: "Supernova 2026" }],
-      openGraph: {
-        title: "Supernova 2026",
-        description: "Supernova 2026.",
-        type: "website",
+      metadataBase: new URL(BASE_URL),
+      title: {
+        default: "Dafina Zeqiri — Bileta Zyrtare | Supernova 2026",
+        template: "%s | Dafina Zeqiri",
       },
+      description: "Blej bileta zyrtare për koncertet e Dafina Zeqirit. Dafina Zeqiri Supernova 2026 — biletat online, të sigurta dhe origjinale.",
+      keywords: ["Dafina Zeqiri", "Dafina Zeqiri bileta", "Dafina Zeqiri tickets", "Dafina Zeqiri Supernova 2026", "bileta koncert", "Kosovo concerts"],
+      openGraph: {
+        title: "Dafina Zeqiri — Bileta Zyrtare | Supernova 2026",
+        description: "Blej bileta zyrtare për koncertet e Dafina Zeqirit. Supernova 2026.",
+        type: "website",
+        url: BASE_URL,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "Dafina Zeqiri — Bileta Zyrtare | Supernova 2026",
+        description: "Blej bileta zyrtare për koncertet e Dafina Zeqirit.",
+      },
+      robots: { index: true, follow: true },
     };
   }
 }

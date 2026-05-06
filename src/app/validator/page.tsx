@@ -97,6 +97,8 @@ export default function ValidatorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const barcodeBufferRef = useRef('');
+  const barcodeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Validation logs state
   const [validationLogs, setValidationLogs] = useState<ValidationLog[]>([]);
@@ -219,6 +221,80 @@ export default function ValidatorPage() {
       }
     }
   }, [isLoaded, user]);
+
+  // Map physical key codes (e.code) to US keyboard characters.
+  // This bypasses the OS keyboard layout entirely — the scanner sends US HID scancodes
+  // but the OS may have Albanian/Serbian layout active, corrupting { " : etc.
+  const usKeyMap: Record<string, [string, string]> = {
+    Backquote: ['`','~'], Digit1: ['1','!'], Digit2: ['2','@'], Digit3: ['3','#'],
+    Digit4: ['4','$'], Digit5: ['5','%'], Digit6: ['6','^'], Digit7: ['7','&'],
+    Digit8: ['8','*'], Digit9: ['9','('], Digit0: ['0',')'], Minus: ['-','_'],
+    Equal: ['=','+'], KeyQ: ['q','Q'], KeyW: ['w','W'], KeyE: ['e','E'],
+    KeyR: ['r','R'], KeyT: ['t','T'], KeyY: ['y','Y'], KeyU: ['u','U'],
+    KeyI: ['i','I'], KeyO: ['o','O'], KeyP: ['p','P'], BracketLeft: ['[','{'],
+    BracketRight: [']','}'], Backslash: ['\\','|'], KeyA: ['a','A'], KeyS: ['s','S'],
+    KeyD: ['d','D'], KeyF: ['f','F'], KeyG: ['g','G'], KeyH: ['h','H'],
+    KeyJ: ['j','J'], KeyK: ['k','K'], KeyL: ['l','L'], Semicolon: [';',':'],
+    Quote: ["'",'"'], KeyZ: ['z','Z'], KeyX: ['x','X'], KeyC: ['c','C'],
+    KeyV: ['v','V'], KeyB: ['b','B'], KeyN: ['n','N'], KeyM: ['m','M'],
+    Comma: [',','<'], Period: ['.','>'], Slash: ['/','?'], Space: [' ',' '],
+    Numpad0: ['0','0'], Numpad1: ['1','1'], Numpad2: ['2','2'], Numpad3: ['3','3'],
+    Numpad4: ['4','4'], Numpad5: ['5','5'], Numpad6: ['6','6'], Numpad7: ['7','7'],
+    Numpad8: ['8','8'], Numpad9: ['9','9'], NumpadDecimal: ['.','.' ],
+    NumpadAdd: ['+','+'], NumpadSubtract: ['-','-'], NumpadMultiply: ['*','*'],
+    NumpadDivide: ['/','/' ],
+  };
+
+  // Document-level keydown listener for barcode scanner mode
+  // Uses e.code (physical key) mapped to US chars — immune to OS keyboard layout
+  useEffect(() => {
+    if (scanMode !== 'barcode') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (['Shift','Control','Alt','Meta','CapsLock'].includes(e.key)) return;
+
+      if (e.code === 'Enter' || e.code === 'Tab' || e.code === 'NumpadEnter') {
+        e.preventDefault();
+        const data = barcodeBufferRef.current.trim();
+        if (data) {
+          barcodeBufferRef.current = '';
+          setBarcodeInput('');
+          if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+          setValidationResult(null);
+          validateTicket(data);
+        }
+        return;
+      }
+
+      // Map physical key code to US character, respecting Shift
+      const mapping = usKeyMap[e.code];
+      if (mapping) {
+        const ch = e.shiftKey ? mapping[1] : mapping[0];
+        barcodeBufferRef.current += ch;
+        setBarcodeInput(barcodeBufferRef.current);
+      }
+
+      // Fallback: auto-submit after 300ms of no new input
+      if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+      barcodeTimerRef.current = setTimeout(() => {
+        const data = barcodeBufferRef.current.trim();
+        if (data && data.length > 10) {
+          barcodeBufferRef.current = '';
+          setBarcodeInput('');
+          setValidationResult(null);
+          validateTicket(data);
+        }
+      }, 300);
+    };
+
+    setBarcodeScanning(true);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+    };
+  }, [scanMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
@@ -862,8 +938,8 @@ Please try:
                 <div className="space-y-4">
                   <div
                     className={`relative rounded-xl border-4 p-8 text-center transition-all cursor-pointer ${barcodeScanning
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-dashed border-purple-300 bg-purple-50 hover:border-purple-500'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-dashed border-purple-300 bg-purple-50 hover:border-purple-500'
                       }`}
                     onClick={() => { setBarcodeScanning(true); barcodeInputRef.current?.focus(); }}
                   >
@@ -879,7 +955,12 @@ Please try:
                     {barcodeScanning && (
                       <div className="mt-4 flex items-center justify-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                        <span className="text-green-600 font-semibold text-sm">Scanner active</span>
+                        <span className="text-green-600 font-semibold text-sm">Scanner active — ready to scan</span>
+                      </div>
+                    )}
+                    {barcodeInput && (
+                      <div className="mt-3 px-3 py-2 bg-white border border-green-300 rounded-lg text-xs text-gray-500 font-mono text-left break-all">
+                        {barcodeInput}
                       </div>
                     )}
                     {/* Hidden input that captures barcode scanner keystrokes */}

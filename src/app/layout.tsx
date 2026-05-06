@@ -82,6 +82,9 @@ export async function generateMetadata(): Promise<Metadata> {
           "max-snippet": -1,
         },
       },
+      verification: {
+        google: "7a041c9ed01aab8c",
+      },
     };
   } catch {
     return {
@@ -104,6 +107,9 @@ export async function generateMetadata(): Promise<Metadata> {
         description: "Blej bileta zyrtare për koncertet e Dafina Zeqirit.",
       },
       robots: { index: true, follow: true },
+      verification: {
+        google: "7a041c9ed01aab8c",
+      },
     };
   }
 }

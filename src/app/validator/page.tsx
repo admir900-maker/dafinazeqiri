@@ -226,23 +226,23 @@ export default function ValidatorPage() {
   // This bypasses the OS keyboard layout entirely — the scanner sends US HID scancodes
   // but the OS may have Albanian/Serbian layout active, corrupting { " : etc.
   const usKeyMap: Record<string, [string, string]> = {
-    Backquote: ['`','~'], Digit1: ['1','!'], Digit2: ['2','@'], Digit3: ['3','#'],
-    Digit4: ['4','$'], Digit5: ['5','%'], Digit6: ['6','^'], Digit7: ['7','&'],
-    Digit8: ['8','*'], Digit9: ['9','('], Digit0: ['0',')'], Minus: ['-','_'],
-    Equal: ['=','+'], KeyQ: ['q','Q'], KeyW: ['w','W'], KeyE: ['e','E'],
-    KeyR: ['r','R'], KeyT: ['t','T'], KeyY: ['y','Y'], KeyU: ['u','U'],
-    KeyI: ['i','I'], KeyO: ['o','O'], KeyP: ['p','P'], BracketLeft: ['[','{'],
-    BracketRight: [']','}'], Backslash: ['\\','|'], KeyA: ['a','A'], KeyS: ['s','S'],
-    KeyD: ['d','D'], KeyF: ['f','F'], KeyG: ['g','G'], KeyH: ['h','H'],
-    KeyJ: ['j','J'], KeyK: ['k','K'], KeyL: ['l','L'], Semicolon: [';',':'],
-    Quote: ["'",'"'], KeyZ: ['z','Z'], KeyX: ['x','X'], KeyC: ['c','C'],
-    KeyV: ['v','V'], KeyB: ['b','B'], KeyN: ['n','N'], KeyM: ['m','M'],
-    Comma: [',','<'], Period: ['.','>'], Slash: ['/','?'], Space: [' ',' '],
-    Numpad0: ['0','0'], Numpad1: ['1','1'], Numpad2: ['2','2'], Numpad3: ['3','3'],
-    Numpad4: ['4','4'], Numpad5: ['5','5'], Numpad6: ['6','6'], Numpad7: ['7','7'],
-    Numpad8: ['8','8'], Numpad9: ['9','9'], NumpadDecimal: ['.','.' ],
-    NumpadAdd: ['+','+'], NumpadSubtract: ['-','-'], NumpadMultiply: ['*','*'],
-    NumpadDivide: ['/','/' ],
+    Backquote: ['`', '~'], Digit1: ['1', '!'], Digit2: ['2', '@'], Digit3: ['3', '#'],
+    Digit4: ['4', '$'], Digit5: ['5', '%'], Digit6: ['6', '^'], Digit7: ['7', '&'],
+    Digit8: ['8', '*'], Digit9: ['9', '('], Digit0: ['0', ')'], Minus: ['-', '_'],
+    Equal: ['=', '+'], KeyQ: ['q', 'Q'], KeyW: ['w', 'W'], KeyE: ['e', 'E'],
+    KeyR: ['r', 'R'], KeyT: ['t', 'T'], KeyY: ['y', 'Y'], KeyU: ['u', 'U'],
+    KeyI: ['i', 'I'], KeyO: ['o', 'O'], KeyP: ['p', 'P'], BracketLeft: ['[', '{'],
+    BracketRight: [']', '}'], Backslash: ['\\', '|'], KeyA: ['a', 'A'], KeyS: ['s', 'S'],
+    KeyD: ['d', 'D'], KeyF: ['f', 'F'], KeyG: ['g', 'G'], KeyH: ['h', 'H'],
+    KeyJ: ['j', 'J'], KeyK: ['k', 'K'], KeyL: ['l', 'L'], Semicolon: [';', ':'],
+    Quote: ["'", '"'], KeyZ: ['z', 'Z'], KeyX: ['x', 'X'], KeyC: ['c', 'C'],
+    KeyV: ['v', 'V'], KeyB: ['b', 'B'], KeyN: ['n', 'N'], KeyM: ['m', 'M'],
+    Comma: [',', '<'], Period: ['.', '>'], Slash: ['/', '?'], Space: [' ', ' '],
+    Numpad0: ['0', '0'], Numpad1: ['1', '1'], Numpad2: ['2', '2'], Numpad3: ['3', '3'],
+    Numpad4: ['4', '4'], Numpad5: ['5', '5'], Numpad6: ['6', '6'], Numpad7: ['7', '7'],
+    Numpad8: ['8', '8'], Numpad9: ['9', '9'], NumpadDecimal: ['.', '.'],
+    NumpadAdd: ['+', '+'], NumpadSubtract: ['-', '-'], NumpadMultiply: ['*', '*'],
+    NumpadDivide: ['/', '/'],
   };
 
   // Document-level keydown listener for barcode scanner mode
@@ -252,7 +252,7 @@ export default function ValidatorPage() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (['Shift','Control','Alt','Meta','CapsLock'].includes(e.key)) return;
+      if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) return;
 
       if (e.code === 'Enter' || e.code === 'Tab' || e.code === 'NumpadEnter') {
         e.preventDefault();
@@ -527,6 +527,11 @@ export default function ValidatorPage() {
       const result = await response.json();
       console.log('✅ Validation result:', result);
       setValidationResult(result);
+
+      // In barcode mode, auto-clear result after 3s so scanner is ready immediately
+      if (scanMode === 'barcode') {
+        setTimeout(() => setValidationResult(null), 3000);
+      }
 
       // Trigger feedback based on result
       if (result.success) {
@@ -937,31 +942,73 @@ Please try:
               {scanMode === 'barcode' && (
                 <div className="space-y-4">
                   <div
-                    className={`relative rounded-xl border-4 p-8 text-center transition-all cursor-pointer ${barcodeScanning
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-dashed border-purple-300 bg-purple-50 hover:border-purple-500'
-                      }`}
-                    onClick={() => { setBarcodeScanning(true); barcodeInputRef.current?.focus(); }}
+                    className={`relative rounded-xl border-4 p-8 text-center transition-all cursor-pointer ${
+                      validationResult
+                        ? validationResult.success
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-red-500 bg-red-50'
+                        : barcodeScanning
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-dashed border-purple-300 bg-purple-50 hover:border-purple-500'
+                    }`}
+                    onClick={() => {
+                      if (validationResult) { setValidationResult(null); return; }
+                      setBarcodeScanning(true); barcodeInputRef.current?.focus();
+                    }}
                   >
-                    <ScanLine className={`w-20 h-20 mx-auto mb-4 ${barcodeScanning ? 'text-green-500 animate-pulse' : 'text-purple-400'}`} />
-                    <p className="text-xl font-bold text-gray-800 mb-1">
-                      {barcodeScanning ? 'Ready — Scan a ticket' : 'Tap to activate scanner'}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {barcodeScanning
-                        ? 'Point your Bluetooth barcode scanner at a ticket QR code'
-                        : 'Connect your Bluetooth barcode scanner, then tap here'}
-                    </p>
-                    {barcodeScanning && (
-                      <div className="mt-4 flex items-center justify-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                        <span className="text-green-600 font-semibold text-sm">Scanner active — ready to scan</span>
+                    {validationResult ? (
+                      /* ── Result state ── */
+                      <div className="flex flex-col items-center gap-3">
+                        {validationResult.success
+                          ? <CheckCircle className="w-20 h-20 text-green-500" />
+                          : <XCircle className="w-20 h-20 text-red-500" />}
+                        <p className={`text-2xl font-extrabold ${validationResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                          {validationResult.success ? '✅ Valid Ticket' : '❌ Invalid Ticket'}
+                        </p>
+                        <p className={`text-sm font-medium ${validationResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {validationResult.message || validationResult.error || 'Unknown error'}
+                        </p>
+                        {!validationResult.success && validationResult.error && validationResult.error !== validationResult.message && (
+                          <p className="text-xs text-red-500">{validationResult.error}</p>
+                        )}
+                        {!validationResult.success && validationResult.status && (
+                          <p className="text-xs text-red-400">Booking status: <strong>{validationResult.status}</strong></p>
+                        )}
+                        {!validationResult.success && validationResult.eventDate && (
+                          <p className="text-xs text-red-400">Event date: <strong>{new Date(validationResult.eventDate).toLocaleDateString()}</strong></p>
+                        )}
+                        {validationResult.success && validationResult.ticket && (
+                          <div className="text-sm text-green-700 space-y-0.5">
+                            <p><strong>Type:</strong> {validationResult.ticket.ticketName}</p>
+                            {validationResult.event && <p><strong>Event:</strong> {validationResult.event.title}</p>}
+                          </div>
+                        )}
+                        <p className="mt-2 text-xs text-gray-400">Tap to scan next ticket</p>
                       </div>
-                    )}
-                    {barcodeInput && (
-                      <div className="mt-3 px-3 py-2 bg-white border border-green-300 rounded-lg text-xs text-gray-500 font-mono text-left break-all">
-                        {barcodeInput}
-                      </div>
+                    ) : (
+                      /* ── Idle / ready state ── */
+                      <>
+                        <ScanLine className={`w-20 h-20 mx-auto mb-4 ${barcodeScanning ? 'text-green-500 animate-pulse' : 'text-purple-400'}`} />
+                        <p className="text-xl font-bold text-gray-800 mb-1">
+                          {barcodeScanning ? 'Ready — Scan a ticket' : 'Tap to activate scanner'}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {barcodeScanning
+                            ? 'Point your Bluetooth barcode scanner at a ticket QR code'
+                            : 'Connect your Bluetooth barcode scanner, then tap here'}
+                        </p>
+                        {barcodeScanning && (
+                          <div className="mt-4 flex items-center justify-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                            <span className="text-green-600 font-semibold text-sm">Scanner active — ready to scan</span>
+                          </div>
+                        )}
+                        {barcodeInput && (
+                          <div className="mt-3 px-3 py-2 bg-white border border-green-300 rounded-lg text-xs text-gray-500 font-mono text-left break-all">
+                            {barcodeInput}
+                          </div>
+                        )}
+                      </>
                     )}
                     {/* Hidden input that captures barcode scanner keystrokes */}
                     <input
@@ -986,44 +1033,6 @@ Please try:
                       aria-label="Barcode scanner input"
                     />
                   </div>
-
-                  {/* Validation Result for barcode mode */}
-                  {validationResult && (
-                    <div className={`p-5 rounded-xl flex items-start gap-4 ${validationResult.success ? 'bg-green-50 border-2 border-green-400' : 'bg-red-50 border-2 border-red-400'}`}>
-                      {validationResult.success
-                        ? <CheckCircle className="w-10 h-10 text-green-500 flex-shrink-0 mt-0.5" />
-                        : <XCircle className="w-10 h-10 text-red-500 flex-shrink-0 mt-0.5" />}
-                      <div className="flex-1">
-                        <p className={`text-xl font-bold ${validationResult.success ? 'text-green-800' : 'text-red-800'}`}>
-                          {validationResult.success ? '✅ Valid Ticket' : '❌ Invalid Ticket'}
-                        </p>
-                        <p className={`text-sm font-medium mt-1 ${validationResult.success ? 'text-green-700' : 'text-red-700'}`}>
-                          {validationResult.message || validationResult.error || 'Unknown error'}
-                        </p>
-                        {!validationResult.success && validationResult.error && validationResult.error !== validationResult.message && (
-                          <p className="text-xs text-red-500 mt-1">{validationResult.error}</p>
-                        )}
-                        {!validationResult.success && validationResult.status && (
-                          <p className="text-xs text-red-400 mt-1">Booking status: <strong>{validationResult.status}</strong></p>
-                        )}
-                        {!validationResult.success && validationResult.eventDate && (
-                          <p className="text-xs text-red-400 mt-1">Ticket event date: <strong>{new Date(validationResult.eventDate).toLocaleDateString()}</strong></p>
-                        )}
-                        {validationResult.success && validationResult.ticket && (
-                          <div className="mt-2 text-sm text-green-700 space-y-0.5">
-                            <p><strong>Type:</strong> {validationResult.ticket.ticketName}</p>
-                            {validationResult.event && <p><strong>Event:</strong> {validationResult.event.title}</p>}
-                          </div>
-                        )}
-                        <button
-                          onClick={() => { setValidationResult(null); barcodeInputRef.current?.focus(); }}
-                          className="mt-3 text-xs underline text-gray-500 hover:text-gray-700"
-                        >
-                          Clear &amp; scan next
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 

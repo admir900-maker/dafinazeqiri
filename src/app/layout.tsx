@@ -83,7 +83,7 @@ export async function generateMetadata(): Promise<Metadata> {
         },
       },
       verification: {
-        google: "7a041c9ed01aab8c",
+        google: "Z3g9ATzU-Mlop3Q7ql9gWCWAyc1ri5gANBPvjNjxznU",
       },
     };
   } catch {
@@ -108,7 +108,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
       robots: { index: true, follow: true },
       verification: {
-        google: "7a041c9ed01aab8c",
+        google: "Z3g9ATzU-Mlop3Q7ql9gWCWAyc1ri5gANBPvjNjxznU",
       },
     };
   }

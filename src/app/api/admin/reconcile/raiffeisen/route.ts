@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import { sendBookingConfirmationEmail } from '@/lib/emailService';
 import { createRaiAcceptClient } from '@/lib/raiAccept';
 
 // RaiAccept response codes and their interpretations
@@ -287,11 +288,20 @@ export async function POST(request: NextRequest) {
       booking.paymentStatus = 'paid';
       booking.paymentDate = booking.paymentDate || new Date();
       await booking.save();
-      if (resend) {
-        // call existing resend endpoint internally
-        // we can just set emailSent=false to force re-send via admin UI, or leave to client
+
+      // Send tickets email
+      let emailSent = false;
+      try {
+        emailSent = await sendBookingConfirmationEmail(booking);
+        if (emailSent) {
+          booking.emailSent = true;
+          await booking.save();
+        }
+      } catch (emailError) {
+        console.error('Failed to send tickets email:', emailError);
       }
-      return NextResponse.json({ success: true, message: 'Booking marked as paid' });
+
+      return NextResponse.json({ success: true, message: 'Booking marked as paid', emailSent });
     }
 
     if (action === 'markFailed') {

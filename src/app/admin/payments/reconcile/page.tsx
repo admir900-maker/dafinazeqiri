@@ -37,6 +37,8 @@ export default function ReconcileRaiAcceptPage() {
   const [fixing, setFixing] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanResults, setScanResults] = useState<ReconcileResult[]>([]);
+  const [fixingAll, setFixingAll] = useState(false);
+  const [scanProgress, setScanProgress] = useState<{ done: number; total: number } | null>(null);
 
   const check = async () => {
     try {
@@ -108,23 +110,51 @@ export default function ReconcileRaiAcceptPage() {
     try {
       setScanning(true);
       setScanResults([]);
+      setScanProgress(null);
       const res = await fetch('/api/admin/pending-bookings');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load pending bookings');
       const list = data.bookings || [];
       const out: ReconcileResult[] = [];
-      for (const b of list) {
+      setScanProgress({ done: 0, total: list.length });
+      for (let i = 0; i < list.length; i++) {
+        const b = list[i];
         if (!b?.id) continue;
         const r = await fetch(`/api/admin/reconcile/raiffeisen?bookingId=${b.id}`);
         const rd = await r.json();
-        if (rd?.summary?.discrepancy) out.push(rd);
+        if (rd?.summary?.recommendedAction === 'markPaidAndResend') out.push(rd);
+        setScanProgress({ done: i + 1, total: list.length });
       }
       setScanResults(out);
-      setMessage(out.length ? `Found ${out.length} discrepancies` : 'No discrepancies found in recent pending bookings');
+      setScanProgress(null);
+      setMessage(out.length ? `Found ${out.length} pending booking(s) that were actually paid` : 'All pending bookings match — no discrepancies found');
     } catch (e: any) {
       setMessage(e.message);
     } finally {
       setScanning(false);
+    }
+  };
+
+  const fixAll = async () => {
+    const toFix = scanResults.filter(r => r.summary.recommendedAction === 'markPaidAndResend');
+    if (!toFix.length) return;
+    try {
+      setFixingAll(true);
+      let fixed = 0;
+      for (const r of toFix) {
+        const resp = await fetch('/api/admin/reconcile/raiffeisen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: r.local.id, action: 'markPaidAndResend' })
+        });
+        if (resp.ok) fixed++;
+      }
+      setScanResults(prev => prev.filter(r => r.summary.recommendedAction !== 'markPaidAndResend'));
+      setMessage(`Fixed ${fixed} booking(s) — tickets sent to customers`);
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setFixingAll(false);
     }
   };
 
@@ -160,7 +190,9 @@ export default function ReconcileRaiAcceptPage() {
                 </Button>
                 <Button variant="outline" onClick={() => { setBookingId(''); setOrderId(''); setCustomerName(''); setResult(null); setCustomerResults([]); setMessage(null); }}>Clear</Button>
                 <Button variant="outline" onClick={scanPending} disabled={scanning}>
-                  {scanning ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>) : 'Scan recent pending'}
+                  {scanning
+                    ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />{scanProgress ? `Checking ${scanProgress.done}/${scanProgress.total}...` : 'Scanning...'}</>)
+                    : 'Scan all pending RaiAccept'}
                 </Button>
             </div>
           </CardContent>
@@ -375,26 +407,41 @@ export default function ReconcileRaiAcceptPage() {
         {scanResults.length > 0 && (
           <Card className="bg-black/60 border-2 border-orange-500/30">
             <CardHeader>
-              <CardTitle className="text-orange-500">Discrepancies found ({scanResults.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-orange-500">Paid but not confirmed ({scanResults.filter(r => r.summary.recommendedAction === 'markPaidAndResend').length})</CardTitle>
+                {scanResults.some(r => r.summary.recommendedAction === 'markPaidAndResend') && (
+                  <Button
+                    onClick={fixAll}
+                    disabled={fixingAll}
+                    className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                  >
+                    {fixingAll ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Fixing all...</> : <><CheckCircle className="h-4 w-4 mr-2" />Fix All &amp; Send Tickets</>}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="overflow-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b">
-                    <th className="p-2 text-left">Booking Ref</th>
-                    <th className="p-2 text-left">Booking ID</th>
-                    <th className="p-2 text-left">Local</th>
-                    <th className="p-2 text-left">Remote</th>
-                    <th className="p-2 text-left">Action</th>
+                  <tr className="border-b border-orange-500/20">
+                    <th className="p-2 text-left text-orange-100/60">Customer</th>
+                    <th className="p-2 text-left text-orange-100/60">Booking Ref</th>
+                    <th className="p-2 text-left text-orange-100/60">Amount</th>
+                    <th className="p-2 text-left text-orange-100/60">RaiAccept Status</th>
+                    <th className="p-2 text-left text-orange-100/60">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {scanResults.map((r, i) => (
-                    <tr key={i} className="border-b hover:bg-orange-500/10">
-                      <td className="p-2">{r.local?.bookingReference}</td>
-                      <td className="p-2">{r.local?.id}</td>
-                      <td className="p-2">{r.local?.status}/{r.local?.paymentStatus}</td>
-                      <td className="p-2">{r.summary.remoteStatus}{r.summary.statusCode ? ` (${r.summary.statusCode})` : ''}</td>
+                    <tr key={i} className="border-b border-orange-500/10 hover:bg-orange-500/10">
+                      <td className="p-2 text-orange-100">{r.local?.customerName}</td>
+                      <td className="p-2 font-mono text-xs text-orange-300">{r.local?.bookingReference}</td>
+                      <td className="p-2 text-orange-100">&euro;{Number(r.local?.totalAmount).toFixed(2)}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${r.summary.recommendedAction === 'markPaidAndResend' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {r.summary.remoteStatus}{r.summary.statusCode ? ` (${r.summary.statusCode})` : ''}
+                        </span>
+                      </td>
                       <td className="p-2">
                         {r.summary.recommendedAction === 'markPaidAndResend' && (
                           <Button size="sm" onClick={async () => {
@@ -403,12 +450,15 @@ export default function ReconcileRaiAcceptPage() {
                               const resp = await fetch('/api/admin/reconcile/raiffeisen', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ bookingId: r.local.id, action: 'markPaidAndResend', resend: false })
+                                body: JSON.stringify({ bookingId: r.local.id, action: 'markPaidAndResend' })
                               });
-                              if (resp.ok) setMessage('Marked paid'); else setMessage('Failed to mark paid');
+                              if (resp.ok) {
+                                setScanResults(prev => prev.filter((_, idx) => idx !== i));
+                                setMessage('Marked paid & tickets sent');
+                              } else setMessage('Failed to mark paid');
                             } finally { setFixing(false); }
-                          }}>
-                            Mark Paid
+                          }} disabled={fixing} className="bg-gradient-to-r from-orange-500 to-amber-900 text-black font-bold">
+                            Mark Paid &amp; Send
                           </Button>
                         )}
                         {r.summary.recommendedAction === 'markFailed' && (
@@ -420,9 +470,12 @@ export default function ReconcileRaiAcceptPage() {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ bookingId: r.local.id, action: 'markFailed' })
                               });
-                              if (resp.ok) setMessage('Marked failed'); else setMessage('Failed to mark failed');
+                              if (resp.ok) {
+                                setScanResults(prev => prev.filter((_, idx) => idx !== i));
+                                setMessage('Marked as failed');
+                              } else setMessage('Failed to mark failed');
                             } finally { setFixing(false); }
-                          }}>
+                          }} disabled={fixing} className="text-red-400 border-red-500/30 hover:bg-red-500/10">
                             Mark Failed
                           </Button>
                         )}

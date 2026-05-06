@@ -20,11 +20,15 @@ export async function GET(_req: NextRequest) {
 
     await connectToDatabase();
 
-    console.log('🔍 Fetching pending bookings...');
-    const pendingBookings = await Booking.find({ status: 'pending' })
+    console.log('🔍 Fetching pending raiffeisen bookings...');
+    const pendingBookings = await Booking.find({
+      status: 'pending',
+      paymentMethod: 'raiffeisen',
+      raiffeisenPaymentId: { $exists: true, $ne: null }
+    })
       .populate('eventId')
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(100);
 
     const bookingsData = pendingBookings.map(booking => ({
       id: booking._id,

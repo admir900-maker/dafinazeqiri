@@ -528,9 +528,9 @@ export default function ValidatorPage() {
       console.log('✅ Validation result:', result);
       setValidationResult(result);
 
-      // In barcode mode, auto-clear result after 3s so scanner is ready immediately
+// In barcode mode, auto-clear result after 5s so scanner is ready immediately
       if (scanMode === 'barcode') {
-        setTimeout(() => setValidationResult(null), 3000);
+        setTimeout(() => setValidationResult(null), 5000);
       }
 
       // Trigger feedback based on result

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import { sendBookingConfirmationEmail } from '@/lib/emailService';
 import { createRaiAcceptClient } from '@/lib/raiAccept';
+import { fulfillPaidBooking } from '@/lib/bookingFulfillment';
 
 // RaiAccept response codes and their interpretations
 const RAIACCEPT_CODES: Record<string, { type: 'success' | 'decline' | 'error' | 'technical', description: string }> = {
@@ -284,22 +284,10 @@ export async function POST(request: NextRequest) {
     if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
 
     if (action === 'markPaidAndResend') {
-      booking.status = 'confirmed';
-      booking.paymentStatus = 'paid';
-      booking.paymentDate = booking.paymentDate || new Date();
-      await booking.save();
-
-      // Send tickets email
-      let emailSent = false;
-      try {
-        emailSent = await sendBookingConfirmationEmail(booking);
-        if (emailSent) {
-          booking.emailSent = true;
-          await booking.save();
-        }
-      } catch (emailError) {
-        console.error('Failed to send tickets email:', emailError);
-      }
+      const { emailSent } = await fulfillPaidBooking(booking, {
+        paymentId: booking.raiffeisenPaymentId,
+        transactionId: booking.raiffeisenTransactionId,
+      });
 
       return NextResponse.json({ success: true, message: 'Booking marked as paid', emailSent });
     }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import { sendBookingConfirmationEmail } from '@/lib/emailService';
+import { sendTicketsForBooking } from '@/lib/bookingFulfillment';
 
 export async function POST(
   request: NextRequest,
@@ -56,13 +56,12 @@ export async function POST(
       }, { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } });
     }
 
-    // Send confirmation email
-    await sendBookingConfirmationEmail(booking);
-
-    // Update email sent flag
-    booking.emailSent = true;
-    booking.emailLastSentAt = new Date();
-    await booking.save();
+    const sent = await sendTicketsForBooking(booking);
+    if (!sent) {
+      return NextResponse.json({
+        error: 'Failed to send confirmation email'
+      }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,

@@ -169,12 +169,14 @@ export async function POST(
     console.log('💳 Creating RaiAccept payment with amount:', totalAmount);
     console.log('🌐 Base URL:', baseUrl);
 
+    const eventDisplayName = event.title || event.name || 'Event';
+
     // Create RaiAccept payment
     const paymentResult = await raiAcceptClient.createPayment({
       amount: totalAmount,
       currency: 'EUR',
       orderId: booking._id.toString(),
-      description: `${siteConfig.siteName} - ${event.name} - ${bookingTickets.length} ticket(s)`,
+      description: `${siteConfig.siteName} - ${eventDisplayName} - ${bookingTickets.length} ticket(s)`,
       customerEmail,
       customerName,
       language: 'en', // or 'sq' for Albanian, 'sr' for Serbian

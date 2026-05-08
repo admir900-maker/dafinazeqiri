@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import Event from '@/models/Event';
-import { sendBookingConfirmationEmail } from '@/lib/emailService';
+import { fulfillPaidBooking } from '@/lib/bookingFulfillment';
 import { getSetting } from '@/lib/settings';
+
+const SUCCESS_STATUSES = new Set(['SUCCESS', 'COMPLETED', 'AUTHORIZED', 'AUTHORISED']);
+const FAILURE_STATUSES = new Set(['FAILED', 'DECLINED', 'ERROR', 'CANCELLED']);
+
+function normalizeTransactionStatus(status?: string | null) {
+  return status?.trim().toUpperCase() || '';
+}
 
 /**
  * RaiAccept Webhook Handler
@@ -94,56 +101,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const normalizedStatus = normalizeTransactionStatus(transactionStatus);
+    const isSuccessful = statusCode === '0000' || SUCCESS_STATUSES.has(normalizedStatus);
+    const isFailed = FAILURE_STATUSES.has(normalizedStatus);
+
+    // Never downgrade a booking that is already marked as paid.
+    if (booking.paymentStatus === 'paid' && !isSuccessful) {
+      console.log('ℹ️ Ignoring non-success webhook for already paid booking:', booking.bookingReference);
+      return NextResponse.json({ success: true, message: 'Ignored stale webhook' });
+    }
+
     // Update booking based on payment status
     // Status code 0000 = successful transaction
-    if (statusCode === '0000' || transactionStatus === 'COMPLETED' || transactionStatus === 'SUCCESS') {
+    if (isSuccessful) {
       console.log('✅ Payment successful - updating booking');
 
-      booking.status = 'confirmed';
-      booking.paymentStatus = 'paid';
-      booking.raiffeisenPaymentId = orderIdentification;
-      booking.raiffeisenTransactionId = transactionId;
+      const sendConfirmationEnabled = await getSetting('email.templates.bookingConfirmation', true);
 
-      // Store additional payment details
-      if (card?.maskedCardNumber) {
-        booking.paymentDetails = {
+      await fulfillPaidBooking(booking, {
+        paymentId: orderIdentification,
+        transactionId,
+        sendEmail: sendConfirmationEnabled,
+        paymentDetails: card?.maskedCardNumber ? {
           cardMasked: card.maskedCardNumber,
           cardType: card.type,
           cardHolderName: card.cardHolderName,
-        };
-      }
-
-      await booking.save();
-
-      // Check email template setting
-      const sendConfirmationEnabled = await getSetting('email.templates.bookingConfirmation', true);
+        } : undefined,
+      });
 
       // Send confirmation email with tickets if enabled and not already sent
-      if (sendConfirmationEnabled && !booking.emailSent) {
-        try {
-          console.log('📧 Sending confirmation email to:', booking.customerEmail);
-
-          // Populate event details for email
-          await booking.populate('eventId');
-
-          // Send email with populated booking
-          const emailSent = await sendBookingConfirmationEmail(booking);
-
-          if (emailSent) {
-            booking.emailSent = true;
-            await booking.save();
-            console.log('✅ Email sent successfully');
-          } else {
-            console.error('❌ Email sending returned false');
-          }
-        } catch (emailError) {
-          console.error('❌ Failed to send email:', emailError);
-          // Don't fail the webhook if email fails
-        }
-      } else if (!sendConfirmationEnabled) {
+      if (!sendConfirmationEnabled) {
         console.log('ℹ️ Booking confirmation emails are disabled by settings; skipping email send.');
       } else {
-        console.log('ℹ️ Email already sent for this booking');
+        console.log(booking.emailSent ? 'ℹ️ Email already sent for this booking' : 'ℹ️ Email was not sent because delivery failed');
       }
 
       return NextResponse.json({
@@ -151,7 +141,7 @@ export async function POST(request: NextRequest) {
         message: 'Payment confirmed',
         bookingReference: booking.bookingReference,
       });
-    } else if (transactionStatus === 'FAILED' || transactionStatus === 'DECLINED' || transactionStatus === 'ERROR' || (statusCode && statusCode !== '0000')) {
+    } else if (isFailed) {
       console.log('❌ Payment failed - updating booking');
       console.log('Status code:', statusCode, 'Status:', transactionStatus);
 
@@ -180,11 +170,16 @@ export async function POST(request: NextRequest) {
         message: 'Payment failed',
         bookingReference: booking.bookingReference,
       });
-    } else if (transactionStatus === 'PENDING' || transactionStatus === 'PROCESSING') {
-      console.log('⏳ Payment pending');
+    } else {
+      console.log('⏳ Payment still in progress');
+      console.log('Status code:', statusCode, 'Status:', transactionStatus);
 
+      booking.status = 'pending';
       booking.paymentStatus = 'pending';
       booking.raiffeisenPaymentId = orderIdentification;
+      if (transactionId) {
+        booking.raiffeisenTransactionId = transactionId;
+      }
 
       await booking.save();
 
@@ -192,15 +187,6 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Payment pending',
         bookingReference: booking.bookingReference,
-      });
-    } else {
-      console.warn('⚠️ Unknown payment status:', transactionStatus, 'Status code:', statusCode);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Status received',
-        status: transactionStatus,
-        statusCode,
       });
     }
   } catch (error) {

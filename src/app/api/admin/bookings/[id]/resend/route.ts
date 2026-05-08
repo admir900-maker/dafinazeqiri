@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
-import { sendBookingConfirmationEmail } from '@/lib/emailService';
+import { sendTicketsForBooking } from '@/lib/bookingFulfillment';
 
 // POST /api/admin/bookings/[id]/resend - Resend booking confirmation email with tickets
 export async function POST(
@@ -34,16 +34,10 @@ export async function POST(
       return NextResponse.json({ error: 'Booking has no customer email' }, { status: 400 });
     }
 
-    const sent = await sendBookingConfirmationEmail(booking);
+    const sent = await sendTicketsForBooking(booking);
 
     if (!sent) {
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
-    }
-
-    // Mark as sent if not already
-    if (!booking.emailSent) {
-      booking.emailSent = true;
-      await booking.save();
     }
 
     return NextResponse.json({ success: true, message: 'Tickets resent successfully' });

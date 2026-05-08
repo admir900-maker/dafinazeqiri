@@ -33,6 +33,7 @@ interface Event {
   name: string;             // Keep for backward compatibility
   description: string;
   date: string;
+  time?: string;
   location: string;
   venue?: string;
   address?: string;
@@ -303,9 +304,7 @@ function BookingSuccessContent() {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : 'Invalid Date'}
+                          }) : 'Invalid Date'} {event.time ? `at ${event.time}` : ''}
                         </td>
                       </tr>
                       <tr>

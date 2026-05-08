@@ -289,10 +289,8 @@ class EmailService {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}</td>
+      day: 'numeric'
+    })}${event.time ? ` at ${event.time}` : ''}</td>
                 </tr>
                 <tr>
                   <td style="padding: 10px 0; font-weight: 700; color: #cd7f32; font-size: 15px;">Venue:</td>

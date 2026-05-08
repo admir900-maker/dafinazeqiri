@@ -52,6 +52,9 @@ export class RaiAcceptAPI {
   private authUrl: string;
   private apiBaseUrl: string;
   private paymentFormUrl: string;
+  private cachedToken: string | null = null;
+  private cachedTokenExpiresAt = 0;
+  private authPromise: Promise<string> | null = null;
   private static readonly COGNITO_CLIENT_ID_REGEX = /^[A-Za-z0-9_+]+$/;
 
   constructor(config: RaiAcceptConfig) {
@@ -71,6 +74,23 @@ export class RaiAcceptAPI {
    * Returns Bearer IdToken for API requests
    */
   private async authenticate(): Promise<string> {
+    if (this.cachedToken && Date.now() < this.cachedTokenExpiresAt) {
+      return this.cachedToken;
+    }
+
+    if (this.authPromise) {
+      return this.authPromise;
+    }
+
+    this.authPromise = this.authenticateInternal();
+    try {
+      return await this.authPromise;
+    } finally {
+      this.authPromise = null;
+    }
+  }
+
+  private async authenticateInternal(): Promise<string> {
     try {
       console.log('🔐 Authenticating with RaiAccept (Amazon Cognito)...');
       console.log('Auth URL:', this.authUrl);
@@ -131,6 +151,11 @@ export class RaiAcceptAPI {
         console.error('No token in response:', JSON.stringify(data, null, 2));
         throw new Error('No authentication token in response');
       }
+
+      const expiresIn = Number(data.AuthenticationResult?.ExpiresIn || data.AuthenticationResult?.expires_in || 3600);
+      // Refresh one minute early to avoid edge-case expiry during requests.
+      this.cachedTokenExpiresAt = Date.now() + Math.max(0, expiresIn - 60) * 1000;
+      this.cachedToken = token;
 
       console.log('✅ Token received (IdToken), length:', token.length);
       return token;

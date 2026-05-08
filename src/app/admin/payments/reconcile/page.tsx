@@ -168,21 +168,31 @@ export default function ReconcileRaiAcceptPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to scan');
       const candidates: ScanCandidate[] = data.results || [];
       const verified: ReconcileResult[] = [];
+      const chunkSize = 20;
 
       setScanAllProgress({ done: 0, total: candidates.length, found: 0 });
 
-      for (let i = 0; i < candidates.length; i++) {
-        const candidate = candidates[i];
-        const resp = await fetch(`/api/admin/reconcile/raiffeisen?bookingId=${candidate.local.id}`);
-        const rd = await resp.json();
+      for (let start = 0; start < candidates.length; start += chunkSize) {
+        const chunk = candidates.slice(start, start + chunkSize);
+        const ids = chunk.map((c) => c.local.id);
 
-        if (resp.ok && rd?.summary?.recommendedAction === 'markPaidAndResend') {
-          verified.push(rd);
+        const resp = await fetch('/api/admin/reconcile/raiffeisen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'verifyPaidBatch', bookingIds: ids }),
+        });
+
+        const rd = await resp.json();
+        if (!resp.ok) throw new Error(rd.error || 'Batch verification failed');
+
+        const matched: ReconcileResult[] = rd.results || [];
+        if (matched.length) {
+          verified.push(...matched);
           setScanAllResults([...verified]);
-          setScanAllProgress({ done: i + 1, total: candidates.length, found: verified.length });
-        } else {
-          setScanAllProgress({ done: i + 1, total: candidates.length, found: verified.length });
         }
+
+        const done = Math.min(start + chunk.length, candidates.length);
+        setScanAllProgress({ done, total: candidates.length, found: verified.length });
       }
 
       if (verified.length) {

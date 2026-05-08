@@ -319,7 +319,99 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase();
 
-    const { bookingId, action, resend } = await request.json();
+    const { bookingId, bookingIds, action } = await request.json();
+
+    if (action === 'verifyPaidBatch') {
+      const ids: string[] = Array.isArray(bookingIds)
+        ? [...new Set(bookingIds.filter((id: unknown) => typeof id === 'string' && id.trim().length > 0))]
+        : [];
+
+      if (!ids.length) {
+        return NextResponse.json({ error: 'bookingIds are required for verifyPaidBatch' }, { status: 400 });
+      }
+
+      const bookings = await Booking.find({
+        _id: { $in: ids },
+        paymentMethod: 'raiffeisen',
+        raiffeisenPaymentId: { $exists: true, $ne: null },
+      }).populate('eventId');
+
+      const client = createRaiAcceptClient();
+      if (!client) return NextResponse.json({ error: 'RaiAccept not configured' }, { status: 500 });
+
+      const results: any[] = [];
+      let checked = 0;
+      let skipped = 0;
+
+      for (const booking of bookings) {
+        const orderId = booking.raiffeisenPaymentId || '';
+        if (!orderId) {
+          skipped++;
+          continue;
+        }
+
+        const orderTx = await client.getOrderTransactions(orderId).catch((e) => ({ error: e.message }));
+        if (orderTx?.error) {
+          skipped++;
+          continue;
+        }
+
+        checked++;
+
+        const txList: any[] = Array.isArray(orderTx?.transactions)
+          ? orderTx.transactions
+          : (Array.isArray(orderTx) ? orderTx : []);
+
+        const { status: remoteStatus, statusCode, codeInfo } = normalizeRemoteStatus(txList);
+        const success = statusCode === '0000' || codeInfo.type === 'success' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
+
+        if (!success) {
+          continue;
+        }
+
+        results.push({
+          local: {
+            id: booking._id,
+            bookingReference: booking.bookingReference,
+            status: booking.status,
+            paymentStatus: booking.paymentStatus,
+            orderId: booking.raiffeisenPaymentId,
+            transactionId: booking.raiffeisenTransactionId || null,
+            totalAmount: booking.totalAmount,
+            currency: booking.currency,
+            createdAt: booking.createdAt,
+            customerEmail: booking.customerEmail,
+            customerName: booking.customerName,
+            emailSent: booking.emailSent,
+            eventTitle: (booking.eventId as any)?.title || (booking.eventId as any)?.name || '—',
+          },
+          remote: {
+            orderId,
+            order: null,
+            transactions: txList,
+            error: null,
+          },
+          summary: {
+            remoteStatus,
+            statusCode,
+            codeType: codeInfo.type,
+            codeDescription: codeInfo.description,
+            recommendedAction: 'markPaidAndResend',
+            discrepancy: true,
+          },
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        action: 'verifyPaidBatch',
+        count: results.length,
+        checked,
+        skipped,
+        results,
+      });
+    }
+
     if (!bookingId || !action) return NextResponse.json({ error: 'bookingId and action are required' }, { status: 400 });
 
     const booking = await Booking.findById(bookingId).populate('eventId');

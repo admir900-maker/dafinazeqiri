@@ -39,7 +39,7 @@ export default function ReconcileRaiAcceptPage() {
   const [scanResults, setScanResults] = useState<ReconcileResult[]>([]);
   const [fixingAll, setFixingAll] = useState(false);
   const [scanProgress, setScanProgress] = useState<{ done: number; total: number } | null>(null);
-  const [scanAllResults, setScanAllResults] = useState<any[]>([]);
+  const [scanAllResults, setScanAllResults] = useState<ReconcileResult[]>([]);
   const [scanningAll, setScanningAll] = useState(false);
   const [confirmingAll, setConfirmingAll] = useState(false);
 
@@ -147,7 +147,11 @@ export default function ReconcileRaiAcceptPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to scan');
       setScanAllResults(data.results || []);
-      setMessage(data.count ? `Found ${data.count} unconfirmed RaiAccept booking(s)` : 'No unconfirmed RaiAccept bookings found');
+      if (data.count) {
+        setMessage(`RaiAccept double-check complete: ${data.count} paid booking(s) need confirmation (${data.checked} checked, ${data.skipped} skipped)`);
+      } else {
+        setMessage(`RaiAccept double-check complete: no paid bookings to confirm (${data.checked} checked, ${data.skipped} skipped)`);
+      }
     } catch (e: any) {
       setMessage(e.message);
     } finally {
@@ -243,7 +247,7 @@ export default function ReconcileRaiAcceptPage() {
               >
                 {scanningAll
                   ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>)
-                  : (<><Zap className="h-4 w-4 mr-2" />Find All Unconfirmed &amp; Send Tickets</>)}
+                  : (<><Zap className="h-4 w-4 mr-2" />Double-check With Rai (Paid Only)</>)}
               </Button>
             </div>
           </CardContent>
@@ -459,7 +463,7 @@ export default function ReconcileRaiAcceptPage() {
           <Card className="bg-black/60 border-2 border-orange-500/30">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-orange-500">All Unconfirmed RaiAccept Bookings ({scanAllResults.length})</CardTitle>
+                <CardTitle className="text-orange-500">RaiVerified Paid Bookings ({scanAllResults.length})</CardTitle>
                 <Button
                   onClick={confirmAllAndSend}
                   disabled={confirmingAll}
@@ -479,6 +483,7 @@ export default function ReconcileRaiAcceptPage() {
                     <th className="p-2 text-left text-orange-100/60">Event</th>
                     <th className="p-2 text-left text-orange-100/60">Booking Ref</th>
                     <th className="p-2 text-left text-orange-100/60">Status</th>
+                    <th className="p-2 text-left text-orange-100/60">Rai Status</th>
                     <th className="p-2 text-left text-orange-100/60">Email Sent</th>
                     <th className="p-2 text-right text-orange-100/60">Amount</th>
                     <th className="p-2 text-left text-orange-100/60">Created</th>
@@ -497,6 +502,11 @@ export default function ReconcileRaiAcceptPage() {
                       <td className="p-2">
                         <Badge className={r.local?.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : r.local?.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}>
                           {r.local?.status}/{r.local?.paymentStatus}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <Badge className="bg-green-500/20 text-green-400">
+                          {r.summary?.remoteStatus || 'SUCCESS'}{r.summary?.statusCode ? ` (${r.summary.statusCode})` : ''}
                         </Badge>
                       </td>
                       <td className="p-2">

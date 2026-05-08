@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     const orderIdParam = searchParams.get('orderId');
     const customerName = searchParams.get('customerName');
 
-    // scanAll: return all unconfirmed RaiAccept bookings directly from DB (no RaiAccept API call)
+    // scanAll: double-check all unconfirmed RaiAccept bookings against RaiAccept transactions
     if (searchParams.get('scanAll') === 'true') {
       const bookings = await Booking.find({
         paymentMethod: 'raiffeisen',
@@ -118,25 +118,80 @@ export async function GET(request: NextRequest) {
         raiffeisenPaymentId: { $exists: true, $ne: null },
       }).populate('eventId').sort({ createdAt: -1 }).limit(200);
 
-      const results = bookings.map((booking) => ({
-        local: {
-          id: booking._id,
-          bookingReference: booking.bookingReference,
-          status: booking.status,
-          paymentStatus: booking.paymentStatus,
-          orderId: booking.raiffeisenPaymentId,
-          transactionId: booking.raiffeisenTransactionId || null,
-          totalAmount: booking.totalAmount,
-          currency: booking.currency,
-          createdAt: booking.createdAt,
-          customerEmail: booking.customerEmail,
-          customerName: booking.customerName,
-          emailSent: booking.emailSent,
-          eventTitle: (booking.eventId as any)?.title || (booking.eventId as any)?.name || '—',
-        },
-      }));
+      const client = createRaiAcceptClient();
+      if (!client) return NextResponse.json({ error: 'RaiAccept not configured' }, { status: 500 });
 
-      return NextResponse.json({ success: true, searchType: 'scanAll', count: results.length, results });
+      const results: any[] = [];
+      let checked = 0;
+      let skipped = 0;
+
+      for (const booking of bookings) {
+        const orderId = booking.raiffeisenPaymentId || '';
+        if (!orderId) {
+          skipped++;
+          continue;
+        }
+
+        const orderTx = await client.getOrderTransactions(orderId).catch((e) => ({ error: e.message }));
+        if (orderTx?.error) {
+          skipped++;
+          continue;
+        }
+
+        checked++;
+
+        const txList: any[] = Array.isArray(orderTx?.transactions)
+          ? orderTx.transactions
+          : (Array.isArray(orderTx) ? orderTx : []);
+
+        const { status: remoteStatus, statusCode, codeInfo } = normalizeRemoteStatus(txList);
+        const success = statusCode === '0000' || codeInfo.type === 'success' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
+
+        if (!success) {
+          continue;
+        }
+
+        results.push({
+          local: {
+            id: booking._id,
+            bookingReference: booking.bookingReference,
+            status: booking.status,
+            paymentStatus: booking.paymentStatus,
+            orderId: booking.raiffeisenPaymentId,
+            transactionId: booking.raiffeisenTransactionId || null,
+            totalAmount: booking.totalAmount,
+            currency: booking.currency,
+            createdAt: booking.createdAt,
+            customerEmail: booking.customerEmail,
+            customerName: booking.customerName,
+            emailSent: booking.emailSent,
+            eventTitle: (booking.eventId as any)?.title || (booking.eventId as any)?.name || '—',
+          },
+          remote: {
+            orderId,
+            order: null,
+            transactions: txList,
+            error: null,
+          },
+          summary: {
+            remoteStatus,
+            statusCode,
+            codeType: codeInfo.type,
+            codeDescription: codeInfo.description,
+            recommendedAction: 'markPaidAndResend',
+            discrepancy: true,
+          },
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        searchType: 'scanAllVerified',
+        count: results.length,
+        checked,
+        skipped,
+        results,
+      });
     }
 
     // If customer name search is provided, return all matching bookings with RaiAccept data

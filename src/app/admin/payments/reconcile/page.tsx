@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Search, CheckCircle, XCircle, Mail, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Search, CheckCircle, XCircle, Mail, AlertTriangle, Zap } from 'lucide-react';
 
 interface ReconcileResult {
   success: boolean;
@@ -39,6 +39,9 @@ export default function ReconcileRaiAcceptPage() {
   const [scanResults, setScanResults] = useState<ReconcileResult[]>([]);
   const [fixingAll, setFixingAll] = useState(false);
   const [scanProgress, setScanProgress] = useState<{ done: number; total: number } | null>(null);
+  const [scanAllResults, setScanAllResults] = useState<any[]>([]);
+  const [scanningAll, setScanningAll] = useState(false);
+  const [confirmingAll, setConfirmingAll] = useState(false);
 
   const check = async () => {
     try {
@@ -135,6 +138,45 @@ export default function ReconcileRaiAcceptPage() {
     }
   };
 
+  const scanAllUnconfirmed = async () => {
+    try {
+      setScanningAll(true);
+      setScanAllResults([]);
+      setMessage(null);
+      const res = await fetch('/api/admin/reconcile/raiffeisen?scanAll=true');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to scan');
+      setScanAllResults(data.results || []);
+      setMessage(data.count ? `Found ${data.count} unconfirmed RaiAccept booking(s)` : 'No unconfirmed RaiAccept bookings found');
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setScanningAll(false);
+    }
+  };
+
+  const confirmAllAndSend = async () => {
+    if (!scanAllResults.length) return;
+    try {
+      setConfirmingAll(true);
+      let confirmed = 0;
+      for (const r of scanAllResults) {
+        const resp = await fetch('/api/admin/reconcile/raiffeisen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: r.local.id, action: 'markPaidAndResend' }),
+        });
+        if (resp.ok) confirmed++;
+      }
+      setScanAllResults([]);
+      setMessage(`Confirmed ${confirmed} booking(s) — tickets sent to customers`);
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setConfirmingAll(false);
+    }
+  };
+
   const fixAll = async () => {
     const toFix = scanResults.filter(r => r.summary.recommendedAction === 'markPaidAndResend');
     if (!toFix.length) return;
@@ -193,6 +235,15 @@ export default function ReconcileRaiAcceptPage() {
                 {scanning
                   ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />{scanProgress ? `Checking ${scanProgress.done}/${scanProgress.total}...` : 'Scanning...'}</>)
                   : 'Scan all pending RaiAccept'}
+              </Button>
+              <Button
+                onClick={scanAllUnconfirmed}
+                disabled={scanningAll}
+                className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+              >
+                {scanningAll
+                  ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>)
+                  : (<><Zap className="h-4 w-4 mr-2" />Find All Unconfirmed &amp; Send Tickets</>)}
               </Button>
             </div>
           </CardContent>
@@ -395,6 +446,91 @@ export default function ReconcileRaiAcceptPage() {
                             </Button>
                           )}
                         </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        )}
+
+        {scanAllResults.length > 0 && (
+          <Card className="bg-black/60 border-2 border-orange-500/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-orange-500">All Unconfirmed RaiAccept Bookings ({scanAllResults.length})</CardTitle>
+                <Button
+                  onClick={confirmAllAndSend}
+                  disabled={confirmingAll}
+                  className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
+                >
+                  {confirmingAll
+                    ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Confirming...</>)
+                    : (<><CheckCircle className="h-4 w-4 mr-2" />Confirm All &amp; Send Tickets</>)}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-orange-500/20 bg-black/40">
+                    <th className="p-2 text-left text-orange-100/60">Customer</th>
+                    <th className="p-2 text-left text-orange-100/60">Event</th>
+                    <th className="p-2 text-left text-orange-100/60">Booking Ref</th>
+                    <th className="p-2 text-left text-orange-100/60">Status</th>
+                    <th className="p-2 text-left text-orange-100/60">Email Sent</th>
+                    <th className="p-2 text-right text-orange-100/60">Amount</th>
+                    <th className="p-2 text-left text-orange-100/60">Created</th>
+                    <th className="p-2 text-left text-orange-100/60">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scanAllResults.map((r, i) => (
+                    <tr key={i} className="border-b border-orange-500/10 hover:bg-orange-500/10">
+                      <td className="p-2">
+                        <div className="text-orange-100 font-medium">{r.local?.customerName}</div>
+                        <div className="text-orange-100/40 text-xs">{r.local?.customerEmail}</div>
+                      </td>
+                      <td className="p-2 text-orange-100/70 text-xs">{r.local?.eventTitle}</td>
+                      <td className="p-2 font-mono text-xs text-orange-300">{r.local?.bookingReference}</td>
+                      <td className="p-2">
+                        <Badge className={r.local?.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : r.local?.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}>
+                          {r.local?.status}/{r.local?.paymentStatus}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        {r.local?.emailSent
+                          ? <span className="text-green-400 text-xs">✓ Sent</span>
+                          : <span className="text-red-400 text-xs">✗ Not sent</span>}
+                      </td>
+                      <td className="p-2 text-right text-orange-100">&euro;{Number(r.local?.totalAmount).toFixed(2)}</td>
+                      <td className="p-2 text-xs text-orange-100/50">{r.local?.createdAt ? new Date(r.local.createdAt).toLocaleDateString() : '—'}</td>
+                      <td className="p-2">
+                        <Button
+                          size="sm"
+                          disabled={confirmingAll}
+                          onClick={async () => {
+                            setConfirmingAll(true);
+                            try {
+                              const resp = await fetch('/api/admin/reconcile/raiffeisen', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ bookingId: r.local.id, action: 'markPaidAndResend' }),
+                              });
+                              if (resp.ok) {
+                                setScanAllResults(prev => prev.filter((_, idx) => idx !== i));
+                                setMessage('Confirmed & ticket sent');
+                              } else {
+                                const d = await resp.json();
+                                setMessage(d.error || 'Failed');
+                              }
+                            } finally { setConfirmingAll(false); }
+                          }}
+                          className="bg-gradient-to-r from-orange-500 to-amber-900 text-black font-bold text-xs"
+                        >
+                          <Mail className="h-3 w-3 mr-1" /> Confirm &amp; Send
+                        </Button>
                       </td>
                     </tr>
                   ))}

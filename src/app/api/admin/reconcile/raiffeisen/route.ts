@@ -110,6 +110,35 @@ export async function GET(request: NextRequest) {
     const orderIdParam = searchParams.get('orderId');
     const customerName = searchParams.get('customerName');
 
+    // scanAll: return all unconfirmed RaiAccept bookings directly from DB (no RaiAccept API call)
+    if (searchParams.get('scanAll') === 'true') {
+      const bookings = await Booking.find({
+        paymentMethod: 'raiffeisen',
+        $or: [{ status: { $ne: 'confirmed' } }, { paymentStatus: { $ne: 'paid' } }],
+        raiffeisenPaymentId: { $exists: true, $ne: null },
+      }).populate('eventId').sort({ createdAt: -1 }).limit(200);
+
+      const results = bookings.map((booking) => ({
+        local: {
+          id: booking._id,
+          bookingReference: booking.bookingReference,
+          status: booking.status,
+          paymentStatus: booking.paymentStatus,
+          orderId: booking.raiffeisenPaymentId,
+          transactionId: booking.raiffeisenTransactionId || null,
+          totalAmount: booking.totalAmount,
+          currency: booking.currency,
+          createdAt: booking.createdAt,
+          customerEmail: booking.customerEmail,
+          customerName: booking.customerName,
+          emailSent: booking.emailSent,
+          eventTitle: (booking.eventId as any)?.title || (booking.eventId as any)?.name || '—',
+        },
+      }));
+
+      return NextResponse.json({ success: true, searchType: 'scanAll', count: results.length, results });
+    }
+
     // If customer name search is provided, return all matching bookings with RaiAccept data
     if (customerName) {
       const nameSearch = customerName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

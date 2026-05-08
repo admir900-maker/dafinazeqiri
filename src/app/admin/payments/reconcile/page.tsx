@@ -26,6 +26,24 @@ interface ReconcileResult {
   };
 }
 
+interface ScanCandidate {
+  local: {
+    id: string;
+    bookingReference: string;
+    status: string;
+    paymentStatus: string;
+    orderId: string;
+    transactionId?: string | null;
+    totalAmount: number;
+    currency: string;
+    createdAt: string;
+    customerEmail: string;
+    customerName: string;
+    emailSent?: boolean;
+    eventTitle?: string;
+  };
+}
+
 export default function ReconcileRaiAcceptPage() {
   const [bookingId, setBookingId] = useState('');
   const [orderId, setOrderId] = useState('');
@@ -42,6 +60,7 @@ export default function ReconcileRaiAcceptPage() {
   const [scanAllResults, setScanAllResults] = useState<ReconcileResult[]>([]);
   const [scanningAll, setScanningAll] = useState(false);
   const [confirmingAll, setConfirmingAll] = useState(false);
+  const [scanAllProgress, setScanAllProgress] = useState<{ done: number; total: number; found: number } | null>(null);
 
   const check = async () => {
     try {
@@ -143,14 +162,33 @@ export default function ReconcileRaiAcceptPage() {
       setScanningAll(true);
       setScanAllResults([]);
       setMessage(null);
+      setScanAllProgress(null);
       const res = await fetch('/api/admin/reconcile/raiffeisen?scanAll=true');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to scan');
-      setScanAllResults(data.results || []);
-      if (data.count) {
-        setMessage(`RaiAccept double-check complete: ${data.count} paid booking(s) need confirmation (${data.checked} checked, ${data.skipped} skipped)`);
+      const candidates: ScanCandidate[] = data.results || [];
+      const verified: ReconcileResult[] = [];
+
+      setScanAllProgress({ done: 0, total: candidates.length, found: 0 });
+
+      for (let i = 0; i < candidates.length; i++) {
+        const candidate = candidates[i];
+        const resp = await fetch(`/api/admin/reconcile/raiffeisen?bookingId=${candidate.local.id}`);
+        const rd = await resp.json();
+
+        if (resp.ok && rd?.summary?.recommendedAction === 'markPaidAndResend') {
+          verified.push(rd);
+          setScanAllResults([...verified]);
+          setScanAllProgress({ done: i + 1, total: candidates.length, found: verified.length });
+        } else {
+          setScanAllProgress({ done: i + 1, total: candidates.length, found: verified.length });
+        }
+      }
+
+      if (verified.length) {
+        setMessage(`RaiAccept double-check complete: ${verified.length} paid booking(s) need confirmation out of ${candidates.length} searched`);
       } else {
-        setMessage(`RaiAccept double-check complete: no paid bookings to confirm (${data.checked} checked, ${data.skipped} skipped)`);
+        setMessage(`RaiAccept double-check complete: no paid bookings to confirm after searching ${candidates.length} records`);
       }
     } catch (e: any) {
       setMessage(e.message);
@@ -246,12 +284,20 @@ export default function ReconcileRaiAcceptPage() {
                 className="bg-gradient-to-r from-orange-500 to-amber-900 hover:from-orange-600 hover:to-amber-950 text-black font-bold"
               >
                 {scanningAll
-                  ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Scanning...</>)
+                  ? (<><RefreshCw className="h-4 w-4 mr-2 animate-spin" />{scanAllProgress ? `Searching ${scanAllProgress.done}/${scanAllProgress.total}...` : 'Loading records...'}</>)
                   : (<><Zap className="h-4 w-4 mr-2" />Double-check With Rai (Paid Only)</>)}
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        {scanAllProgress && (
+          <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded text-orange-100 flex items-center justify-between gap-3 text-sm">
+            <span>Searched: {scanAllProgress.done} / {scanAllProgress.total}</span>
+            <span>Left: {Math.max(scanAllProgress.total - scanAllProgress.done, 0)}</span>
+            <span>Paid found: {scanAllProgress.found}</span>
+          </div>
+        )}
 
         {message && (
           <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded text-yellow-400 flex items-center gap-2">

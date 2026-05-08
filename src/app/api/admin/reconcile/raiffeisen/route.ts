@@ -110,48 +110,22 @@ export async function GET(request: NextRequest) {
     const orderIdParam = searchParams.get('orderId');
     const customerName = searchParams.get('customerName');
 
-    // scanAll: double-check all unconfirmed RaiAccept bookings against RaiAccept transactions
+    // scanAll: return all candidate RaiAccept bookings so the client can verify each one and show live progress
     if (searchParams.get('scanAll') === 'true') {
-      const bookings = await Booking.find({
+      const filter = {
         paymentMethod: 'raiffeisen',
         $or: [{ status: { $ne: 'confirmed' } }, { paymentStatus: { $ne: 'paid' } }],
         raiffeisenPaymentId: { $exists: true, $ne: null },
-      }).populate('eventId').sort({ createdAt: -1 }).limit(200);
+      };
 
-      const client = createRaiAcceptClient();
-      if (!client) return NextResponse.json({ error: 'RaiAccept not configured' }, { status: 500 });
+      const bookings = await Booking.find(filter)
+        .select('bookingReference status paymentStatus raiffeisenPaymentId raiffeisenTransactionId totalAmount currency createdAt customerEmail customerName emailSent eventId')
+        .populate('eventId', 'title name')
+        .sort({ createdAt: -1 });
 
-      const results: any[] = [];
-      let checked = 0;
-      let skipped = 0;
+      const total = await Booking.countDocuments(filter);
 
-      for (const booking of bookings) {
-        const orderId = booking.raiffeisenPaymentId || '';
-        if (!orderId) {
-          skipped++;
-          continue;
-        }
-
-        const orderTx = await client.getOrderTransactions(orderId).catch((e) => ({ error: e.message }));
-        if (orderTx?.error) {
-          skipped++;
-          continue;
-        }
-
-        checked++;
-
-        const txList: any[] = Array.isArray(orderTx?.transactions)
-          ? orderTx.transactions
-          : (Array.isArray(orderTx) ? orderTx : []);
-
-        const { status: remoteStatus, statusCode, codeInfo } = normalizeRemoteStatus(txList);
-        const success = statusCode === '0000' || codeInfo.type === 'success' || ['SUCCESS', 'COMPLETED'].includes(remoteStatus);
-
-        if (!success) {
-          continue;
-        }
-
-        results.push({
+      const results = bookings.map((booking) => ({
           local: {
             id: booking._id,
             bookingReference: booking.bookingReference,
@@ -167,29 +141,13 @@ export async function GET(request: NextRequest) {
             emailSent: booking.emailSent,
             eventTitle: (booking.eventId as any)?.title || (booking.eventId as any)?.name || '—',
           },
-          remote: {
-            orderId,
-            order: null,
-            transactions: txList,
-            error: null,
-          },
-          summary: {
-            remoteStatus,
-            statusCode,
-            codeType: codeInfo.type,
-            codeDescription: codeInfo.description,
-            recommendedAction: 'markPaidAndResend',
-            discrepancy: true,
-          },
-        });
-      }
+        }));
 
       return NextResponse.json({
         success: true,
-        searchType: 'scanAllVerified',
+        searchType: 'scanAllCandidates',
         count: results.length,
-        checked,
-        skipped,
+        total,
         results,
       });
     }

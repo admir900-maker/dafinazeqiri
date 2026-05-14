@@ -121,11 +121,50 @@ export default function MobileValidatorPage() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
 
+
+  // Tab state: 0 = Camera, 1 = Barcode Scanner
+  const [tab, setTab] = useState<0 | 1>(0);
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
+  // Barcode scanner input
+  const [barcodeValue, setBarcodeValue] = useState('');
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
+  // Manual entry
   const [manualOpen, setManualOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
+  // Barcode scanner: always focus input when tab is active
+  useEffect(() => {
+    if (tab === 1 && barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+    }
+  }, [tab]);
+
+  // Barcode scanner: auto-refocus on blur
+  useEffect(() => {
+    if (tab !== 1) return;
+    const handler = () => {
+      setTimeout(() => {
+        if (barcodeInputRef.current && document.activeElement !== barcodeInputRef.current) {
+          barcodeInputRef.current.focus();
+        }
+      }, 100);
+    };
+    window.addEventListener('blur', handler, true);
+    return () => window.removeEventListener('blur', handler, true);
+  }, [tab]);
+
+  // Barcode scanner: handle Enter key
+  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const code = barcodeValue.trim();
+      if (code) {
+        validateTicket(code);
+        setBarcodeValue('');
+      }
+      e.preventDefault();
+    }
+  };
 
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -524,52 +563,99 @@ export default function MobileValidatorPage() {
           </p>
         </section>
 
-        {/* Scan area */}
+        {/* Scan area with tabs */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
-          <div className="p-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Camera className="w-4 h-4 text-orange-400" />
-              <h2 className="text-sm font-semibold">Camera Scanner</h2>
-            </div>
-            {cameraOn ? (
-              <button
-                onClick={stopCamera}
-                className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-white hover:bg-zinc-700 active:bg-zinc-600"
-              >
-                <CameraOff className="w-3.5 h-3.5" /> Stop
-              </button>
-            ) : (
-              <button
-                onClick={startCamera}
-                className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-orange-500 text-black font-semibold hover:bg-orange-400 active:bg-orange-600"
-              >
-                <Camera className="w-3.5 h-3.5" /> Start scanning
-              </button>
-            )}
+          {/* Tabs */}
+          <div className="flex border-b border-zinc-800">
+            <button
+              className={`flex-1 py-2 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${tab === 0 ? 'bg-zinc-900 text-orange-400 border-b-2 border-orange-500' : 'bg-zinc-900 text-zinc-400'}`}
+              onClick={() => setTab(0)}
+              type="button"
+            >
+              <Camera className="w-4 h-4" /> Camera Scan
+            </button>
+            <button
+              className={`flex-1 py-2 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${tab === 1 ? 'bg-zinc-900 text-orange-400 border-b-2 border-orange-500' : 'bg-zinc-900 text-zinc-400'}`}
+              onClick={() => setTab(1)}
+              type="button"
+            >
+              <ScanLine className="w-4 h-4" /> Barcode Scanner
+            </button>
           </div>
 
-          <div className={`relative bg-black ${cameraOn ? 'aspect-square' : 'h-0'}`}>
-            <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
-            {cameraOn && (
-              <>
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="w-2/3 aspect-square border-2 border-orange-500/80 rounded-xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
+          {/* Tab content */}
+          {tab === 0 && (
+            <div>
+              <div className="p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-orange-400" />
+                  <h2 className="text-sm font-semibold">Camera Scanner</h2>
                 </div>
-                <div className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-orange-300">
-                  Point at the QR code
-                </div>
-              </>
-            )}
-          </div>
+                {cameraOn ? (
+                  <button
+                    onClick={stopCamera}
+                    className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-white hover:bg-zinc-700 active:bg-zinc-600"
+                  >
+                    <CameraOff className="w-3.5 h-3.5" /> Stop
+                  </button>
+                ) : (
+                  <button
+                    onClick={startCamera}
+                    className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-orange-500 text-black font-semibold hover:bg-orange-400 active:bg-orange-600"
+                  >
+                    <Camera className="w-3.5 h-3.5" /> Start scanning
+                  </button>
+                )}
+              </div>
 
-          {cameraError && (
-            <div className="mx-3 my-3 flex items-start gap-2 text-xs text-red-300 bg-red-950/40 border border-red-900 rounded-lg p-2">
-              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>{cameraError}</span>
+              <div className={`relative bg-black ${cameraOn ? 'aspect-square' : 'h-0'}`}>
+                <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
+                {cameraOn && (
+                  <>
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <div className="w-2/3 aspect-square border-2 border-orange-500/80 rounded-xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
+                    </div>
+                    <div className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-orange-300">
+                      Point at the QR code
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {cameraError && (
+                <div className="mx-3 my-3 flex items-start gap-2 text-xs text-red-300 bg-red-950/40 border border-red-900 rounded-lg p-2">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{cameraError}</span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Manual */}
+          {tab === 1 && (
+            <div className="flex flex-col items-center justify-center p-6 min-h-[260px]">
+              <ScanLine className="w-12 h-12 text-orange-400 mb-4" />
+              <p className="text-sm text-zinc-200 mb-2">Tap to activate scanner</p>
+              <p className="text-xs text-zinc-400 mb-4 text-center">Connect your Bluetooth barcode scanner, then scan here.</p>
+              <input
+                ref={barcodeInputRef}
+                type="text"
+                inputMode="text"
+                autoFocus={tab === 1}
+                value={barcodeValue}
+                onChange={e => setBarcodeValue(e.target.value)}
+                onKeyDown={handleBarcodeKeyDown}
+                className="w-full max-w-xs text-lg text-center tracking-[0.15em] bg-black border-2 border-orange-500 rounded-xl px-4 py-4 outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Scan barcode here"
+                tabIndex={0}
+                aria-label="Barcode scanner input"
+                spellCheck={false}
+                autoComplete="off"
+              />
+              <div className="text-xs text-zinc-500 mt-3">Press Enter after scanning</div>
+            </div>
+          )}
+
+          {/* Manual entry always available below */}
           <div className="border-t border-zinc-800 p-3">
             <button
               onClick={() => setManualOpen((v) => !v)}

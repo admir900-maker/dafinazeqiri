@@ -1,6 +1,26 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+// US key mapping for barcode/QR scanner (copied from /validator)
+const usKeyMap: Record<string, [string, string]> = {
+  Backquote: ['`', '~'], Digit1: ['1', '!'], Digit2: ['2', '@'], Digit3: ['3', '#'],
+  Digit4: ['4', '$'], Digit5: ['5', '%'], Digit6: ['6', '^'], Digit7: ['7', '&'],
+  Digit8: ['8', '*'], Digit9: ['9', '('], Digit0: ['0', ')'], Minus: ['-', '_'],
+  Equal: ['=', '+'], KeyQ: ['q', 'Q'], KeyW: ['w', 'W'], KeyE: ['e', 'E'],
+  KeyR: ['r', 'R'], KeyT: ['t', 'T'], KeyY: ['y', 'Y'], KeyU: ['u', 'U'],
+  KeyI: ['i', 'I'], KeyO: ['o', 'O'], KeyP: ['p', 'P'], BracketLeft: ['[', '{'],
+  BracketRight: [']', '}'], Backslash: ['\\', '|'], KeyA: ['a', 'A'], KeyS: ['s', 'S'],
+  KeyD: ['d', 'D'], KeyF: ['f', 'F'], KeyG: ['g', 'G'], KeyH: ['h', 'H'],
+  KeyJ: ['j', 'J'], KeyK: ['k', 'K'], KeyL: ['l', 'L'], Semicolon: [';', ':'],
+  Quote: ["'", '"'], KeyZ: ['z', 'Z'], KeyX: ['x', 'X'], KeyC: ['c', 'C'],
+  KeyV: ['v', 'V'], KeyB: ['b', 'B'], KeyN: ['n', 'N'], KeyM: ['m', 'M'],
+  Comma: [',', '<'], Period: ['.', '>'], Slash: ['/', '?'], Space: [' ', ' '],
+  Numpad0: ['0', '0'], Numpad1: ['1', '1'], Numpad2: ['2', '2'], Numpad3: ['3', '3'],
+  Numpad4: ['4', '4'], Numpad5: ['5', '5'], Numpad6: ['6', '6'], Numpad7: ['7', '7'],
+  Numpad8: ['8', '8'], Numpad9: ['9', '9'], NumpadDecimal: ['.', '.'],
+  NumpadAdd: ['+', '+'], NumpadSubtract: ['-', '-'], NumpadMultiply: ['*', '*'],
+  NumpadDivide: ['/', '/'],
+};
 import { useUser } from '@clerk/nextjs';
 import {
   Camera,
@@ -130,41 +150,58 @@ export default function MobileValidatorPage() {
   // Barcode scanner input
   const [barcodeValue, setBarcodeValue] = useState('');
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const barcodeBufferRef = useRef('');
+  const barcodeTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Manual entry
   const [manualOpen, setManualOpen] = useState(false);
   const [manualValue, setManualValue] = useState('');
-  // Barcode scanner: always focus input when tab is active
-  useEffect(() => {
-    if (tab === 1 && barcodeInputRef.current) {
-      barcodeInputRef.current.focus();
-    }
-  }, [tab]);
-
-  // Barcode scanner: auto-refocus on blur
+  // ...existing code...
+  // Barcode scanner: document-level keydown for US layout, immune to OS layout
   useEffect(() => {
     if (tab !== 1) return;
-    const handler = () => {
-      setTimeout(() => {
-        if (barcodeInputRef.current && document.activeElement !== barcodeInputRef.current) {
-          barcodeInputRef.current.focus();
-        }
-      }, 100);
-    };
-    window.addEventListener('blur', handler, true);
-    return () => window.removeEventListener('blur', handler, true);
-  }, [tab]);
 
-  // Barcode scanner: handle Enter key
-  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const code = barcodeValue.trim();
-      if (code) {
-        validateTicket(code);
-        setBarcodeValue('');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key)) return;
+
+      if (e.code === 'Enter' || e.code === 'Tab' || e.code === 'NumpadEnter') {
+        e.preventDefault();
+        const data = barcodeBufferRef.current.trim();
+        if (data) {
+          barcodeBufferRef.current = '';
+          setBarcodeValue('');
+          if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+          validateTicket(data);
+        }
+        return;
       }
-      e.preventDefault();
-    }
-  };
+
+      // Map physical key code to US character, respecting Shift
+      const mapping = usKeyMap[e.code];
+      if (mapping) {
+        const ch = e.shiftKey ? mapping[1] : mapping[0];
+        barcodeBufferRef.current += ch;
+        setBarcodeValue(barcodeBufferRef.current);
+      }
+
+      // Fallback: auto-submit after 300ms of no new input
+      if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+      barcodeTimerRef.current = setTimeout(() => {
+        const data = barcodeBufferRef.current.trim();
+        if (data && data.length > 10) {
+          barcodeBufferRef.current = '';
+          setBarcodeValue('');
+          validateTicket(data);
+        }
+      }, 300);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+    };
+  }, [tab]);
 
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -634,24 +671,22 @@ export default function MobileValidatorPage() {
           {tab === 1 && (
             <div className="flex flex-col items-center justify-center p-6 min-h-[260px]">
               <ScanLine className="w-12 h-12 text-orange-400 mb-4" />
-              <p className="text-sm text-zinc-200 mb-2">Tap to activate scanner</p>
-              <p className="text-xs text-zinc-400 mb-4 text-center">Connect your Bluetooth barcode scanner, then scan here.</p>
+              <p className="text-sm text-zinc-200 mb-2">Scanner active — ready to scan</p>
+              <p className="text-xs text-zinc-400 mb-4 text-center">Connect your Bluetooth barcode scanner, then scan a ticket</p>
               <input
                 ref={barcodeInputRef}
                 type="text"
-                inputMode="text"
-                autoFocus={tab === 1}
+                inputMode="none"
                 value={barcodeValue}
-                onChange={e => setBarcodeValue(e.target.value)}
-                onKeyDown={handleBarcodeKeyDown}
-                className="w-full max-w-xs text-lg text-center tracking-[0.15em] bg-black border-2 border-orange-500 rounded-xl px-4 py-4 outline-none focus:ring-2 focus:ring-orange-500"
+                readOnly
+                className="w-full max-w-xs text-lg text-center tracking-[0.15em] bg-black border-2 border-orange-500 rounded-xl px-4 py-4 outline-none focus:ring-2 focus:ring-orange-500 select-none pointer-events-none"
                 placeholder="Scan barcode here"
-                tabIndex={0}
+                tabIndex={-1}
                 aria-label="Barcode scanner input"
                 spellCheck={false}
                 autoComplete="off"
               />
-              <div className="text-xs text-zinc-500 mt-3">Press Enter after scanning</div>
+              <div className="text-xs text-zinc-500 mt-3">Scan a ticket — no keyboard required</div>
             </div>
           )}
 

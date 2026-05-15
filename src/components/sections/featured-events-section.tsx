@@ -152,9 +152,11 @@ export function FeaturedEventsSection() {
 
       const eventsArray = data.events || [];
 
-      // Get only upcoming events and sort by date
+      // Get only upcoming events (compare against start of today, not current time)
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
       const upcomingEvents = eventsArray
-        .filter((event: Event) => new Date(event.date) >= new Date())
+        .filter((event: Event) => new Date(event.date) >= startOfToday)
         .sort((a: Event, b: Event) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 4);
 
